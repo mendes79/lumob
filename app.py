@@ -1,4 +1,5 @@
 # app.py
+# rev01 - integração do campo email da tabela usuarios no app.py
 
 # Importações necessárias
 from flask import Flask, render_template, redirect, url_for, request, flash, session, get_flashed_messages
@@ -33,10 +34,12 @@ login_manager.login_view = 'login' # Se o usuário tentar acessar uma página pr
 
 # Classe User para Flask-Login
 class User(UserMixin):
-    def __init__(self, id, username, role, permissions=None): # Adicionar 'permissions'
+    # ALTERAÇÃO: Adicionado 'email' ao construtor
+    def __init__(self, id, username, role, email=None, permissions=None): 
         self.id = id
         self.username = username
         self.role = role
+        self.email = email # NOVO: Atributo email
         # permissions será uma lista de nomes de módulos (strings), ex: ['Pessoal', 'Obras']
         self.permissions = permissions if permissions is not None else [] 
 
@@ -55,12 +58,13 @@ def load_user(user_id):
     try:
         with DatabaseManager(**db_config) as db_base:
             user_manager = UserManager(db_base)
+            # ALTERAÇÃO: user_data agora deve incluir 'email'
             user_data = user_manager.find_user_by_id(user_id)
             if user_data:
                 # Carregar as permissões do usuário e anexar ao objeto User
                 user_permissions = user_manager.get_user_permissions(user_id)
-                # Passamos o user_permissions como uma lista de nomes de módulos
-                return User(user_data['id'], user_data['username'], user_data['role'], user_permissions)
+                # ALTERAÇÃO: Passando user_data['email'] para o construtor do User
+                return User(user_data['id'], user_data['username'], user_data['role'], user_data.get('email'), user_permissions)
         return None
     except mysql.connector.Error as e:
         print(f"Erro ao carregar usuário: {e}")
@@ -87,9 +91,10 @@ def login():
                 user_record = user_manager.authenticate_user(username, password) # Passa a senha em texto puro para autenticação
                 
                 if user_record:
-                    # Ao logar, carregamos o user_permissions para o objeto User
+                    # Ao logar, carregamos o user_permissions e o email para o objeto User
                     user_permissions = user_manager.get_user_permissions(user_record['id'])
-                    user = User(user_record['id'], user_record['username'], user_record['role'], user_permissions)
+                    # ALTERAÇÃO: Passando user_record['email'] para o construtor do User
+                    user = User(user_record['id'], user_record['username'], user_record['role'], user_record.get('email'), user_permissions)
                     login_user(user)
                     flash('Login bem-sucedido!', 'success')
                     return redirect(url_for('welcome'))
@@ -114,9 +119,14 @@ def welcome():
         with DatabaseManager(**db_config) as db_base:
             user_manager = UserManager(db_base)
             current_user.permissions = user_manager.get_user_permissions(current_user.id)
+            # NOVO: Recarrega o email para garantir que current_user esteja atualizado
+            updated_user_data = user_manager.find_user_by_id(current_user.id)
+            if updated_user_data:
+                current_user.email = updated_user_data.get('email')
     except Exception as e:
-        print(f"Erro ao carregar permissões para current_user em welcome: {e}")
+        print(f"Erro ao carregar permissões e/ou email para current_user em welcome: {e}")
         current_user.permissions = [] # Garante que seja uma lista vazia em caso de erro
+        current_user.email = None # Garante que seja None em caso de erro
 
     flash(f"Bem-vindo(a) ao sistema LUMOB, {current_user.username}!", "info")
     
@@ -184,8 +194,9 @@ def users_module():
     try:
         with DatabaseManager(**db_config) as db_base:
             user_manager = UserManager(db_base)
-            users = user_manager.get_all_users() # Obter todos os usuários
-            return render_template('users.html', users=users, user=current_user)
+            users = user_manager.get_all_users() # Obter todos os usuários (agora com email)
+            # CORREÇÃO: Nome do template de 'users.html' para 'users/users_module.html'
+            return render_template('users/users_module.html', users=users, user=current_user) 
     except mysql.connector.Error as e:
         flash(f"Erro de banco de dados ao carregar usuários: {e}", 'danger')
         return redirect(url_for('welcome'))
@@ -202,30 +213,49 @@ def add_user():
 
     if request.method == 'POST':
         username = request.form['username']
+        email = request.form['email'] # NOVO: Captura o campo email
         password = request.form['password']
         role = request.form['role']
         
         try:
             with DatabaseManager(**db_config) as db_base:
                 user_manager = UserManager(db_base)
+                
+                # NOVO: Validação de unicidade para username
                 if user_manager.find_user_by_username(username):
-                    flash(f"Usuário '{username}' já existe.", 'danger')
+                    flash(f"Usuário '{username}' já existe. Por favor, escolha outro.", 'danger')
+                    # Preserva os dados digitados para o usuário não ter que digitar tudo de novo
+                    available_roles = ['admin', 'rh', 'engenheiro', 'editor', 'seguranca']
+                    return render_template('users/add_user.html', user=current_user, available_roles=available_roles, 
+                                           old_username=username, old_email=email, old_role=role)
+                
+                # NOVO: Validação de unicidade para email
+                if user_manager.find_user_by_email(email):
+                    flash(f"Este e-mail '{email}' já está em uso. Por favor, escolha outro.", 'danger')
+                    # Preserva os dados digitados
+                    available_roles = ['admin', 'rh', 'engenheiro', 'editor', 'seguranca']
+                    return render_template('users/add_user.html', user=current_user, available_roles=available_roles, 
+                                           old_username=username, old_email=email, old_role=role)
+
+                # ALTERAÇÃO: Passa o email para o método add_user
+                new_user_id = user_manager.add_user(username, password, role, email) 
+                if new_user_id:
+                    flash(f"Usuário '{username}' adicionado com sucesso!", 'success')
+                    return redirect(url_for('users_module'))
                 else:
-                    new_user_id = user_manager.add_user(username, password, role)
-                    if new_user_id:
-                        flash(f"Usuário '{username}' adicionado com sucesso!", 'success')
-                        return redirect(url_for('users_module'))
-                    else:
-                        flash("Erro ao adicionar usuário.", 'danger')
+                    flash("Erro ao adicionar usuário.", 'danger')
         except mysql.connector.Error as e:
             flash(f"Erro de banco de dados: {e}", 'danger')
+            print(f"Erro de banco de dados: {e}")
         except Exception as e:
             flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+            print(f"Erro inesperado durante a adição de usuário: {e}")
 
     # Para a página GET, ou em caso de erro no POST
     # Pode-se passar a lista de roles disponíveis para o template
     available_roles = ['admin', 'rh', 'engenheiro', 'editor', 'seguranca']
-    return render_template('add_user.html', user=current_user, available_roles=available_roles)
+    # CORREÇÃO: Nome do template de 'add_user.html' para 'users/add_user.html'
+    return render_template('users/add_user.html', user=current_user, available_roles=available_roles)
 
 @app.route('/users/edit/<int:user_id>', methods=['GET', 'POST'])
 @login_required
@@ -237,6 +267,7 @@ def edit_user(user_id):
     try:
         with DatabaseManager(**db_config) as db_base:
             user_manager = UserManager(db_base)
+            # ALTERAÇÃO: user_to_edit agora inclui o campo 'email'
             user_to_edit = user_manager.find_user_by_id(user_id)
 
             if not user_to_edit:
@@ -245,22 +276,34 @@ def edit_user(user_id):
 
             if request.method == 'POST':
                 new_username = request.form.get('username')
+                new_email = request.form.get('email') # NOVO: Captura o campo email
                 new_password = request.form.get('password') # Pode ser vazio se não for alterada
                 new_role = request.form.get('role')
 
                 # Validação básica
-                if not new_username or not new_role:
-                    flash("Nome de usuário e Papel (Role) são obrigatórios.", 'danger')
-                    return render_template('edit_user.html', user_to_edit=user_to_edit, user=current_user, available_roles=['admin', 'rh', 'engenheiro', 'editor', 'seguranca'])
+                if not new_username or not new_role or not new_email: # NOVO: Email é obrigatório
+                    flash("Nome de usuário, Email e Papel (Role) são obrigatórios.", 'danger')
+                    # CORREÇÃO: Nome do template de 'edit_user.html' para 'users/edit_user.html'
+                    return render_template('users/edit_user.html', user_to_edit=user_to_edit, user=current_user, available_roles=['admin', 'rh', 'engenheiro', 'editor', 'seguranca'])
                 
-                # Se o username for alterado, verificar se o novo username já existe para outro usuário
+                # Validação de unicidade do username (se for alterado e já existir)
                 if new_username != user_to_edit['username']:
                     existing_user_with_new_name = user_manager.find_user_by_username(new_username)
                     if existing_user_with_new_name and existing_user_with_new_name['id'] != user_id:
                         flash(f"O nome de usuário '{new_username}' já está em uso por outro usuário.", 'danger')
-                        return render_template('edit_user.html', user_to_edit=user_to_edit, user=current_user, available_roles=['admin', 'rh', 'engenheiro', 'editor', 'seguranca'])
+                        # CORREÇÃO: Nome do template de 'edit_user.html' para 'users/edit_user.html'
+                        return render_template('users/edit_user.html', user_to_edit=user_to_edit, user=current_user, available_roles=['admin', 'rh', 'engenheiro', 'editor', 'seguranca'])
 
-                success = user_manager.update_user(user_id, new_username, new_password if new_password else None, new_role)
+                # NOVO: Validação de unicidade do email (se for alterado e já existir)
+                if new_email != user_to_edit['email']:
+                    existing_user_with_new_email = user_manager.find_user_by_email(new_email)
+                    if existing_user_with_new_email and existing_user_with_new_email['id'] != user_id:
+                        flash(f"O e-mail '{new_email}' já está em uso por outro usuário.", 'danger')
+                        # CORREÇÃO: Nome do template de 'edit_user.html' para 'users/edit_user.html'
+                        return render_template('users/edit_user.html', user_to_edit=user_to_edit, user=current_user, available_roles=['admin', 'rh', 'engenheiro', 'editor', 'seguranca'])
+
+                # ALTERAÇÃO: Passa o new_email para o método update_user
+                success = user_manager.update_user(user_id, new_username, new_password if new_password else None, new_role, new_email)
                 if success:
                     flash(f"Usuário '{user_to_edit['username']}' atualizado com sucesso!", 'success')
                     return redirect(url_for('users_module'))
@@ -269,7 +312,8 @@ def edit_user(user_id):
             
             # GET request
             available_roles = ['admin', 'rh', 'engenheiro', 'editor', 'seguranca']
-            return render_template('edit_user.html', user_to_edit=user_to_edit, user=current_user, available_roles=available_roles)
+            # CORREÇÃO: Nome do template de 'edit_user.html' para 'users/edit_user.html'
+            return render_template('users/edit_user.html', user_to_edit=user_to_edit, user=current_user, available_roles=available_roles)
 
     except mysql.connector.Error as e:
         flash(f"Erro de banco de dados: {e}", 'danger')
@@ -348,6 +392,7 @@ def manage_user_permissions(user_id):
     try:
         with DatabaseManager(**db_config) as db_base:
             user_manager = UserManager(db_base)
+            # user_to_manage agora inclui o campo 'email'
             user_to_manage = user_manager.find_user_by_id(user_id)
 
             if not user_to_manage:
@@ -357,12 +402,12 @@ def manage_user_permissions(user_id):
             # Admins sempre têm acesso total, suas permissões não devem ser editáveis aqui
             if user_to_manage['role'] == 'admin':
                 flash('As permissões de um administrador são totais por padrão e não podem ser gerenciadas individualmente.', 'info')
-                # Renderiza a página, mas com a mensagem informativa e desabilitada
-                return render_template('manage_permissions.html', 
-                                   user_to_manage=user_to_manage,
-                                   all_modules=[], # Nenhum módulo para selecionar
-                                   current_permissions_ids=[], # Nenhuma permissão individual
-                                   user=current_user)
+                # CORREÇÃO: Nome do template de 'manage_permissions.html' para 'users/manage_permissions.html'
+                return render_template('users/manage_permissions.html', 
+                                       user_to_manage=user_to_manage,
+                                       all_modules=[], # Nenhum módulo para selecionar
+                                       current_permissions_ids=[], # Nenhuma permissão individual
+                                       user=current_user)
 
             all_modules = user_manager.get_all_modules()
             current_permissions_ids = user_manager.get_user_module_permissions(user_id)
@@ -385,7 +430,8 @@ def manage_user_permissions(user_id):
                     flash("Erro ao atualizar permissões.", 'danger')
 
             # GET request
-            return render_template('manage_permissions.html', 
+            # CORREÇÃO: Nome do template de 'manage_permissions.html' para 'users/manage_permissions.html'
+            return render_template('users/manage_permissions.html', 
                                    user_to_manage=user_to_manage,
                                    all_modules=all_modules,
                                    current_permissions_ids=current_permissions_ids,

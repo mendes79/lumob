@@ -11,7 +11,8 @@
         h1 { text-align: center; color: #0056b3; margin-bottom: 20px; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"], input[type="password"], select {
+        /* NOVO: Adicionado input[type="email"] ao estilo */
+        input[type="text"], input[type="email"], input[type="password"], select {
             width: calc(100% - 22px);
             padding: 10px;
             border: 1px solid #ddd;
@@ -51,6 +52,10 @@
             <div class="form-group">
                 <label for="username">Nome de Usuário:</label>
                 <input type="text" id="username" name="username" value="{{ user_to_edit.username }}" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" value="{{ user_to_edit.email }}" required>
             </div>
             <div class="form-group">
                 <label for="password">Nova Senha (deixe em branco para não alterar):</label>

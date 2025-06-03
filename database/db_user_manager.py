@@ -1,4 +1,5 @@
 # database/db_user_manager.py
+# rev01 - alterações para tratar a adição do campo email na tabela usuarios
 import bcrypt
 from passlib.context import CryptContext
 
@@ -11,23 +12,38 @@ class UserManager:
         self.db = db_manager
 
     def find_user_by_id(self, user_id):
-        query = "SELECT id, username, password, role FROM usuarios WHERE id = %s"
+        """
+        Retorna um registro de usuário pelo ID, incluindo o email.
+        """
+        query = "SELECT id, username, password, role, email FROM usuarios WHERE id = %s"
         result = self.db.execute_query(query, (user_id,), fetch_results=True)
         return result[0] if result else None
 
     def find_user_by_username(self, username):
-        query = "SELECT id, username, password, role FROM usuarios WHERE username = %s"
+        """
+        Retorna um registro de usuário pelo nome de usuário, incluindo o email.
+        """
+        query = "SELECT id, username, password, role, email FROM usuarios WHERE username = %s"
         result = self.db.execute_query(query, (username,), fetch_results=True)
+        return result[0] if result else None
+
+    def find_user_by_email(self, email):
+        """
+        NOVO MÉTODO: Retorna um registro de usuário pelo email.
+        """
+        query = "SELECT id, username, password, role, email FROM usuarios WHERE email = %s"
+        result = self.db.execute_query(query, (email,), fetch_results=True)
         return result[0] if result else None
 
     def authenticate_user(self, username, plain_password):
         user_record = self.find_user_by_username(username)
         if user_record:
             try:
+                # Usa pwd_context para verificar a senha
                 if pwd_context.verify(plain_password, user_record['password']):
                     return user_record
             except ValueError as e:
-                # print(f"Erro ao verificar senha (formato inválido?): {e}") # Remover em produção
+                # Erro ao verificar senha (formato inválido?): {e}
                 return None
         return None
 
@@ -56,41 +72,51 @@ class UserManager:
         result = self.db.execute_query(query, (user_id,), fetch_results=True)
         return [row['Nome_Modulo'] for row in result] if result else []
 
-    # --- NOVOS MÉTODOS PARA O MÓDULO DE USUÁRIOS ---
+    # --- MÉTODOS PARA O MÓDULO DE USUÁRIOS ---
 
     def get_all_users(self):
-        """Retorna todos os usuários com seus IDs, usernames e roles."""
-        query = "SELECT id, username, role FROM usuarios ORDER BY username"
+        """
+        Retorna todos os usuários com seus IDs, usernames, emails e roles.
+        """
+        query = "SELECT id, username, email, role FROM usuarios ORDER BY username"
         return self.db.execute_query(query, fetch_results=True)
 
-    def add_user(self, username, plain_password, role):
-        """Adiciona um novo usuário ao banco de dados."""
+    def add_user(self, username, plain_password, role, email):
+        """
+        Adiciona um novo usuário ao banco de dados, incluindo o email.
+        """
         hashed_password = pwd_context.hash(plain_password)
-        query = "INSERT INTO usuarios (username, password, role) VALUES (%s, %s, %s)"
-        success = self.db.execute_query(query, (username, hashed_password, role), fetch_results=False)
+        query = "INSERT INTO usuarios (username, password, role, email) VALUES (%s, %s, %s, %s)"
+        success = self.db.execute_query(query, (username, hashed_password, role, email), fetch_results=False)
         if success:
             # Tenta retornar o ID do usuário recém-criado, buscando-o
-            user_data = self.find_user_by_username(username)
+            user_data = self.find_user_by_username(username) # Ou find_user_by_email(email)
             return user_data['id'] if user_data else None
         return None
 
-    def update_user(self, user_id, new_username=None, new_password=None, new_role=None):
-        """Atualiza o username, senha e/ou role de um usuário."""
+    def update_user(self, user_id, new_username=None, new_password=None, new_role=None, new_email=None):
+        """
+        Atualiza o username, senha, role e/ou email de um usuário.
+        """
         updates = []
         params = []
 
-        if new_username:
+        if new_username is not None: # Verifica se foi fornecido, pode ser uma string vazia
             updates.append("username = %s")
             params.append(new_username)
         
-        if new_password:
+        if new_password is not None:
             hashed_password = pwd_context.hash(new_password)
             updates.append("password = %s")
             params.append(hashed_password)
         
-        if new_role:
+        if new_role is not None:
             updates.append("role = %s")
             params.append(new_role)
+
+        if new_email is not None: # Adiciona o campo email
+            updates.append("email = %s")
+            params.append(new_email)
 
         if not updates: # Se não há nada para atualizar
             return False

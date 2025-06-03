@@ -36,6 +36,7 @@
         font-weight: bold;
       }
       input[type="text"],
+      input[type="email"], /* NOVO: Estilo para input de email */
       input[type="password"],
       select {
         width: calc(100% - 22px); /* Ajuste para o padding */
@@ -97,7 +98,23 @@
       <form method="POST">
         <div class="form-group">
           <label for="username">Nome de Usuário:</label>
-          <input type="text" id="username" name="username" required />
+          <input
+            type="text"
+            id="username"
+            name="username"
+            value="{{ old_username | default('') }}"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="email">Email:</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value="{{ old_email | default('') }}"
+            required
+          />
         </div>
         <div class="form-group">
           <label for="password">Senha:</label>
@@ -107,7 +124,9 @@
           <label for="role">Papel (Role):</label>
           <select id="role" name="role" required>
             {% for r in available_roles %}
-            <option value="{{ r }}">{{ r | capitalize }}</option>
+            <option value="{{ r }}" {% if r == old_role %} selected {% endif %}>
+              {{ r | capitalize }}
+            </option>
             {% endfor %}
           </select>
         </div>
