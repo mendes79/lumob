@@ -1,0 +1,36 @@
+// script_welcome.js
+document.addEventListener("DOMContentLoaded", function () {
+  const body = document.body;
+  const themeToggleBtn = document.getElementById("themeToggle");
+
+  function loadTheme() {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+      body.classList.add(savedTheme);
+    } else {
+      body.classList.add("light-mode");
+    }
+  }
+
+  function saveTheme(theme) {
+    localStorage.setItem("theme", theme);
+  }
+
+  loadTheme();
+
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener("click", function () {
+      if (body.classList.contains("light-mode")) {
+        body.classList.remove("light-mode");
+        body.classList.add("dark-mode");
+        saveTheme("dark-mode");
+      } else {
+        body.classList.remove("dark-mode");
+        body.classList.add("light-mode");
+        saveTheme("light-mode");
+      }
+    });
+  } else {
+    console.error("Elemento themeToggle não encontrado em welcome.html!");
+  }
+});

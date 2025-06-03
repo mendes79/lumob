@@ -1,0 +1,383 @@
+/* style.css - LUMOB Login Page */
+
+/* Estilos Globais e Reset Básico */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  min-height: 100vh;
+  background-color: black; /* Fundo padrão preto para o modo escuro inicial */
+  color: white; /* Texto padrão branco para o modo escuro inicial */
+  transition: background-color 0.5s ease, color 0.5s ease;
+  overflow: hidden; /* Evita barras de rolagem indesejadas */
+  box-sizing: border-box; /* Aplica border-box globalmente */
+}
+
+/* Garante que todos os elementos respeitem box-sizing - REFORÇADO */
+*,
+*::before,
+*::after {
+  box-sizing: border-box !important; /* Adiciona !important para garantir a aplicação */
+}
+
+/* Modo Claro (ativado via JS adicionando a classe ao body) */
+body.light-mode {
+  background-color: white;
+  color: black;
+}
+
+/* Container principal que ocupa a tela toda */
+.main-container {
+  width: 100vw; /* Ocupa 100% da largura da viewport */
+  height: 100vh; /* Ocupa 100% da altura da viewport */
+  position: relative; /* Base para elementos posicionados absolutamente */
+  overflow: hidden; /* Garante que nada transborde */
+}
+
+/* Imagem de Fundo (FAIXA HORIZONTAL 2/3 DA TELA, CENTRALIZADA) */
+.image-band {
+  width: 100%;
+  height: calc(100vh * 2 / 3); /* 2/3 da altura da viewport */
+  background-image: url("../img/landscape-construction.jpg"); /* Verifique o caminho! */
+  background-size: cover; /* Garante que a imagem cubra toda a área */
+  background-position: center center; /* Centraliza a imagem */
+  position: absolute;
+  top: 50%; /* Inicia no meio da altura */
+  left: 0;
+  transform: translateY(-50%); /* Ajusta para centralizar verticalmente */
+  z-index: 1; /* Fica no fundo */
+}
+
+/* Estilo para a palavra "lumob" */
+.lumob-text-container {
+  position: absolute;
+  top: 50%; /* Posição inicial no meio da tela (e da faixa) */
+  left: 50%;
+  transform: translate(-50%, -50%); /* Centraliza exato */
+  z-index: 5; /* Acima da imagem */
+  pointer-events: none; /* Permite cliques passarem por ele */
+}
+
+.lumob-word {
+  font-weight: bold; /* Manter bold para o efeito inicial, mas JS vai controlar */
+  margin: 0;
+  padding: 0;
+}
+
+/* Botão de Tema (Lâmpada - canto superior ESQUERDO) */
+.theme-toggle {
+  position: absolute;
+  top: 20px;
+  left: 20px; /* AGORA NO CANTO SUPERIOR ESQUERDO */
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  background-image: url("../img/lightbulb-icon.png"); /* Verifique o caminho! */
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  z-index: 10; /* Acima da imagem */
+  transition: filter 0.5s ease;
+}
+
+/* Modo escuro (lightbulb fica branco) */
+body.dark-mode .theme-toggle {
+  filter: invert(100%); /* Inverte 100% das cores (preto vira branco) */
+}
+
+/* Modo claro (lightbulb fica preto) */
+body.light-mode .theme-toggle {
+  filter: none; /* Sem inversão, volta ao normal (ícone preto) */
+}
+
+/* Botão "login" (canto superior DIREITO) */
+.login-button {
+  position: absolute;
+  top: 80px; /* Abaixo do theme-toggle, que agora está à esquerda */
+  right: 20px;
+  padding: 10px 20px;
+  font-size: 1.2em;
+  font-weight: bold;
+  background-color: white; /* Cor padrão para light-mode */
+  color: black;
+  border: 2px solid black;
+  border-radius: 50px;
+  cursor: pointer;
+  z-index: 10; /* Acima da imagem */
+  transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+body.dark-mode .login-button {
+  background-color: black;
+  color: white;
+  border-color: white;
+}
+
+/* Animação de hover do botão de login RESTAURADA */
+.login-button:hover {
+  background-color: #007bff; /* Azul no hover */
+  color: white;
+  border-color: #007bff;
+}
+
+/* Pop-up de Login Overlay (fundo transparente) */
+.login-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(
+    0,
+    0,
+    0,
+    0.8
+  ); /* Fundo semi-transparente (80% de opacidade) */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  visibility: hidden; /* Escondido por padrão */
+  opacity: 0; /* Transparência para transição suave */
+  transition: visibility 0.3s ease, opacity 0.3s ease;
+}
+
+.login-popup-overlay.active {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Pop-up de Login (a caixa de login - MAIS COMPACTO E COM EFEITO FUMÊ) */
+.login-popup {
+  background-color: rgba(
+    255,
+    255,
+    255,
+    0.1
+  ); /* Fundo branco com pouca opacidade para efeito fumê */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px 10px; /* Padding geral AINDA MAIS reduzido */
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 250px; /* Largura MÁXIMA da caixa do pop-up. */
+  transform: scale(0.9);
+  transition: transform 0.3s ease;
+  color: white; /* Cor padrão do texto no pop-up para visibilidade sobre fundo fumê */
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center; /* Centraliza os filhos horizontalmente */
+  /* Removido `gap: 0` para evitar interferências em elementos internos com display flex */
+
+  /* Reset interno para elementos HTML comuns no pop-up, de forma mais específica e rígida */
+  h2,
+  .input-group,
+  .button-group {
+    margin: 0;
+    padding: 0;
+    line-height: 1; /* Linha única para compactação */
+    width: 100%; /* Garante que ocupem a largura total do .login-popup */
+    flex-shrink: 0; /* Impede que esses elementos encolham */
+    box-sizing: border-box; /* Garante que padding e border sejam incluídos na largura */
+  }
+}
+
+.login-popup-overlay.active .login-popup {
+  transform: scale(1);
+}
+
+/* Ajustes de cor do texto do pop-up para light/dark mode */
+body.dark-mode .login-popup {
+  background-color: rgba(
+    51,
+    51,
+    51,
+    0.1
+  ); /* Fundo escuro com pouca opacidade para efeito fumê */
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  color: white; /* Texto branco no pop-up escuro */
+}
+
+body.light-mode .login-popup {
+  background-color: rgba(
+    255,
+    255,
+    255,
+    0.1
+  ); /* Fundo branco com pouca opacidade para efeito fumê */
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: black; /* Texto preto no pop-up claro */
+}
+
+/* Título do Pop-up (LOGIN) */
+.login-popup h2 {
+  margin-top: 15px; /* Mantém o espaço que você adicionou acima do "Login" */
+  margin-bottom: 35px; /* Pequena margem abaixo do título */
+  font-size: 1em; /* Font size menor */
+  font-weight: normal; /* Sem negrito */
+  text-align: center; /* Centraliza o texto "Login" */
+  line-height: 1.2; /* Restaura um pouco de altura de linha para legibilidade */
+}
+
+/* Grupos de input (USUARIO e SENHA) - AGORA COM LABEL E INPUT LADO A LADO E BEM COMPACTOS */
+.login-popup .input-group {
+  margin-bottom: 8px; /* Mantém o espaçamento vertical entre os grupos */
+  display: flex; /* Mantém como flexbox para label e input na mesma linha */
+  align-items: center; /* Alinha label e input verticalmente no centro da linha */
+  justify-content: flex-start; /* Alinha todo o grupo (label + input) à esquerda */
+  /* A largura e box-sizing já são gerenciados pela regra geral do .login-popup */
+  /* REMOVIDO: padding adicional para este elemento, já que width: 100% + padding 0 é no pai */
+}
+
+/* Estilos para os labels dentro dos grupos de input */
+.login-popup label {
+  flex-shrink: 0; /* Impede que o label encolha */
+  width: 60px; /* Largura FIXA para o label */
+  text-align: right; /* Alinha o texto do label à direita para ficar próximo ao input */
+  font-weight: normal; /* Sem negrito */
+  font-size: 0.7em; /* Font size menor */
+  color: inherit; /* Herda a cor do .login-popup */
+  margin-right: 5px; /* Espaço entre o label e o input */
+}
+
+/* Estilos para os campos de entrada de texto */
+.login-popup input[type="text"],
+.login-popup input[type="password"] {
+  flex-grow: 1; /* Permite que o input preencha o espaço restante */
+  width: auto; /* Deixa flex-grow e max-width controlarem */
+  /*
+    Cálculo do max-width para o input (baseado em .login-popup max-width: 250px):
+    - Largura MÁXIMA do .login-popup: 250px [cite: 1]
+    - Padding horizontal TOTAL do .login-popup: 10px (esquerda) + 10px (direita) = 20px [cite: 1]
+    - Border horizontal TOTAL do .login-popup: 1px (esquerda) + 1px (direita) = 2px [cite: 1]
+    - Largura interna DISPONÍVEL no .login-popup para os filhos: 250px - 20px - 2px = 228px
+
+    - Largura do label (.login-popup label): 60px (width) + 5px (margin-right) = 65px [cite: 1]
+
+    - Largura MÁXIMA para o input: 228px (disponível) - 65px (label e seu margin) = 163px
+  */
+  max-width: 163px; /* Limita a largura do input para que não transborde */
+
+  box-sizing: border-box !important; /* ABSOLUTAMENTE ESSENCIAL - Garante que padding e border sejam incluídos na largura */
+  min-width: 80px; /* Garante que o input não fique muito pequeno */
+  padding: 3px 5px;
+  border: 1px solid rgba(204, 204, 204, 0.5);
+  border-radius: 3px;
+  font-size: 0.8em;
+  height: 22px;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: black;
+}
+
+/* Estilos para o grupo de botões */
+.login-popup .button-group {
+  margin-top: 20px; /* Espaço acima do grupo de botões */
+  display: flex;
+  flex-direction: column; /* Coloca os botões um abaixo do outro */
+  align-items: center; /* Centraliza os botões horizontalmente */
+  gap: 10px; /* Espaço vertical entre os botões */
+  /* Largura e box-sizing já são gerenciados pela regra geral do .login-popup */
+  /* REMOVIDO: padding adicional para este elemento, já que width: 100% + padding 0 é no pai */
+}
+
+/* Estilos gerais dos botões (Entrar e Cancelar) */
+.login-popup button {
+  width: 100%; /* Ocupa a largura total do button-group (que é 100% do .login-popup interno) */
+  max-width: 120px; /* Limita a largura máxima do botão */
+  box-sizing: border-box !important; /* Garante que padding e border sejam incluídos */
+  padding: 5px 8px;
+  height: 28px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8em;
+  font-weight: normal;
+  white-space: nowrap; /* Impede que o texto do botão quebre linha */
+  line-height: 1; /* Ajusta a altura da linha para centralizar o texto */
+  overflow: hidden; /* Esconde o texto que excede o limite */
+  text-overflow: ellipsis; /* Adiciona "..." se o texto for muito longo */
+  transition: background-color 0.3s ease, color 0.3s ease;
+  color: white; /* Cor do texto do botão */
+  display: flex; /* Habilita flexbox para centralizar o texto interno */
+  justify-content: center; /* Centraliza horizontalmente o texto */
+  align-items: center; /* Centraliza verticalmente o texto */
+  text-align: center; /* Reforça o alinhamento de texto dentro do botão */
+}
+
+.login-popup button[type="submit"] {
+  background-color: rgba(
+    0,
+    123,
+    255,
+    0.7
+  ); /* Azul com opacidade (opaco/fosco) */
+}
+
+.login-popup button[type="submit"]:hover {
+  background-color: rgba(0, 86, 179, 0.9); /* Azul mais sólido no hover */
+}
+
+.login-popup .close-popup {
+  background-color: rgba(
+    220,
+    53,
+    69,
+    0.7
+  ); /* VERMELHO com opacidade (opaco/fosco) */
+}
+
+.login-popup .close-popup:hover {
+  background-color: rgba(193, 35, 51, 0.9); /* Vermelho mais sólido no hover */
+}
+
+/* Estilos para Mensagens Flash do Flask */
+.flash-messages {
+  list-style: none;
+  padding: 0;
+  margin: 15px 0;
+  text-align: center;
+}
+.flash-messages li {
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  color: white;
+  font-size: 0.9em;
+  display: block; /* Garante que a lista seja um bloco */
+  width: 100%; /* Ocupa a largura total */
+  box-sizing: border-box; /* Para que padding não cause transbordo */
+}
+
+/* Estilos para categorias de mensagens flash */
+.flash-messages li.success {
+  background-color: rgba(40, 167, 69, 0.8);
+}
+.flash-messages li.error,
+.flash-messages li.danger {
+  background-color: rgba(220, 53, 69, 0.8);
+}
+.flash-messages li.warning {
+  background-color: rgba(255, 193, 7, 0.8);
+}
+.flash-messages li.info {
+  background-color: rgba(23, 162, 184, 0.8);
+}
+
+/* Estilos responsivos (exemplo, ajuste conforme necessário) */
+@media (max-width: 400px) {
+  .login-popup {
+    width: 95%; /* Ocupa mais largura em telas muito pequenas */
+  }
+
+  .login-popup h2 {
+    font-size: 1.3em;
+  }
+}

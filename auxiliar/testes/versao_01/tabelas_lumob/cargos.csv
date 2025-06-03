@@ -1,0 +1,8 @@
+ID_Cargos,Nome_Cargo,Descricao_Cargo,Cbo,Data_Criacao,Data_Modificacao
+1,Engenheiro Civil,Profissional que projeta e gerencia obras civis.,2142-10,2025-05-28 11:54:02,2025-05-29 16:41:38
+2,Mestre de Obras,Lidera equipes no canteiro de obras e supervisiona a execução diária.,7102-05,2025-05-28 11:54:02,2025-05-28 11:54:02
+3,Pedreiro,"Executa trabalhos de alvenaria, concreto e acabamento.",7152-05,2025-05-28 11:54:02,2025-05-28 11:54:02
+4,Auxiliar Administrativo,Presta suporte em tarefas de escritório e organização.,4110-05,2025-05-28 11:54:02,2025-05-28 11:54:02
+5,Diretor de Obras,Responsável pela gestão estratégica de todas as obras da empresa.,1226-05,2025-05-28 11:54:02,2025-05-28 11:54:02
+6,Supervisor de Equipe,Supervisiona equipes de trabalho.,1234-78,2025-05-28 15:36:09,2025-05-28 15:40:57
+8,Analista de Dados,"Profissional que coleta, processa e analisa dados.",2141-15,2025-05-29 16:19:20,2025-05-29 16:19:20

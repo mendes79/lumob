@@ -1,0 +1,6 @@
+ID_Funcionario_Documento,Matricula_Funcionario,Tipo_Documento,Numero_Documento,Data_Emissao,Orgao_Emissor,Uf_Emissor,Data_Vencimento,Observacoes,Data_Criacao,Data_Modificacao
+1,MATR001,RG,109876543,2010-01-15,SSP,MG,2035-01-15,RG principal de Ana,2025-05-28 17:00:20,2025-05-28 17:01:53
+2,MATR001,CPF,98765432100,2000-05-20,,,,CPF de Ana,2025-05-28 17:00:20,2025-05-28 17:00:20
+3,MATR002,CNH,1122334455,2018-03-10,DETRAN,SP,,"CNH de Bruno, Categoria B",2025-05-28 17:00:20,2025-05-28 17:00:20
+6,001ABC,RG,MG-12345678,2010-03-01,SSP,MG,,Documento com foto recente.,2025-05-29 16:19:20,2025-05-29 16:19:20
+7,002DEF,CPF,987.654.321-00,2005-07-20,RFB,SP,,Validade até 2030.,2025-05-29 16:41:40,2025-05-29 16:41:40

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+   
+  <head>
+       
+    <meta charset="UTF-8" />
+       
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+       
+    <title>LUMOB - Login</title>
+       
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+       
+    <script
+      src="{{ url_for('static', filename='js/script.js') }}"
+      defer
+    ></script>
+
+     
+  </head>
+   
+  <body class="dark-mode">
+       
+    <div class="main-container">
+           
+      <div class="lumob-text-container">
+               
+        <h1 class="lumob-word">lumob</h1>
+             
+      </div>
+
+           
+      <div class="image-band"></div>
+
+            <button class="login-button" id="openLoginPopup">login</button>
+
+           
+      <div class="login-popup-overlay" id="loginPopupOverlay">
+               
+        <div class="login-popup">
+                   
+          <h2>Login</h2>
+
+          {% with messages = get_flashed_messages(with_categories=true) %} {% if
+          messages %}
+          <ul class="flash-messages">
+            {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %} {% endwith %}          
+          <form action="{{ url_for('login') }}" method="POST">
+                       
+            <div class="input-group">
+              <label for="username">Usuário:</label
+              ><input type="text" id="username" name="username" required />
+            </div>
+
+            <div class="input-group">
+              <label for="password">Senha:</label
+              ><input type="password" id="password" name="password" required />
+            </div>
+                        <button type="submit">Entrar</button>            
+            <button type="button" class="close-popup" id="closeLoginPopup">
+                            Cancelar            
+            </button>
+                     
+          </form>
+                 
+        </div>
+             
+      </div>
+
+            <button class="theme-toggle" id="themeToggle"></button>    
+    </div>
+     
+  </body>
+</html>

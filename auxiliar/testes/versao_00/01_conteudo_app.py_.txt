@@ -1,0 +1,148 @@
+# app.py
+
+# Importações necessárias
+from flask import Flask, render_template, redirect, url_for, request, flash, session
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+import mysql.connector # Para a classe Error do MySQL
+from database.db_base import DatabaseManager
+from database.db_user_manager import UserManager
+from database.db_hr_manager import HrManager # Para o módulo de RH
+
+app = Flask(__name__)
+
+# --- Configurações do Flask ---
+# **IMPORANTE: TROQUE ESTA CHAVE POR UMA STRING LONGA E ALEATÓRIA PARA PRODUÇÃO**
+app.config['SECRET_KEY'] = '0ca1a44e0ae3dbb65bd073ccdc37d90d285064c4abec94e9'
+# Exemplo de como gerar uma: import os; os.urandom(24).hex()
+
+# Configurações do Banco de Dados
+db_config = {
+    "host": "localhost",
+    "database": "lumob",
+    "user": "mendes",
+    "password": "Galo13BH79&*" # Sua senha real
+}
+
+# --- Inicialização do Flask-Login ---
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login' # Se o usuário tentar acessar uma rota @login_required sem estar logado, ele será redirecionado para 'login'
+
+# --- Classe User para Flask-Login ---
+# Esta classe adapta seu usuário do banco de dados para o Flask-Login
+class User(UserMixin):
+    def __init__(self, id, username, role):
+        self.id = id
+        self.username = username
+        self.role = role # Adiciona o papel do usuário
+
+    def get_id(self):
+        # O Flask-Login armazena isso na sessão. Deve ser um string.
+        return str(self.id)
+
+# --- user_loader para Flask-Login ---
+# Esta função é chamada pelo Flask-Login para recarregar o objeto User a partir do ID armazenado na sessão.
+@login_manager.user_loader
+def load_user(user_id):
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            user_manager = UserManager(db_base)
+            user_data = user_manager.get_user_by_id(user_id) # Usamos o novo método by_id
+            if user_data:
+                return User(user_data['id'], user_data['username'], user_data['role'])
+        return None
+    except mysql.connector.Error as e:
+        print(f"Erro no user_loader ao carregar usuário do banco de dados: {e}")
+        return None
+    except Exception as e:
+        print(f"Erro inesperado no user_loader: {e}")
+        return None
+
+# --- Rotas da Aplicação ---
+
+# Rota para a página inicial (acessível sem login)
+@app.route('/')
+def index():
+    # Pode ser uma página de "landing page" ou simplesmente redirecionar para login/dashboard
+    if current_user.is_authenticated:
+        return redirect(url_for('welcome')) # Se já logado, vai direto para o dashboard
+    return redirect(url_for('login')) # Se não logado, vai para a tela de login
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('welcome')) # Se já logado, redireciona para o dashboard
+
+    if request.method == 'POST':
+        username = request.form.get('username') # Usar .get() para evitar KeyError
+        password = request.form.get('password')
+
+        if not username or not password:
+            flash('Por favor, preencha todos os campos.', 'danger')
+            return render_template('login.html')
+
+        try:
+            with DatabaseManager(**db_config) as db_base:
+                user_manager = UserManager(db_base)
+                user_data = user_manager.get_user_by_username(username)
+
+                if user_data and user_manager.check_password(user_data['password'], password):
+                    # Autenticação bem-sucedida
+                    user = User(user_data['id'], user_data['username'], user_data['role'])
+                    login_user(user) # Loga o usuário com Flask-Login
+
+                    flash('Login realizado com sucesso!', 'success')
+                    
+                    # Redireciona para a página 'next' se houver uma (ex: URL protegida que tentou acessar)
+                    next_page = request.args.get('next')
+                    return redirect(next_page or url_for('welcome'))
+                else:
+                    flash('Nome de usuário ou senha inválidos.', 'danger') # 'danger' para mensagem de erro
+        except mysql.connector.Error as e:
+            flash(f"Erro de banco de dados ao tentar logar: {e}", 'danger')
+            print(f"Erro de banco de dados: {e}") # Para debug no console
+        except Exception as e:
+            flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+            print(f"Erro inesperado: {e}") # Para debug no console
+
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required # Garante que só usuários logados possam deslogar
+def logout():
+    logout_user() # Desloga o usuário da sessão Flask-Login
+    flash('Você foi desconectado.', 'info')
+    return redirect(url_for('login')) # Redireciona para a tela de login após o logout
+
+@app.route('/welcome')
+@login_required # Esta é a rota protegida para o dashboard/página de boas-vindas
+def welcome():
+    # current_user é fornecido pelo Flask-Login e contém o objeto User logado
+    # 'user' é o nome da variável que será usada no seu welcome.html
+    return render_template('welcome.html', user=current_user)
+
+# Exemplo de rota protegida por papel (role-based access control)
+@app.route('/hr_management')
+@login_required
+def hr_management():
+    # Apenas usuários com o papel 'admin' podem acessar esta página
+    if current_user.role != 'admin':
+        flash('Acesso negado. Apenas administradores podem acessar esta página.', 'warning')
+        return redirect(url_for('welcome')) # Redireciona para o dashboard se não tiver permissão
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            hr_manager = HrManager(db_base)
+            # Exemplo: buscar todos os funcionários
+            all_employees = hr_manager.buscar_funcionarios()
+        
+        return render_template('hr_management.html', employees=all_employees, user=current_user) # Passa 'user' para o template
+    except Exception as e:
+        flash(f"Erro ao carregar dados de RH: {e}", 'danger')
+        print(f"Erro ao carregar dados de RH: {e}")
+        return redirect(url_for('welcome'))
+
+
+if __name__ == '__main__':
+    app.run(debug=True) # Mantenha debug=True APENAS durante o desenvolvimento.
+                        # Desative em produção por questões de segurança.

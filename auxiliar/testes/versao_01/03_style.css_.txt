@@ -1,0 +1,335 @@
+/* style.css - LUMOB Login Page */
+
+/* Importação da fonte personalizada */
+@font-face {
+  font-family: "Moderna"; /* O nome da família da fonte que você usará no CSS */
+  src: url("../fonts/MODERNA_.TTF") format("truetype"); /* Nome do arquivo correto */
+  font-weight: normal; /* Define o peso padrão (regular) */
+  font-style: normal;
+}
+/* Se houver uma versão negrito separada, adicione outro @font-face aqui, por exemplo:
+@font-face {
+  font-family: 'Moderna';
+  src: url('../fonts/MODERNA_BOLD.TTF') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+*/
+
+/* Estilos Globais e Reset Básico */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif; /* Fonte padrão de fallback */
+  min-height: 100vh;
+  background-color: black; /* Fundo padrão preto para o modo escuro inicial */
+  color: white; /* Texto padrão branco para o modo escuro inicial */
+  transition: background-color 0.5s ease, color 0.5s ease;
+  overflow: hidden; /* Evita barras de rolagem indesejadas */
+  box-sizing: border-box; /* Aplica border-box globalmente */
+}
+
+/* Garante que todos os elementos respeitem box-sizing */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Modo Claro (ativado via JS adicionando a classe ao body) */
+body.light-mode {
+  background-color: white;
+  color: black;
+}
+
+/* Container principal que ocupa a tela toda */
+.main-container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Faixa de imagem */
+.image-band {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 60%; /* 2/3 da tela - ideia original é 66.67% */
+  transform: translateY(-50%);
+  background-image: url("../img/landscape-construction.jpg"); /* SEU CAMINHO E NOME CORRETOS */
+  background-size: cover;
+  background-position: center;
+  filter: grayscale(0.5); /* Efeito de cinza */
+  z-index: 1;
+}
+
+/* Estilos para o texto "lumob" - ESTADO INICIAL (CENTRO E INVISÍVEL) */
+.lumob-text-container {
+  position: absolute;
+  top: 50%; /* Centralizado verticalmente */
+  left: 50%; /* Centralizado horizontalmente */
+  transform: translate(-50%, -50%); /* Ajusta para centralização perfeita */
+  z-index: 5; /* Garante que esteja acima da imagem */
+  width: 85%; /* 85% da largura da tela, que é a largura da faixa da imagem */
+  text-align: center; /* Centraliza o texto "lumob" */
+  opacity: 1; /* Definimos a opacidade para 1, a invisibilidade virá da cor */
+  transition: all 0.7s ease-in-out; /* Adiciona transição para todas as propriedades */
+}
+
+.lumob-word {
+  font-family: "Moderna", Arial, sans-serif !important; /* Nova fonte */
+  font-size: 15vw; /* Tamanho da fonte relativo à largura da viewport. AJUSTE ESTE VALOR PARA O TAMANHO INICIAL. */
+  font-weight: bold; /* Negrito */
+  text-transform: lowercase; /* Caixa baixa */
+  line-height: 1; /* Garante que a linha não tenha espaçamento extra */
+  text-shadow: none !important; /* SEM SOMBRA/CONTORNO */
+  color: black; /* Cor padrão para dark-mode inicial, será sobrescrita pelo JS para invisibilidade */
+  transition: color 0.7s ease-in-out, font-size 0.7s ease-in-out; /* Transição suave para cor e tamanho */
+  max-width: 100%; /* Garante que o texto não "saia" do container de 85% */
+  overflow: hidden; /* Esconde qualquer parte do texto que exceder */
+  display: inline-block; /* Permite que max-width funcione corretamente */
+}
+
+/* ESTILOS PARA "lumob" QUANDO O POP-UP DE LOGIN ESTÁ ATIVO (ANIMAÇÃO) */
+body.login-popup-active .lumob-text-container {
+  top: 10%; /* Desloca para cima --> quanto menor mais alto */
+  left: 50%; /* Mantém centralizado horizontalmente */
+  transform: translate(-50%, -50%) scale(0.6); /* Diminui o tamanho (pode ajustar o 0.6) */
+  width: auto; /* Permite que a largura seja determinada pelo conteúdo diminuído */
+  padding: 0 20px; /* Adiciona um pouco de padding para espaçamento se for pequeno */
+}
+
+body.login-popup-active .lumob-word {
+  font-size: 5vw; /* Novo tamanho da fonte, menor (pode ajustar este valor) */
+  /* A cor será definida dinamicamente pelo JavaScript */
+}
+
+/* Cores do texto lumob na animação, dependendo do tema */
+body.login-popup-active.dark-mode .lumob-word {
+  color: white; /* No dark mode, lumob fica branco */
+}
+
+body.login-popup-active.light-mode .lumob-word {
+  color: black; /* No light mode, lumob fica preto */
+}
+
+/* Botão de Tema (Lâmpada - canto superior ESQUERDO) */
+.theme-toggle {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  background-image: url("../img/lightbulb-icon.png"); /* SEU CAMINHO ORIGINAL */
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  z-index: 10;
+  transition: filter 0.5s ease;
+}
+
+/* Modo escuro (lightbulb fica branco se o ícone original for preto) */
+body.dark-mode .theme-toggle {
+  filter: invert(100%);
+}
+
+/* Modo claro (lightbulb fica preto se o ícone original for preto) */
+body.light-mode .theme-toggle {
+  filter: none;
+}
+
+/* Botão de Login (login no canto superior direito) */
+.login-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 10px 20px;
+  font-size: 1.2em;
+  font-weight: bold;
+  background-color: rgba(0, 123, 255, 0.8);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  z-index: 10;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.login-button:hover {
+  background-color: rgba(0, 86, 179, 0.9);
+  transform: scale(1.05);
+}
+
+/* Pop-up de Login - Overlay */
+.login-popup-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  z-index: 20;
+}
+
+.login-popup-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Pop-up de Login - Conteúdo com EFEITO DE VIDRO FUMÊ */
+.login-popup {
+  background-color: rgba(255, 255, 255, 0.15);
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  color: white;
+  width: 90%;
+  max-width: 400px;
+  transform: translateY(-20px);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+
+  backdrop-filter: blur(10px) brightness(1.2);
+  -webkit-backdrop-filter: blur(10px) brightness(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Animação de entrada do pop-up */
+.login-popup-overlay.active .login-popup {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.login-popup h2 {
+  margin-top: 0;
+  color: white;
+}
+
+.login-popup .input-group {
+  margin-bottom: 15px;
+  text-align: left;
+}
+
+.login-popup label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: white;
+}
+
+.login-popup input[type="text"],
+.login-popup input[type="password"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+  font-size: 1em;
+  box-sizing: border-box;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.login-popup input[type="text"]::placeholder,
+.login-popup input[type="password"]::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Cores de borda e fundo do input em modo claro */
+body.light-mode .login-popup input[type="text"],
+body.light-mode .login-popup input[type="password"] {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: black;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+}
+
+body.light-mode .login-popup input[type="text"]::placeholder,
+body.light-mode .login-popup input[type="password"]::placeholder {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.login-popup .button-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+  gap: 10px;
+}
+
+.login-popup button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1em;
+  font-weight: bold;
+  cursor: pointer;
+  flex-grow: 1;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.login-popup button[type="submit"] {
+  background-color: rgba(0, 123, 255, 0.7);
+}
+
+.login-popup button[type="submit"]:hover {
+  background-color: rgba(0, 86, 179, 0.9);
+}
+
+.login-popup .close-popup {
+  background-color: rgba(220, 53, 69, 0.7);
+}
+
+.login-popup .close-popup:hover {
+  background-color: rgba(193, 35, 51, 0.9);
+}
+
+/* Estilos para Mensagens Flash do Flask */
+.flash-messages {
+  list-style: none;
+  padding: 0;
+  margin: 15px 0;
+  text-align: center;
+}
+.flash-messages li {
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  font-size: 0.9em;
+  font-weight: bold;
+}
+.flash-messages li.success {
+  background-color: rgba(212, 237, 218, 0.8);
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+.flash-messages li.danger {
+  background-color: rgba(248, 215, 218, 0.8);
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+.flash-messages li.info {
+  background-color: rgba(209, 236, 241, 0.8);
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}
+.flash-messages li.warning {
+  background-color: rgba(255, 243, 205, 0.8);
+  color: #856404;
+  border: 1px solid #ffeeba;
+}

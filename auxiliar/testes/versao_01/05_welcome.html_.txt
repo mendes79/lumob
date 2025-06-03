@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LUMOB - Bem-vindo!</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style_welcome.css') }}"
+    />
+    <script
+      src="{{ url_for('static', filename='js/script_welcome.js') }}"
+      defer
+    ></script>
+  </head>
+  <body class="light-mode">
+    <div class="main-container">
+      <button class="theme-toggle" id="themeToggle"></button>
+
+      <a href="{{ url_for('logout') }}" class="logout-button" id="logoutButton"
+        >Sair</a
+      >
+
+      <div class="modules-grid-container">
+        {% if user.role == 'admin' or user.role == 'rh' %}
+        <a
+          href="{{ url_for('pessoal_module') }}"
+          class="module-card module-colored"
+          style="background-image: url('{{ url_for('static', filename='img/pessoal_colorful.jpg') }}');"
+        >
+          <h2 class="module-title">Pessoal</h2>
+        </a>
+        {% else %}
+        <div
+          class="module-card module-grayscale"
+          style="background-image: url('{{ url_for('static', filename='img/pessoal_colorful.jpg') }}');"
+        >
+          <h2 class="module-title">Pessoal</h2>
+        </div>
+        {% endif %} {% if user.role == 'admin' or user.role == 'obras' %}
+        <a
+          href="{{ url_for('obras_module') }}"
+          class="module-card module-colored"
+          style="background-image: url('{{ url_for('static', filename='img/obras_colorful.jpg') }}');"
+        >
+          <h2 class="module-title">Obras</h2>
+        </a>
+        {% else %}
+        <div
+          class="module-card module-grayscale"
+          style="background-image: url('{{ url_for('static', filename='img/obras_colorful.jpg') }}');"
+        >
+          <h2 class="module-title">Obras</h2>
+        </div>
+        {% endif %} {% if user.role == 'admin' %}
+        <a
+          href="{{ url_for('users_module') }}"
+          class="module-card module-colored"
+          style="background-image: url('{{ url_for('static', filename='img/users_colorful.jpg') }}');"
+        >
+          <h2 class="module-title">Usuários</h2>
+        </a>
+        {% else %}
+        <div
+          class="module-card module-grayscale"
+          style="background-image: url('{{ url_for('static', filename='img/users_colorful.jpg') }}');"
+        >
+          <h2 class="module-title">Usuários</h2>
+        </div>
+        {% endif %} {% if user.role == 'admin' or user.role == 'seguranca' %}
+        <a
+          href="{{ url_for('seguranca_module') }}"
+          class="module-card module-colored"
+          style="background-image: url('{{ url_for('static', filename='img/seguranca_colorful.jpg') }}');"
+        >
+          <h2 class="module-title">Segurança</h2>
+        </a>
+        {% else %}
+        <div
+          class="module-card module-grayscale"
+          style="background-image: url('{{ url_for('static', filename='img/seguranca_colorful.jpg') }}');"
+        >
+          <h2 class="module-title">Segurança</h2>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </body>
+</html>

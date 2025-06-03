@@ -1,0 +1,93 @@
+document.addEventListener("DOMContentLoaded", function () {
+  const openLoginPopupBtn = document.getElementById("openLoginPopup");
+  const closeLoginPopupBtn = document.getElementById("closeLoginPopup");
+  const loginPopupOverlay = document.getElementById("loginPopupOverlay");
+  const lumobTextContainer = document.querySelector(".lumob-text-container");
+  const lumobWord = document.querySelector(".lumob-word");
+  const themeToggleBtn = document.getElementById("themeToggle");
+  const body = document.body;
+  const mainContainer = document.querySelector(".main-container"); // Seleciona o main-container
+
+  // --- Configurações Iniciais do Texto "lumob" ---
+  // Define a cor inicial do "lumob" para ser a mesma do background (invisível)
+  function setLumobInitialColor() {
+    if (body.classList.contains("light-mode")) {
+      lumobWord.style.color = "white"; // Corpo branco, lumob branco
+    } else {
+      // dark-mode (padrão)
+      lumobWord.style.color = "black"; // Corpo preto, lumob preto
+    }
+  }
+
+  // Garante que o texto lumob comece na posição e tamanho corretos (invisível)
+  // e com transição desabilitada para evitar "flash" no carregamento
+  lumobTextContainer.style.top = "50%";
+  lumobTextContainer.style.transform = "translate(-50%, -50%) scale(1)";
+  lumobTextContainer.style.fontSize = "8em"; // Tamanho inicial
+  lumobTextContainer.style.transition = "none"; // Desabilita transição para o estado inicial
+
+  setLumobInitialColor(); // Define a cor inicial
+
+  // Habilita transições após um pequeno atraso para que o estado inicial seja renderizado sem transição
+  setTimeout(() => {
+    lumobTextContainer.style.transition =
+      "top 0.5s ease, transform 0.5s ease, font-size 0.5s ease, color 0.5s ease";
+  }, 50); // Pequeno atraso (50ms)
+
+  // --- Funcionalidade do Pop-up de Login ---
+  openLoginPopupBtn.addEventListener("click", function () {
+    loginPopupOverlay.classList.add("active");
+    // mainContainer.classList.add("popup-active"); // Não é mais necessário para o JS
+
+    // Animação e cor do texto "lumob" ao abrir o pop-up
+    lumobTextContainer.style.top = "15%"; // Move para cima
+    lumobTextContainer.style.transform = "translate(-50%, -50%) scale(0.6)"; // Diminui o tamanho
+    lumobTextContainer.style.fontSize = "5em"; // Define um tamanho absoluto menor
+    lumobWord.style.color = "white"; // MUDANÇA: Sempre branco para contrastar com overlay escuro
+  });
+
+  closeLoginPopupBtn.addEventListener("click", function () {
+    loginPopupOverlay.classList.remove("active");
+    // mainContainer.classList.remove("popup-active"); // Não é mais necessário para o JS
+
+    // Restaura a posição, tamanho e cor do texto "lumob" ao fechar o pop-up
+    lumobTextContainer.style.top = "50%"; // Volta para o centro
+    lumobTextContainer.style.transform = "translate(-50%, -50%) scale(1)"; // Volta ao tamanho normal
+    lumobTextContainer.style.fontSize = "8em"; // Volta ao tamanho inicial
+    setLumobInitialColor(); // Volta a cor para ser a mesma do background (invisível)
+  });
+
+  // Fechar pop-up ao clicar fora (no overlay)
+  loginPopupOverlay.addEventListener("click", function (event) {
+    if (event.target === loginPopupOverlay) {
+      closeLoginPopupBtn.click();
+    }
+  });
+
+  // --- Funcionalidade de Troca de Tema (Dark/Light Mode) ---
+  themeToggleBtn.addEventListener("click", function () {
+    if (body.classList.contains("light-mode")) {
+      body.classList.remove("light-mode");
+      body.classList.add("dark-mode");
+    } else {
+      body.classList.remove("dark-mode");
+      body.classList.add("light-mode");
+    }
+    // Atualiza a cor do lumob após a troca de tema para garantir que fique invisível
+    setLumobInitialColor();
+  });
+
+  // --- Listener para garantir cor do lumob na troca de tema (se a troca for feita por outro meio que não o botão) ---
+  // Caso o tema seja salvo e carregado, ou alterado por outro JS
+  const observer = new MutationObserver(function (mutations) {
+    mutations.forEach(function (mutation) {
+      if (mutation.attributeName === "class" && mutation.target === body) {
+        // A classe do body mudou, verifica se o pop-up não está ativo
+        if (!loginPopupOverlay.classList.contains("active")) {
+          setLumobInitialColor();
+        }
+      }
+    });
+  });
+  observer.observe(body, { attributes: true });
+});

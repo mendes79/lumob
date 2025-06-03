@@ -1,0 +1,29 @@
+lumob
+├── database/
+│   ├── __init__.py
+│   ├── db_base.py
+│   ├── db_hr_manager.py
+│   └── db_user_manager.py
+├── static/
+│   ├── css/
+│   │   ├── listar_diretorios.py
+│   │   └── style.css
+│   ├── fonts/
+│   │   ├── MODERNA_.TTF
+│   │   ├── grandview.zip
+│   │   ├── moderna.zip
+│   │   └── read_me.pdf
+│   ├── img/
+│   │   ├── branco.png
+│   │   ├── landscape-construction.jpg
+│   │   ├── landscape-construction1.jpg
+│   │   └── lightbulb-icon.png
+│   └── js/
+│       └── script.js
+├── templates/
+│   ├── login.html
+│   └── welcome.html
+├── app.py
+├── conexao_db.py
+├── db_manager.py
+└── secret_key.py

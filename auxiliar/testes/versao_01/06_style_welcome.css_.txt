@@ -1,0 +1,199 @@
+/* style_welcome.css - Estilos específicos para welcome.html */
+
+/* Importação da fonte personalizada (pode ser repetida aqui para garantir) */
+@font-face {
+  font-family: "Moderna";
+  src: url("../fonts/MODERNA_.TTF") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* Estilos Globais e Reset Básico para welcome.html (garante consistência de tema) */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  min-height: 100vh;
+  transition: background-color 0.5s ease, color 0.5s ease;
+  box-sizing: border-box;
+}
+
+/* Modos de Tema */
+body.light-mode {
+  background-color: white;
+  color: black;
+}
+
+body.dark-mode {
+  background-color: #1a1a1a; /* Um tom de cinza escuro para o fundo */
+  color: white;
+}
+
+/* Container principal para welcome.html */
+.main-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 80px 20px; /* Adiciona padding para os botões do topo não sobreporem o conteúdo central */
+  overflow-y: auto; /* Permite rolagem se o conteúdo exceder a altura */
+  min-height: 100vh; /* Garante que o container ocupe toda a altura da viewport */
+  box-sizing: border-box; /* Inclui padding e borda no cálculo da largura/altura total */
+}
+
+/* Botão de Troca de Tema (Lâmpada) */
+.theme-toggle {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 40px;
+  height: 40px;
+  background-image: url("../img/lightbulb-icon.png"); /* Ícone de lâmpada */
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  z-index: 1000; /* Garante que fique acima de outros elementos */
+  filter: invert(0); /* Ajustado para começar "ligado" no tema padrão */
+  transition: filter 0.3s ease;
+}
+
+body.light-mode .theme-toggle {
+  filter: invert(0); /* Lâmpada preta no fundo branco */
+}
+
+body.dark-mode .theme-toggle {
+  filter: invert(1); /* Lâmpada branca no fundo preto */
+}
+
+/* Botão Sair (Logout) */
+.logout-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1em;
+  font-weight: bold;
+  cursor: pointer;
+  color: white;
+  background-color: rgba(220, 53, 69, 0.7); /* Vermelho translúcido para Sair */
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  text-decoration: none; /* Remove sublinhado do link */
+  display: flex; /* Para centralizar o texto se necessário */
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.logout-button:hover {
+  background-color: rgba(193, 35, 51, 0.9); /* Vermelho mais escuro no hover */
+  transform: translateY(-2px);
+}
+
+/* Layout das capas dos módulos (grid) */
+.modules-grid-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Duas colunas */
+  gap: 30px; /* Espaço entre os cards */
+  max-width: 1200px; /* Largura máxima para o grid */
+  width: 90%; /* Ocupa 90% da largura do container principal */
+  margin-top: 20px; /* Espaço do topo */
+  margin-bottom: 20px; /* Espaço da base */
+  justify-content: center; /* Centraliza o grid horizontalmente */
+  align-items: center; /* Centraliza os itens verticalmente */
+}
+
+/* Card individual do módulo */
+.module-card {
+  position: relative;
+  width: 100%; /* Ocupa a largura da coluna */
+  padding-bottom: 56.25%; /* Proporção 16:9 (9 / 16 * 100 = 56.25) */
+  background-size: cover;
+  background-position: center;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none; /* Remove sublinhado dos links */
+  color: inherit; /* Garante que a cor do texto seja herdada ou definida pelo tema */
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, filter 0.3s ease;
+  cursor: pointer;
+}
+
+/* Efeito de destaque ao passar o mouse */
+.module-card:hover {
+  transform: scale(1.03);
+}
+
+/* Título do módulo dentro da capa */
+.module-title {
+  font-family: "Moderna", Arial, sans-serif !important;
+  font-size: 3vw;
+  font-weight: bold;
+  text-transform: lowercase;
+  line-height: 1;
+  position: absolute; /* Permite posicionamento absoluto dentro do card */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* Centraliza o texto */
+  transition: color 0.3s ease; /* Transição suave da cor do texto */
+}
+
+/* Cores do título do módulo baseadas no tema do body para contraste */
+body.light-mode .module-title {
+  color: black;
+  text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white,
+    1px 1px 0 white;
+}
+
+body.dark-mode .module-title {
+  color: white;
+  text-shadow: -1px -1px 0 black, 1px -1px 0 black, -1px 1px 0 black,
+    1px 1px 0 black;
+}
+
+/* Efeito de preto e branco para módulos sem permissão */
+.module-grayscale {
+  filter: grayscale(100%);
+  pointer-events: none; /* Desabilita o clique */
+  cursor: not-allowed; /* Muda o cursor para "não permitido" */
+  opacity: 0.6; /* Deixa a capa um pouco transparente */
+}
+
+.module-grayscale:hover {
+  transform: none; /* Remove o efeito de escala no hover para módulos desabilitados */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Mantém uma sombra básica, mas sem o destaque */
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .modules-grid-container {
+    grid-template-columns: 1fr; /* Uma coluna em telas menores */
+    width: 95%;
+  }
+
+  .module-title {
+    font-size: 6vw; /* Ajusta o tamanho da fonte para telas menores */
+  }
+
+  .theme-toggle,
+  .logout-button {
+    width: 35px;
+    height: 35px;
+    top: 15px;
+    right: 15px;
+    left: 15px;
+    font-size: 0.9em;
+  }
+  .logout-button {
+    padding: 8px 12px;
+  }
+}

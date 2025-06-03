@@ -1,0 +1,4 @@
+ID_Funcionario_Endereco,Matricula_Funcionario,Tipo_Endereco,Logradouro,Numero,Complemento,Bairro,Cidade,Estado,Cep,Data_Criacao,Data_Modificacao
+1,MATR001,Residencial,Avenida Principal,456,Apto 101,Centro,Belo Horizonte,MG,30123-000,2025-05-28 17:00:20,2025-05-28 17:01:53
+2,MATR001,Correspondência,Caixa Postal 555,S/N,,Correios,Belo Horizonte,MG,30100-000,2025-05-28 17:00:20,2025-05-28 17:00:20
+3,MATR002,Residencial,Av. Paulista,1500,Conj 200,Bela Vista,São Paulo,SP,01310-100,2025-05-28 17:00:20,2025-05-28 17:00:20

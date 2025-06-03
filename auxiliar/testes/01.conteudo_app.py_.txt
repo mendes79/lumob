@@ -1,0 +1,148 @@
+# app.py
+
+# Importações necessárias
+from flask import Flask, render_template, redirect, url_for, request, flash, session, get_flashed_messages
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+import mysql.connector # Para a classe Error do MySQL
+from database.db_base import DatabaseManager
+from database.db_user_manager import UserManager
+from database.db_hr_manager import HrManager # Para o módulo de RH
+
+# --- Inicialização do Flask ---
+app = Flask(__name__)
+
+# --- Configurações do Flask ---
+# **IMPORTANTE: TROQUE ESTA CHAVE POR UMA STRING LONGA E ALEATÓRIA PARA PRODUÇÃO**
+app.config['SECRET_KEY'] = '0ca1a44e0ae3dbb65bd073ccdc37d90d285064c4abec94e9'
+# Exemplo de como gerar uma: import os; os.urandom(24).hex()
+
+# Configurações do Banco de Dados
+db_config = {
+    "host": "localhost",
+    "database": "lumob",
+    "user": "mendes",
+    "password": "Galo13BH79&*" # Sua senha real
+}
+
+# --- Inicialização do Flask-Login ---
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login' # Se o usuário tentar acessar uma rota @login_required sem estar logado, ele será redirecionado para esta rota.
+
+# Classe User para Flask-Login
+class User(UserMixin):
+    def __init__(self, id, username, role):
+        self.id = id
+        self.username = username
+        self.role = role
+
+    def get_id(self):
+        return str(self.id)
+
+# User loader para Flask-Login
+@login_manager.user_loader
+def load_user(user_id):
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            user_manager = UserManager(db_base)
+            user_data = user_manager.get_user_by_id(user_id) # Supondo que você tem um get_user_by_id no UserManager
+            if user_data:
+                return User(user_data['id'], user_data['username'], user_data['role'])
+            return None
+    except Exception as e:
+        print(f"Erro ao carregar usuário por ID: {e}")
+        return None
+
+# --- FUNÇÃO EXECUTADA ANTES DE CADA REQUISIÇÃO ---
+# ESTA FUNÇÃO GARANTE QUE AO ACESSAR A PÁGINA DE LOGIN VIA GET,
+# AS MENSAGENS FLASH ANTERIORES (DE SUCESSO DE LOGIN OU LOGOUT) SEJAM LIMPAS.
+@app.before_request
+def clear_login_flash_messages():
+    # Verifica se a rota atual é 'login' e o método da requisição é 'GET'.
+    if request.endpoint == 'login' and request.method == 'GET':
+        session.pop('_flashes', None) # Limpa todas as mensagens flash da sessão.
+
+# --- ROTAS DA APLICAÇÃO ---
+
+@app.route('/')
+def index():
+    return redirect(url_for('login')) # Redireciona a raiz para a página de login
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        session.pop('_flashes', None) 
+        return redirect(url_for('welcome'))
+
+    open_login_popup = False 
+
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        if not username or not password:
+            flash('Por favor, preencha todos os campos.', 'danger')
+            open_login_popup = True 
+        else:
+            try:
+                with DatabaseManager(**db_config) as db_base:
+                    user_manager = UserManager(db_base)
+                    user_data = user_manager.get_user_by_username(username)
+
+                    if user_data and user_manager.check_password(user_data['password'], password):
+                        user = User(user_data['id'], user_data['username'], user_data['role'])
+                        login_user(user)
+                        flash('Login realizado com sucesso!', 'success')
+                        
+                        next_page = request.args.get('next')
+                        return redirect(next_page or url_for('welcome'))
+                    else:
+                        flash('Nome de usuário ou senha inválidos.', 'danger')
+                        open_login_popup = True 
+            except mysql.connector.Error as e:
+                flash(f"Erro de banco de dados ao tentar logar: {e}", 'danger')
+                print(f"Erro de banco de dados: {e}")
+                open_login_popup = True 
+            except Exception as e:
+                flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+                print(f"Erro inesperado: {e}")
+                open_login_popup = True 
+    
+    return render_template('login.html', open_login_popup=open_login_popup)
+
+# --- Rota de logout ---
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('Você foi desconectado.', 'info') 
+    return redirect(url_for('login'))
+
+# --- Rota 'welcome' para o dashboard/página de boas-vindas ---
+@app.route('/welcome')
+@login_required 
+def welcome():
+    messages = get_flashed_messages(with_categories=True) 
+    return render_template('welcome.html', user=current_user, messages=messages)
+
+# --- Exemplo de rota protegida por papel (role-based access control) ---
+@app.route('/hr_management')
+@login_required
+def hr_management():
+    if current_user.role != 'admin':
+        flash('Acesso negado. Apenas administradores podem acessar esta página.', 'warning')
+        return redirect(url_for('welcome')) 
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            hr_manager = HrManager(db_base)
+            all_employees = hr_manager.buscar_funcionarios()
+        
+        return render_template('hr_management.html', employees=all_employees, user=current_user) 
+    except Exception as e:
+        flash(f"Erro ao carregar dados de RH: {e}", 'danger')
+        print(f"Erro ao carregar dados de RH: {e}")
+        return redirect(url_for('welcome'))
+
+if __name__ == '__main__':
+    app.run(debug=True)

@@ -1,0 +1,186 @@
+﻿
+
+123456780
+* {
+}
+margin: 0; padding: 0;
+box-sizing: border-box;
+font-family: 'Poppins', sans-serif;
+body {
+min-height: 100vh;
+display: flex;
+align-items: center;
+justify-content: center;
+background-image: url(bg.jpg); background-size: cover;
+background-position: center;
+.login-form {
+background: rgba(64, 64, 64, 0.15); border: 3px solid rgba(255, 255, 255, 0.3); padding: 30px;
+border-radius: 16px;
+backdrop-filter: blur (25px);
+text-align: center;
+color: white;
+width: 400px;
+box-shadow: 0px 0px 20px 10px rgba(0, 0, 0, 0.15);
+.login-title {
+font-size: 40px;
+margin-bottom: 40px;
+Follow @the_coding_wizard for more
+9
+10
+11
+12
+13
+14
+15
+16
+}
+17
+18
+19
+28
+21
+22
+23
+24
+25
+26
+27
+}
+
+
+
+
+}
+﻿
+
+}
+}
+.input-box {
+margin: 20px 0;
+position: relative;
+.input-box input {
+width: 100%;
+background: rgba(255, 255, 255, 0.1);
+border: none;
+padding: 12px 12px 12px 45px;
+border-radius: 99px;
+outline: 3px solid transparent;
+transition: 0.3s;
+font-size: 17px; color: white;
+font-weight: 600;
+.input-box input:: placeholder { color: rgba(255, 255, 255, 0.8); font-size: 17px;
+font-weight: 500;
+.input-box input:focus {
+}
+}
+}
+outline: 3px solid rgba(255, 255, 255, 0.3);
+.input-box input ::-ms-reveal {
+filter: invert(100%);
+.input-box i {
+}
+position: absolute;
+left: 15px;
+top: 50%;
+transform: translateY(-50%);
+font-size: 20px;
+color: rgba(255, 255, 255, 0.8);
+Follow @the_coding_wizard for more
+﻿
+
+70
+71
+72
+73
+74
+.remember-forgot-box {
+display: flex;
+justify-content: space-between;
+margin: 20px 0;
+font-size: 15px;
+index.css
+75
+}
+76
+93
+.login-btn {
+77
+.remember-forgot-box label {
+94
+width: 100%;
+78
+display: flex;
+95
+96
+79
+gap: 8px;
+97
+border: none;
+80
+cursor: pointer;
+98
+81
+}
+99
+color: white;
+$2
+.remember-forgot-box input {
+100
+101
+83
+accent-color: white;
+182
+84
+cursor: pointer;
+103
+padding: 10px 0;
+background: #2F9CF4;
+border-radius: 99px;
+font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s;
+>
+85
+}
+104
+}
+86
+185
+.login-btn:hover {
+106
+87
+.remember-forgot-box a {
+background: #0887EC;
+107
+}
+88
+color: white;
+108
+89
+text-decoration: none;
+109 .register {
+90
+}
+110
+111
+91
+.remember-forgot-box a:hover {
+112
+}
+92
+text-decoration: underline;
+113
+93 }
+114
+115
+116
+117
+}
+118
+margin-top: 15px; font-size: 15px;
+.register a {
+color: white;
+text-decoration: none; font-weight: 500;
+.register a:hover {
+119
+text-decoration: underline;
+128
+}

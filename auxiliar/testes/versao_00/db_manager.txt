@@ -1,0 +1,1248 @@
+# LUMOB - modular construction management program
+# 2025-05-28 - VERSION 0.0 (lead-off)
+# db_manager.py 
+
+import mysql.connector
+from mysql.connector import Error
+
+# 1. Definição da classe DatabaseManager
+class DatabaseManager:
+    """
+    Gerencia a conexão com o banco de dados MySQL e operações CRUD.
+    Utiliza context manager para garantir que a conexão seja fechada automaticamente.
+    """
+    def __init__(self, host, database, user, password):
+        """Inicializa o gerenciador com as credenciais do banco de dados."""
+        self.host = host
+        self.database = database
+        self.user = user
+        self.password = password
+        self.connection = None
+
+    def __enter__(self):
+        """Estabelece a conexão com o banco de dados ao entrar no bloco 'with'."""
+        try:
+            self.connection = mysql.connector.connect(
+                host=self.host,
+                database=self.database,
+                user=self.user,
+                password=self.password
+            )
+            if self.connection.is_connected():
+                print(f"Conexão bem-sucedida ao banco de dados '{self.database}'!")
+            return self # Retorna a instância da classe para ser usada no 'as db_manager'
+        except Error as e:
+            print(f"Erro ao conectar ao MySQL: {e}")
+            self.connection = None # Garante que a conexão seja None se falhar
+            raise # Re-lança a exceção para que o problema seja visível
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Fecha a conexão com o banco de dados ao sair do bloco 'with'."""
+        if self.connection and self.connection.is_connected():
+            self.connection.close()
+            print("Conexão MySQL fechada.")
+
+    def execute_query(self, query, params=None, fetch_results=True):
+        """
+        Executa uma consulta SQL (INSERT, UPDATE, DELETE, SELECT).
+        :param query: A string da consulta SQL.
+        :param params: Uma tupla ou lista de parâmetros para a consulta (para segurança e evitar SQL Injection).
+        :param fetch_results: Se True (para SELECT), retorna os resultados. Se False (para INSERT/UPDATE/DELETE), commita as mudanças.
+        :return: Uma lista de dicionários (para SELECT) ou True/False (para outras operações).
+        """
+        if not self.connection or not self.connection.is_connected():
+            print("Erro: Nenhuma conexão ativa com o banco de dados.")
+            return None
+
+        # Usamos cursor(dictionary=True) para que os resultados sejam dicionários,
+        # onde as chaves são os nomes das colunas. Mais fácil de usar!
+        cursor = self.connection.cursor(dictionary=True)
+        try:
+            cursor.execute(query, params or ()) # 'or ()' garante que params seja uma tupla vazia se for None
+
+            if fetch_results:
+                results = cursor.fetchall()
+                return results
+            else:
+                self.connection.commit() # Salva as mudanças no banco
+                return True # Operação de escrita bem-sucedida
+        except Error as e:
+            print(f"Erro ao executar a consulta '{query}': {e}")
+            self.connection.rollback() # Desfaz as mudanças se ocorrer um erro
+            return False # Operação de escrita falhou
+        finally:
+            cursor.close() # Sempre fecha o cursor
+
+    def get_id_by_name(self, table_name, name_column, name_value, id_column=None):
+        """
+        Busca o ID de uma tabela de domínio (cargos, niveis) dado o nome.
+        :param table_name: Nome da tabela (ex: 'cargos', 'niveis').
+        :param name_column: Nome da coluna que contém o nome (ex: 'Nome_Cargo', 'Nome_Nivel').
+        :param name_value: O nome a ser buscado (ex: 'Engenheiro Civil', 'Junior').
+        :param id_column: Nome da coluna ID. Se None, assume ID_TableName (ex: ID_Cargos).
+        :return: O ID correspondente ou None se não encontrado.
+        """
+        if id_column is None:
+            id_column = f"ID_{table_name.capitalize()}" # Ex: ID_Cargos, ID_Niveis
+        
+        query = f"SELECT {id_column} FROM {table_name} WHERE {name_column} = %s;"
+        result = self.execute_query(query, (name_value,), fetch_results=True)
+        if result and result[0]:
+            return result[0][id_column] # Acessa pelo nome da coluna no dicionário
+        return None
+    
+    # db_manager.py (continuação)
+
+#-------------------------------------------------------------------------------
+# CRUD para Cargos
+# Criação: 2025-05-27
+# Revisão: 0.1 - Busca mais flexível.
+#-------------------------------------------------------------------------------
+# 2. Definições das funções CRUD para Cargos (adicionar_cargo, buscar_cargos, etc.)
+
+def adicionar_cargo(db_manager, nome_cargo, descricao_cargo=None, cbo=None):
+    """Adiciona um novo cargo."""
+    query = "INSERT INTO cargos (Nome_Cargo, Descricao_Cargo, Cbo) VALUES (%s, %s, %s);"
+    params = (nome_cargo, descricao_cargo, cbo)
+    return db_manager.execute_query(query, params, fetch_results=False)
+
+def buscar_cargos(db_manager, nome_cargo=None, cbo=None):
+    """
+    Busca cargos por nome ou CBO. Se nenhum parâmetro for fornecido, lista todos.
+    :param db_manager: Instância de DatabaseManager.
+    :param nome_cargo: Nome parcial ou completo do cargo (usa LIKE se tiver '%').
+    :param cbo: CBO completo do cargo.
+    :return: Lista de dicionários com os cargos encontrados.
+    """
+    query = "SELECT ID_Cargos, Nome_Cargo, Descricao_Cargo, Cbo FROM cargos"
+    conditions = []
+    params = []
+
+    if nome_cargo:
+        if '%' in nome_cargo:
+            conditions.append("Nome_Cargo LIKE %s")
+        else:
+            conditions.append("Nome_Cargo = %s")
+        params.append(nome_cargo)
+    
+    if cbo:
+        conditions.append("Cbo = %s")
+        params.append(cbo)
+
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+    
+    query += " ORDER BY Nome_Cargo;"
+    return db_manager.execute_query(query, tuple(params), fetch_results=True)
+
+def atualizar_cargo(db_manager, id_cargo, nome_cargo=None, descricao_cargo=None, cbo=None):
+    """Atualiza dados de um cargo existente pelo seu ID."""
+    updates = []
+    params = []
+    if nome_cargo is not None:
+        updates.append("Nome_Cargo = %s")
+        params.append(nome_cargo)
+    if descricao_cargo is not None:
+        updates.append("Descricao_Cargo = %s")
+        params.append(descricao_cargo)
+    if cbo is not None:
+        updates.append("Cbo = %s")
+        params.append(cbo)
+    
+    if not updates:
+        print("Nenhum campo para atualizar o cargo.")
+        return False
+    
+    query = f"UPDATE cargos SET {', '.join(updates)} WHERE ID_Cargos = %s;"
+    params.append(id_cargo) # ID_Cargos é o último parâmetro para a cláusula WHERE
+    return db_manager.execute_query(query, tuple(params), fetch_results=False)
+
+def deletar_cargo(db_manager, id_cargo):
+    """Deleta um cargo pelo seu ID."""
+    query = "DELETE FROM cargos WHERE ID_Cargos = %s;"
+    return db_manager.execute_query(query, (id_cargo,), fetch_results=False)
+
+#-------------------------------------------------------------------------------
+# CRUD para Níveis
+# Criação: 2025-05-28
+# Revisão: 0.0 - Funções CRUD iniciais para a tabela 'niveis'.
+#-------------------------------------------------------------------------------
+# 3. Definições das funções CRUD para Níveis (adicionar_nivel, buscar_niveis, etc.)
+
+def adicionar_nivel(db_manager, nome_nivel, descricao=None):
+    """
+    Adiciona um novo nível ao banco de dados.
+    :param db_manager: Instância de DatabaseManager.
+    :param nome_nivel: O nome do novo nível (string, ex: 'Junior', 'Pleno').
+    :param descricao: Descrição opcional do nível (string).
+    :return: True se a adição for bem-sucedida, False caso contrário.
+    """
+    query = "INSERT INTO niveis (Nome_Nivel, Descricao) VALUES (%s, %s);"
+    params = (nome_nivel, descricao)
+    return db_manager.execute_query(query, params, fetch_results=False)
+
+def buscar_niveis(db_manager, nome_nivel=None):
+    """
+    Busca níveis por nome. Se nenhum parâmetro for fornecido, lista todos os níveis.
+    :param db_manager: Instância de DatabaseManager.
+    :param nome_nivel: Nome parcial ou completo do nível (usa LIKE se tiver '%').
+    :return: Lista de dicionários com os níveis encontrados.
+    """
+    query = "SELECT ID_Niveis, Nome_Nivel, Descricao FROM niveis"
+    conditions = []
+    params = []
+
+    if nome_nivel:
+        if '%' in nome_nivel:
+            conditions.append("Nome_Nivel LIKE %s")
+        else:
+            conditions.append("Nome_Nivel = %s")
+        params.append(nome_nivel)
+    
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+    
+    query += " ORDER BY Nome_Nivel;"
+    return db_manager.execute_query(query, tuple(params), fetch_results=True)
+
+def atualizar_nivel(db_manager, id_nivel, nome_nivel=None, descricao=None):
+    """
+    Atualiza dados de um nível existente pelo seu ID.
+    :param db_manager: Instância de DatabaseManager.
+    :param id_nivel: ID do nível a ser atualizado (inteiro).
+    :param nome_nivel: Novo nome do nível (string, opcional).
+    :param descricao: Nova descrição do nível (string, opcional).
+    :return: True se a atualização for bem-sucedida, False caso contrário.
+    """
+    updates = []
+    params = []
+
+    if nome_nivel is not None:
+        updates.append("Nome_Nivel = %s")
+        params.append(nome_nivel)
+    if descricao is not None:
+        updates.append("Descricao = %s")
+        params.append(descricao)
+    
+    if not updates:
+        print("Nenhum campo para atualizar o nível.")
+        return False
+    
+    query = f"UPDATE niveis SET {', '.join(updates)} WHERE ID_Niveis = %s;"
+    params.append(id_nivel) # ID_Niveis é o último parâmetro para a cláusula WHERE
+    return db_manager.execute_query(query, tuple(params), fetch_results=False)
+
+def deletar_nivel(db_manager, id_nivel):
+    """
+    Deleta um nível pelo seu ID.
+    CUIDADO: Isso pode falhar se houver funcionários ou salários vinculados a este nível.
+    :param db_manager: Instância de DatabaseManager.
+    :param id_nivel: ID do nível a ser deletado (inteiro).
+    :return: True se a deleção for bem-sucedida, False caso contrário.
+    """
+    query = "DELETE FROM niveis WHERE ID_Niveis = %s;"
+    return db_manager.execute_query(query, (id_nivel,), fetch_results=False)
+
+#-------------------------------------------------------------------------------
+# CRUD para Funcionários
+# Criação: 2025-05-27
+# Revisão: 0.1 - Busca mais flexível.
+#-------------------------------------------------------------------------------
+# 4. Definições das funções CRUD para Funcionários (adicionar_funcionario, buscar_funcionarios, etc.)
+
+def adicionar_funcionario(db_manager, matricula, nome_completo, data_admissao, cargo_nome, nivel_nome, status='Ativo'):
+    """
+    Adiciona um novo funcionário. Requer os nomes do cargo e nível para buscar seus IDs.
+    """
+    id_cargo = db_manager.get_id_by_name('cargos', 'Nome_Cargo', cargo_nome)
+    # Supondo que você tem uma tabela 'niveis' e que 'Nivel_Nome' é a coluna com o nome do nível
+    id_nivel = db_manager.get_id_by_name('niveis', 'Nome_Nivel', nivel_nome)
+
+    if id_cargo is None:
+        print(f"Erro: Cargo '{cargo_nome}' não encontrado. Não é possível adicionar funcionário.")
+        return False
+    if id_nivel is None:
+        print(f"Erro: Nível '{nivel_nome}' não encontrado. Não é possível adicionar funcionário.")
+        return False
+
+    query = """
+    INSERT INTO funcionarios (Matricula, Nome_Completo, Data_Admissao, ID_Cargos, ID_Niveis, Status)
+    VALUES (%s, %s, %s, %s, %s, %s);
+    """
+    params = (matricula, nome_completo, data_admissao, id_cargo, id_nivel, status)
+    return db_manager.execute_query(query, params, fetch_results=False)
+
+def buscar_funcionarios(db_manager, matricula=None, nome_completo=None, cargo_nome=None, nivel_nome=None, status=None):
+    """
+    Busca funcionários por diversos critérios.
+    :param db_manager: Instância de DatabaseManager.
+    :param matricula: Matrícula exata do funcionário.
+    :param nome_completo: Nome parcial ou completo do funcionário (usa LIKE se tiver '%').
+    :param cargo_nome: Nome do cargo para filtrar.
+    :param nivel_nome: Nome do nível para filtrar.
+    :param status: Status do funcionário (ex: 'Ativo', 'Inativo', 'Férias').
+    :return: Lista de dicionários com os funcionários encontrados e seus detalhes.
+    """
+    query = """
+    SELECT 
+        f.Matricula, 
+        f.Nome_Completo, 
+        f.Data_Admissao, 
+        c.Nome_Cargo, 
+        n.Nome_Nivel, 
+        f.Status
+    FROM 
+        funcionarios f
+    JOIN 
+        cargos c ON f.ID_Cargos = c.ID_Cargos
+    JOIN 
+        niveis n ON f.ID_Niveis = n.ID_Niveis
+    """
+    conditions = []
+    params = []
+
+    if matricula:
+        conditions.append("f.Matricula = %s")
+        params.append(matricula)
+    
+    if nome_completo:
+        if '%' in nome_completo:
+            conditions.append("f.Nome_Completo LIKE %s")
+        else:
+            conditions.append("f.Nome_Completo = %s")
+        params.append(nome_completo)
+    
+    if cargo_nome:
+        conditions.append("c.Nome_Cargo = %s")
+        params.append(cargo_nome)
+    
+    if nivel_nome:
+        conditions.append("n.Nome_Nivel = %s")
+        params.append(nivel_nome)
+
+    if status:
+        conditions.append("f.Status = %s")
+        params.append(status)
+
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+    
+    query += " ORDER BY f.Nome_Completo;"
+    return db_manager.execute_query(query, tuple(params), fetch_results=True)
+
+def atualizar_funcionario(db_manager, matricula, nome_completo=None, data_admissao=None, cargo_nome=None, nivel_nome=None, status=None):
+    """
+    Atualiza dados de um funcionário existente pela matrícula.
+    Permite atualizar um ou mais campos.
+    """
+    updates = []
+    params = []
+
+    if nome_completo is not None:
+        updates.append("Nome_Completo = %s")
+        params.append(nome_completo)
+    if data_admissao is not None:
+        updates.append("Data_Admissao = %s")
+        params.append(data_admissao)
+    if cargo_nome is not None:
+        id_cargo = db_manager.get_id_by_name('cargos', 'Nome_Cargo', cargo_nome)
+        if id_cargo is None:
+            print(f"Erro: Cargo '{cargo_nome}' não encontrado para atualização.")
+            return False
+        updates.append("ID_Cargos = %s")
+        params.append(id_cargo)
+    if nivel_nome is not None:
+        id_nivel = db_manager.get_id_by_name('niveis', 'Nome_Nivel', nivel_nome)
+        if id_nivel is None:
+            print(f"Erro: Nível '{nivel_nome}' não encontrado para atualização.")
+            return False
+        updates.append("ID_Niveis = %s")
+        params.append(id_nivel)
+    if status is not None:
+        updates.append("Status = %s")
+        params.append(status)
+
+    if not updates:
+        print("Nenhum campo para atualizar.")
+        return False
+
+    query = f"UPDATE funcionarios SET {', '.join(updates)} WHERE Matricula = %s;"
+    params.append(matricula) # A matrícula é o último parâmetro para a cláusula WHERE
+
+    return db_manager.execute_query(query, tuple(params), fetch_results=False)
+
+def deletar_funcionario(db_manager, matricula):
+    """Deleta um funcionário pelo número de matrícula."""
+    query = "DELETE FROM funcionarios WHERE Matricula = %s;"
+    return db_manager.execute_query(query, (matricula,), fetch_results=False)
+
+#-------------------------------------------------------------------------------
+# CRUD para Salários
+# Criação: 2025-05-28
+# Revisão: 0.0 - Funções CRUD iniciais para a tabela 'salarios'.
+# Notas:
+#   - 'adicionar_salario' e 'buscar_salario' trabalham com os nomes de cargo/nível.
+#   - 'atualizar_salario_por_id' e 'deletar_salario' usam o ID_Salarios.
+#   - A busca considera a Data_Vigencia para encontrar o salário mais recente.
+#-------------------------------------------------------------------------------
+
+def adicionar_salario(db_manager, cargo_nome, nivel_nome, salario_base, data_vigencia,
+                      periculosidade=False, insalubridade=False, ajuda_de_custo=0.0,
+                      vale_refeicao=0.0, gratificacao=0.0, cesta_basica=False, outros_beneficios=None):
+    """
+    Adiciona um novo registro de pacote salarial para um Cargo/Nível a partir de uma data de vigência.
+    Converte nomes de cargo/nível em IDs antes da inserção.
+    :param db_manager: Instância de DatabaseManager.
+    :param cargo_nome: Nome do cargo ao qual o salário se aplica.
+    :param nivel_nome: Nome do nível ao qual o salário se aplica.
+    :param salario_base: Valor do salário base.
+    :param data_vigencia: Data a partir da qual este pacote salarial é válido (formato 'YYYY-MM-DD').
+    :param periculosidade: Booleano, se tem direito a periculosidade.
+    :param insalubridade: Booleano, se tem direito a insalubridade.
+    :param ajuda_de_custo: Valor de ajuda de custo.
+    :param vale_refeicao: Valor do vale refeição.
+    :param gratificacao: Valor da gratificação.
+    :param cesta_basica: Booleano, se tem direito a cesta básica.
+    :param outros_beneficios: Descrição de outros benefícios.
+    :return: True se a adição for bem-sucedida, False caso contrário.
+    """
+    id_cargo = db_manager.get_id_by_name('cargos', 'Nome_Cargo', cargo_nome)
+    id_nivel = db_manager.get_id_by_name('niveis', 'Nome_Nivel', nivel_nome)
+    
+    if id_cargo is None:
+        print(f"Erro: Cargo '{cargo_nome}' não encontrado. Verifique a tabela 'cargos'.")
+        return False
+    if id_nivel is None:
+        print(f"Erro: Nível '{nivel_nome}' não encontrado. Verifique a tabela 'niveis'.")
+        return False
+
+    query = """
+    INSERT INTO salarios (ID_Cargos, ID_Niveis, Salario_Base, Periculosidade, Insalubridade,
+                          Ajuda_De_Custo, Vale_Refeicao, Gratificacao, Cesta_Basica,
+                          Outros_Beneficios, Data_Vigencia)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+    """
+    params = (id_cargo, id_nivel, salario_base, periculosidade, insalubridade,
+              ajuda_de_custo, vale_refeicao, gratificacao, cesta_basica,
+              outros_beneficios, data_vigencia)
+    return db_manager.execute_query(query, params, fetch_results=False)
+
+def buscar_salarios(db_manager, cargo_nome=None, nivel_nome=None, data_vigencia=None, id_salarios=None):
+    """
+    Busca registros de salário. Pode filtrar por cargo, nível, data de vigência ou ID do salário.
+    Se data_vigencia for fornecida e não for ID_Salarios, busca o pacote mais recente para o cargo/nível ANTES ou NA data.
+    Se não for fornecida, busca o mais recente até a data atual.
+    :param db_manager: Instância de DatabaseManager.
+    :param cargo_nome: Nome do cargo para filtrar.
+    :param nivel_nome: Nome do nível para filtrar.
+    :param data_vigencia: Data para filtrar (formato 'YYYY-MM-DD').
+    :param id_salarios: ID específico do registro de salário para buscar (ignora outros filtros se presente).
+    :return: Lista de dicionários com os registros de salário encontrados.
+    """
+    query_parts = ["""
+    SELECT 
+        s.ID_Salarios,
+        c.Nome_Cargo,
+        n.Nome_Nivel,
+        s.Salario_Base,
+        s.Periculosidade,
+        s.Insalubridade,
+        s.Ajuda_De_Custo,
+        s.Vale_Refeicao,
+        s.Gratificacao,
+        s.Cesta_Basica,
+        s.Outros_Beneficios,
+        s.Data_Vigencia
+    FROM 
+        salarios s
+    JOIN 
+        cargos c ON s.ID_Cargos = c.ID_Cargos
+    JOIN 
+        niveis n ON s.ID_Niveis = n.ID_Niveis
+    """]
+    conditions = []
+    params = []
+
+    if id_salarios is not None:
+        conditions.append("s.ID_Salarios = %s")
+        params.append(id_salarios)
+    else:
+        if cargo_nome:
+            id_cargo = db_manager.get_id_by_name('cargos', 'Nome_Cargo', cargo_nome)
+            if id_cargo is None: return [] # Retorna vazio se cargo não existe
+            conditions.append("s.ID_Cargos = %s")
+            params.append(id_cargo)
+        
+        if nivel_nome:
+            id_nivel = db_manager.get_id_by_name('niveis', 'Nome_Nivel', nivel_nome)
+            if id_nivel is None: return [] # Retorna vazio se nível não existe
+            conditions.append("s.ID_Niveis = %s")
+            params.append(id_nivel)
+
+        if data_vigencia:
+            conditions.append("s.Data_Vigencia <= %s")
+            params.append(data_vigencia)
+        elif cargo_nome and nivel_nome: # Se só tem cargo/nivel, busca o mais recente até hoje
+            conditions.append("s.Data_Vigencia <= CURDATE()")
+            
+    if conditions:
+        query_parts.append(" WHERE " + " AND ".join(conditions))
+    
+    # Para buscar o mais recente, se não for por ID_Salarios
+    if id_salarios is None and (cargo_nome or nivel_nome):
+        # Subquery para pegar o ID_Salarios do pacote mais recente para cada combinação cargo/nivel
+        query_parts.append("""
+        AND s.ID_Salarios IN (
+            SELECT sq.ID_Salarios
+            FROM salarios sq
+            WHERE sq.ID_Cargos = s.ID_Cargos
+              AND sq.ID_Niveis = s.ID_Niveis
+              AND sq.Data_Vigencia <= %s
+            ORDER BY sq.Data_Vigencia DESC
+            LIMIT 1
+        )
+        """)
+        params.append(data_vigencia if data_vigencia else 'CURDATE()') # Re-adiciona data para a subquery
+
+    query_parts.append(" ORDER BY c.Nome_Cargo, n.Nome_Nivel, s.Data_Vigencia DESC;")
+    
+    # Se buscando um salário específico por ID, não queremos a lógica de "mais recente"
+    if id_salarios is not None:
+        final_query = f"""
+        SELECT 
+            s.ID_Salarios, c.Nome_Cargo, n.Nome_Nivel, s.Salario_Base, s.Periculosidade,
+            s.Insalubridade, s.Ajuda_De_Custo, s.Vale_Refeicao, s.Gratificacao,
+            s.Cesta_Basica, s.Outros_Beneficios, s.Data_Vigencia
+        FROM salarios s
+        JOIN cargos c ON s.ID_Cargos = c.ID_Cargos
+        JOIN niveis n ON s.ID_Niveis = n.ID_Niveis
+        WHERE s.ID_Salarios = %s;
+        """
+        return db_manager.execute_query(final_query, (id_salarios,), fetch_results=True)
+    else:
+        final_query = " ".join(query_parts)
+        # Ajusta a query para evitar duplicidade de 'AND' se já tiver condições
+        if final_query.count("WHERE") > 1:
+             final_query = final_query.replace("WHERE ", "WHERE ", 1).replace("WHERE ", "AND ", 1) # Gambiarra para 2 wheres
+             # Melhoria: Reconstruir a query de forma mais inteligente para não precisar desta gambiarra
+             # A lógica da subquery precisou de um AND externo para ser correta
+             if "AND s.ID_Salarios IN" in final_query:
+                 if "WHERE s.ID_Cargos =" in final_query: # Se já tem where, é 'AND'
+                     final_query = final_query.replace("AND s.ID_Salarios IN", "AND s.ID_Salarios IN")
+                 else: # Se não tem where, é 'WHERE'
+                     final_query = final_query.replace("AND s.ID_Salarios IN", "WHERE s.ID_Salarios IN")
+
+
+        # Um ajuste para a subquery que busca o mais recente. A lógica anterior pode gerar AND duplos.
+        # Vamos simplificar a busca do mais recente para uma função auxiliar ou um padrão mais robusto.
+        # Por enquanto, se você quer o "mais recente", busque por cargo e nível E trate a data no Python ou faça uma query mais específica.
+        # A busca genérica aqui é para listar salários com seus filtros.
+        
+        # Vamos manter a busca por id_salarios e a busca geral.
+        # A busca "mais recente" é um pouco mais complexa para ser genérica aqui.
+        # O ideal seria buscar "TODOS OS SALÁRIOS DE UM CARGO/NIVEL" e no Python filtrar o mais recente.
+        # Ou uma query específica para "get_salario_vigente(cargo_nome, nivel_nome, data_base)".
+
+        # Simplificando a busca para LISTAR. A lógica de "mais recente" será um relatório específico.
+        # O último 'ORDER BY' já ajuda.
+        
+        # Remove a lógica de subquery complexa por enquanto para evitar erros de WHERE/AND.
+        # Esta função 'buscar_salarios' listará, não necessariamente o 'vigente'.
+        if cargo_nome and nivel_nome and data_vigencia is None: # Se quer o vigente, fazemos uma query mais específica
+             return buscar_salario_vigente(db_manager, cargo_nome, nivel_nome)
+
+
+        final_query = " ".join(query_parts)
+    
+    return db_manager.execute_query(final_query, tuple(params), fetch_results=True)
+
+def buscar_salario_vigente(db_manager, cargo_nome, nivel_nome, data_base=None):
+    """
+    Busca o pacote salarial vigente mais recente para um Cargo/Nível em uma data específica
+    ou na data atual se não especificada.
+    :param db_manager: Instância de DatabaseManager.
+    :param cargo_nome: Nome do cargo.
+    :param nivel_nome: Nome do nível.
+    :param data_base: Data para considerar como base de vigência (formato 'YYYY-MM-DD'). Se None, usa CURDATE().
+    :return: Dicionário com o registro de salário vigente ou None.
+    """
+    id_cargo = db_manager.get_id_by_name('cargos', 'Nome_Cargo', cargo_nome)
+    id_nivel = db_manager.get_id_by_name('niveis', 'Nome_Nivel', nivel_nome)
+
+    if id_cargo is None or id_nivel is None:
+        print(f"Aviso: Cargo '{cargo_nome}' ou Nível '{nivel_nome}' não encontrado(s).")
+        return None
+    
+    # Prepara a parte da query e os parâmetros de acordo com a presença de data_base
+    if data_base is None:
+        # Se data_base for None, a função CURDATE() é inserida diretamente na string da query
+        date_condition = "AND s.Data_Vigencia <= CURDATE()"
+        params = (id_cargo, id_nivel)
+    else:
+        # Se data_base for fornecida, usamos o placeholder %s e passamos a data como parâmetro
+        date_condition = "AND s.Data_Vigencia <= %s"
+        params = (id_cargo, id_nivel, data_base)
+        
+    query = f"""
+    SELECT 
+        s.ID_Salarios,
+        c.Nome_Cargo,
+        n.Nome_Nivel,
+        s.Salario_Base,
+        s.Periculosidade,
+        s.Insalubridade,
+        s.Ajuda_De_Custo,
+        s.Vale_Refeicao,
+        s.Gratificacao,
+        s.Cesta_Basica,
+        s.Outros_Beneficios,
+        s.Data_Vigencia
+    FROM salarios s
+    JOIN cargos c ON s.ID_Cargos = c.ID_Cargos
+    JOIN niveis n ON s.ID_Niveis = n.ID_Niveis
+    WHERE s.ID_Cargos = %s
+      AND s.ID_Niveis = %s
+      {date_condition} -- Aqui a condição de data é inserida
+    ORDER BY s.Data_Vigencia DESC
+    LIMIT 1;
+    """
+    
+    results = db_manager.execute_query(query, params, fetch_results=True)
+    return results[0] if results else None
+
+
+def atualizar_salario(db_manager, id_salarios, **kwargs):
+    """
+    Atualiza um registro de salário/benefícios específico pelo seu ID.
+    Usa kwargs para os campos a serem atualizados (ex: salario_base=3000.00).
+    Permite atualizar ID_Cargos e ID_Niveis se os nomes forem passados.
+    :param db_manager: Instância de DatabaseManager.
+    :param id_salarios: ID do registro de salário a ser atualizado.
+    :param kwargs: Dicionário com os campos a serem atualizados e seus novos valores.
+                   Ex: salario_base=5500.00, periculosidade=True, cargo_nome='Engenheiro Senior'.
+    :return: True se a atualização for bem-sucedida, False caso contrário.
+    """
+    updates = []
+    params = []
+    
+    # Mapeamento de kwargs para nomes de coluna no BD
+    column_map = {
+        'salario_base': 'Salario_Base', 'periculosidade': 'Periculosidade', 
+        'insalubridade': 'Insalubridade', 'ajuda_de_custo': 'Ajuda_De_Custo',
+        'vale_refeicao': 'Vale_Refeicao', 'gratificacao': 'Gratificacao', 
+        'cesta_basica': 'Cesta_Basica', 'outros_beneficios': 'Outros_Beneficios', 
+        'data_vigencia': 'Data_Vigencia'
+    }
+
+    for key, value in kwargs.items():
+        if key == 'cargo_nome':
+            id_cargo = db_manager.get_id_by_name('cargos', 'Nome_Cargo', value)
+            if id_cargo is None:
+                print(f"Erro: Cargo '{value}' não encontrado para atualização de salário.")
+                return False
+            updates.append("ID_Cargos = %s")
+            params.append(id_cargo)
+        elif key == 'nivel_nome':
+            id_nivel = db_manager.get_id_by_name('niveis', 'Nome_Nivel', value)
+            if id_nivel is None:
+                print(f"Erro: Nível '{value}' não encontrado para atualização de salário.")
+                return False
+            updates.append("ID_Niveis = %s")
+            params.append(id_nivel)
+        elif key in column_map:
+            updates.append(f"{column_map[key]} = %s")
+            params.append(value)
+    
+    if not updates:
+        print("Nenhum campo de salário para atualizar.")
+        return False
+    
+    query = f"UPDATE salarios SET {', '.join(updates)} WHERE ID_Salarios = %s;"
+    params.append(id_salarios)
+    return db_manager.execute_query(query, tuple(params), fetch_results=False)
+
+def deletar_salario(db_manager, id_salarios):
+    """
+    Deleta um registro de salário pelo ID.
+    CUIDADO: Se este registro for o único salário vigente para um cargo/nível,
+    futuras buscas pelo salário vigente podem não encontrar nada.
+    :param db_manager: Instância de DatabaseManager.
+    :param id_salarios: ID do registro de salário a ser deletado (inteiro).
+    :return: True se a deleção for bem-sucedida, False caso contrário.
+    """
+    query = "DELETE FROM salarios WHERE ID_Salarios = %s;"
+    return db_manager.execute_query(query, (id_salarios,), fetch_results=False)
+
+def listar_todos_salarios_com_detalhes(db_manager):
+    """
+    Lista todos os pacotes salariais com detalhes de Cargo e Nível.
+    :param db_manager: Instância de DatabaseManager.
+    :return: Lista de dicionários com todos os registros de salário.
+    """
+    query = """
+    SELECT 
+        s.ID_Salarios,
+        c.Nome_Cargo,
+        n.Nome_Nivel,
+        s.Salario_Base,
+        s.Periculosidade,
+        s.Insalubridade,
+        s.Ajuda_De_Custo,
+        s.Vale_Refeicao,
+        s.Gratificacao,
+        s.Cesta_Basica,
+        s.Outros_Beneficios,
+        s.Data_Vigencia
+    FROM 
+        salarios s
+    JOIN 
+        cargos c ON s.ID_Cargos = c.ID_Cargos
+    JOIN 
+        niveis n ON s.ID_Niveis = n.ID_Niveis
+    ORDER BY c.Nome_Cargo, n.Nome_Nivel, s.Data_Vigencia DESC;
+    """
+    return db_manager.execute_query(query, fetch_results=True)
+
+# db_manager.py
+
+# ... (Seu código existente da classe DatabaseManager e funções CRUD de cargos, niveis, funcionarios e salarios) ...
+
+
+# db_manager.py
+
+# ... (Seu código existente da classe DatabaseManager e funções CRUD de cargos, niveis, funcionarios e salarios) ...
+
+
+#-------------------------------------------------------------------------------
+# CRUD para Funcionários - Documentos (funcionarios_documentos)
+# Criação: 2025-05-28
+# Revisão: 0.1 - Ajustado para usar Matricula_Funcionario como FK.
+#-------------------------------------------------------------------------------
+
+def adicionar_documento_funcionario(db_manager, matricula_funcionario, tipo_documento, numero_documento,
+                                    data_emissao=None, orgao_emissor=None, uf_emissor=None,
+                                    data_vencimento=None, observacoes=None):
+    """
+    Adiciona um novo documento a um funcionário existente.
+    :param db_manager: Instância de DatabaseManager.
+    :param matricula_funcionario: Matrícula do funcionário ao qual o documento pertence.
+    # ... (restante dos docstrings) ...
+    """
+    # Não precisamos mais buscar ID_Funcionarios. A própria Matricula é a FK.
+    # Apenas verificamos se o funcionário existe para evitar erro de FK.
+    query_check_func = "SELECT Matricula FROM funcionarios WHERE Matricula = %s;"
+    funcionario_existe = db_manager.execute_query(query_check_func, (matricula_funcionario,), fetch_results=True)
+
+    if not funcionario_existe:
+        print(f"Erro: Funcionário com matrícula '{matricula_funcionario}' não encontrado. Não é possível adicionar documento.")
+        return False
+
+    query = """
+    INSERT INTO funcionarios_documentos (Matricula_Funcionario, Tipo_Documento, Numero_Documento,
+                                        Data_Emissao, Orgao_Emissor, Uf_Emissor, Data_Vencimento, Observacoes)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
+    """
+    params = (matricula_funcionario, tipo_documento, numero_documento, # Agora usamos matricula_funcionario aqui
+              data_emissao, orgao_emissor, uf_emissor, data_vencimento, observacoes)
+    
+    return db_manager.execute_query(query, params, fetch_results=False)
+
+def buscar_documentos_funcionario(db_manager, matricula_funcionario=None, tipo_documento=None, numero_documento=None, id_documento=None):
+    """
+    Busca documentos de funcionários. Pode filtrar por matrícula, tipo de documento, número do documento ou ID do documento.
+    # ... (restante dos docstrings) ...
+    """
+    query = """
+    SELECT 
+        fd.ID_Funcionario_Documento,
+        fd.Matricula_Funcionario, -- Seleciona a matrícula diretamente da tabela de documentos
+        f.Nome_Completo,
+        fd.Tipo_Documento,
+        fd.Numero_Documento,
+        fd.Data_Emissao,
+        fd.Orgao_Emissor,
+        fd.Uf_Emissor,
+        fd.Data_Vencimento,
+        fd.Observacoes
+    FROM 
+        funcionarios_documentos fd
+    JOIN 
+        funcionarios f ON fd.Matricula_Funcionario = f.Matricula -- Junta pela matrícula
+    """
+    conditions = []
+    params = []
+
+    if id_documento is not None:
+        conditions.append("fd.ID_Funcionario_Documento = %s")
+        params.append(id_documento)
+    
+    # Se ID_Documento não foi especificado, permite buscar por matrícula/tipo/número
+    if matricula_funcionario:
+        conditions.append("fd.Matricula_Funcionario = %s") # Filtra pela matrícula na tabela de documentos
+        params.append(matricula_funcionario)
+    
+    if tipo_documento:
+        conditions.append("fd.Tipo_Documento = %s")
+        params.append(tipo_documento)
+    
+    if numero_documento:
+        conditions.append("fd.Numero_Documento = %s")
+        params.append(numero_documento)
+    
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+    
+    query += " ORDER BY f.Nome_Completo, fd.Tipo_Documento;"
+    return db_manager.execute_query(query, tuple(params), fetch_results=True)
+
+def atualizar_documento_funcionario(db_manager, id_documento, **kwargs):
+    """
+    Atualiza um registro de documento de funcionário pelo ID do documento.
+    # ... (restante dos docstrings) ...
+    """
+    # A atualização é pelo ID do documento, então não há mudança direta na FK aqui,
+    # mas o docstring e a lógica geral se aplicam.
+    updates = []
+    params = []
+
+    # Se quiser permitir a mudança da matrícula associada ao documento, seria mais complexo
+    # mas por enquanto, manteremos a atualização de campos do documento em si.
+    column_map = {
+        'tipo_documento': 'Tipo_Documento', 'numero_documento': 'Numero_Documento',
+        'data_emissao': 'Data_Emissao', 'orgao_emissor': 'Orgao_Emissor',
+        'uf_emissor': 'Uf_Emissor', 'data_vencimento': 'Data_Vencimento',
+        'observacoes': 'Observacoes'
+    }
+
+    for key, value in kwargs.items():
+        if key in column_map:
+            updates.append(f"{column_map[key]} = %s")
+            params.append(value)
+        # Não permitimos mudar a matricula_funcionario por kwargs aqui.
+        # Isso seria uma operação de mover o documento para outro funcionário.
+        else:
+            print(f"Aviso: Campo '{key}' não reconhecido para atualização de documento.")
+    
+    if not updates:
+        print("Nenhum campo para atualizar o documento.")
+        return False
+    
+    query = f"UPDATE funcionarios_documentos SET {', '.join(updates)} WHERE ID_Funcionario_Documento = %s;"
+    params.append(id_documento)
+    return db_manager.execute_query(query, tuple(params), fetch_results=False)
+
+def deletar_documento_funcionario(db_manager, id_documento):
+    """
+    Deleta um registro de documento de funcionário pelo ID do documento.
+    # ... (restante dos docstrings) ...
+    """
+    query = "DELETE FROM funcionarios_documentos WHERE ID_Funcionario_Documento = %s;"
+    return db_manager.execute_query(query, (id_documento,), fetch_results=False)
+
+
+#-------------------------------------------------------------------------------
+# CRUD para Funcionários - Endereços (funcionarios_enderecos)
+# Criação: 2025-05-28
+# Revisão: 0.1 - Ajustado para usar Matricula_Funcionario como FK.
+#-------------------------------------------------------------------------------
+
+def adicionar_endereco_funcionario(db_manager, matricula_funcionario, tipo_endereco, logradouro, numero,
+                                   complemento=None, bairro=None, cidade=None, estado=None, cep=None):
+    """
+    Adiciona um novo endereço para um funcionário.
+    # ... (restante dos docstrings) ...
+    """
+    query_check_func = "SELECT Matricula FROM funcionarios WHERE Matricula = %s;"
+    funcionario_existe = db_manager.execute_query(query_check_func, (matricula_funcionario,), fetch_results=True)
+
+    if not funcionario_existe:
+        print(f"Erro: Funcionário com matrícula '{matricula_funcionario}' não encontrado. Não é possível adicionar endereço.")
+        return False
+
+    query = """
+    INSERT INTO funcionarios_enderecos (Matricula_Funcionario, Tipo_Endereco, Logradouro, Numero, Complemento,
+                                       Bairro, Cidade, Estado, Cep)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
+    """
+    params = (matricula_funcionario, tipo_endereco, logradouro, numero, complemento,
+              bairro, cidade, estado, cep)
+    
+    return db_manager.execute_query(query, params, fetch_results=False)
+
+def buscar_enderecos_funcionario(db_manager, matricula_funcionario=None, tipo_endereco=None, id_endereco=None):
+    """
+    Busca endereços de funcionários. Pode filtrar por matrícula, tipo de endereço ou ID do endereço.
+    # ... (restante dos docstrings) ...
+    """
+    query = """
+    SELECT 
+        fe.ID_Funcionario_Endereco,
+        fe.Matricula_Funcionario, -- Seleciona a matrícula diretamente
+        f.Nome_Completo,
+        fe.Tipo_Endereco,
+        fe.Logradouro,
+        fe.Numero,
+        fe.Complemento,
+        fe.Bairro,
+        fe.Cidade,
+        fe.Estado,
+        fe.Cep
+    FROM 
+        funcionarios_enderecos fe
+    JOIN 
+        funcionarios f ON fe.Matricula_Funcionario = f.Matricula -- Junta pela matrícula
+    """
+    conditions = []
+    params = []
+
+    if id_endereco is not None:
+        conditions.append("fe.ID_Funcionario_Endereco = %s")
+        params.append(id_endereco)
+    
+    if matricula_funcionario:
+        conditions.append("fe.Matricula_Funcionario = %s") # Filtra pela matrícula
+        params.append(matricula_funcionario)
+    
+    if tipo_endereco:
+        conditions.append("fe.Tipo_Endereco = %s")
+        params.append(tipo_endereco)
+    
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+    
+    query += " ORDER BY f.Nome_Completo, fe.Tipo_Endereco;"
+    return db_manager.execute_query(query, tuple(params), fetch_results=True)
+
+def atualizar_endereco_funcionario(db_manager, id_endereco, **kwargs):
+    """
+    Atualiza um registro de endereço de funcionário pelo ID do endereço.
+    # ... (restante dos docstrings) ...
+    """
+    updates = []
+    params = []
+
+    column_map = {
+        'tipo_endereco': 'Tipo_Endereco', 'logradouro': 'Logradouro', 'numero': 'Numero',
+        'complemento': 'Complemento', 'bairro': 'Bairro', 'cidade': 'Cidade',
+        'estado': 'Estado', 'cep': 'Cep'
+    }
+
+    for key, value in kwargs.items():
+        if key in column_map:
+            updates.append(f"{column_map[key]} = %s")
+            params.append(value)
+        else:
+            print(f"Aviso: Campo '{key}' não reconhecido para atualização de endereço.")
+    
+    if not updates:
+        print("Nenhum campo para atualizar o endereço.")
+        return False
+    
+    query = f"UPDATE funcionarios_enderecos SET {', '.join(updates)} WHERE ID_Funcionario_Endereco = %s;"
+    params.append(id_endereco)
+    return db_manager.execute_query(query, tuple(params), fetch_results=False)
+
+def deletar_endereco_funcionario(db_manager, id_endereco):
+    """
+    Deleta um registro de endereço de funcionário pelo ID do endereço.
+    # ... (restante dos docstrings) ...
+    """
+    query = "DELETE FROM funcionarios_enderecos WHERE ID_Funcionario_Endereco = %s;"
+    return db_manager.execute_query(query, (id_endereco,), fetch_results=False)
+
+
+#-------------------------------------------------------------------------------
+# CRUD para Funcionários - Contatos (funcionarios_contatos)
+# Criação: 2025-05-28
+# Revisão: 0.1 - Ajustado para usar Matricula_Funcionario como FK.
+#-------------------------------------------------------------------------------
+
+def adicionar_contato_funcionario(db_manager, matricula_funcionario, tipo_contato, valor_contato, observacoes=None):
+    """
+    Adiciona um novo contato para um funcionário.
+    # ... (restante dos docstrings) ...
+    """
+    query_check_func = "SELECT Matricula FROM funcionarios WHERE Matricula = %s;"
+    funcionario_existe = db_manager.execute_query(query_check_func, (matricula_funcionario,), fetch_results=True)
+
+    if not funcionario_existe:
+        print(f"Erro: Funcionário com matrícula '{matricula_funcionario}' não encontrado. Não é possível adicionar contato.")
+        return False
+
+    query = """
+    INSERT INTO funcionarios_contatos (Matricula_Funcionario, Tipo_Contato, Valor_Contato, Observacoes)
+    VALUES (%s, %s, %s, %s);
+    """
+    params = (matricula_funcionario, tipo_contato, valor_contato, observacoes)
+
+    return db_manager.execute_query(query, params, fetch_results=False)
+
+def buscar_contatos_funcionario(db_manager, matricula_funcionario=None, tipo_contato=None, valor_contato=None, id_contato=None):
+    """
+    Busca contatos de funcionários. Pode filtrar por matrícula, tipo de contato, valor do contato ou ID do contato.
+    # ... (restante dos docstrings) ...
+    """
+    query = """
+    SELECT
+        fc.ID_Funcionario_Contato,
+        fc.Matricula_Funcionario, -- Seleciona a matrícula diretamente
+        f.Nome_Completo,
+        fc.Tipo_Contato,
+        fc.Valor_Contato,
+        fc.Observacoes
+    FROM
+        funcionarios_contatos fc
+    JOIN
+        funcionarios f ON fc.Matricula_Funcionario = f.Matricula -- Junta pela matrícula
+    """
+    conditions = []
+    params = []
+
+    if id_contato is not None:
+        conditions.append("fc.ID_Funcionario_Contato = %s")
+        params.append(id_contato)
+    
+    if matricula_funcionario:
+        conditions.append("fc.Matricula_Funcionario = %s") # Filtra pela matrícula
+        params.append(matricula_funcionario)
+    
+    if tipo_contato:
+        conditions.append("fc.Tipo_Contato = %s")
+        params.append(tipo_contato)
+    
+    if valor_contato:
+        conditions.append("fc.Valor_Contato = %s")
+        params.append(valor_contato)
+    
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+
+    query += " ORDER BY f.Nome_Completo, fc.Tipo_Contato;"
+    return db_manager.execute_query(query, tuple(params), fetch_results=True)
+
+def atualizar_contato_funcionario(db_manager, id_contato, **kwargs):
+    """
+    Atualiza um registro de contato de funcionário pelo ID do contato.
+    # ... (restante dos docstrings) ...
+    """
+    updates = []
+    params = []
+
+    column_map = {
+        'tipo_contato': 'Tipo_Contato', 'valor_contato': 'Valor_Contato', 'observacoes': 'Observacoes'
+    }
+
+    for key, value in kwargs.items():
+        if key in column_map:
+            updates.append(f"{column_map[key]} = %s")
+            params.append(value)
+        else:
+            print(f"Aviso: Campo '{key}' não reconhecido para atualização de contato.")
+
+    if not updates:
+        print("Nenhum campo para atualizar o contato.")
+        return False
+
+    query = f"UPDATE funcionarios_contatos SET {', '.join(updates)} WHERE ID_Funcionario_Contato = %s;"
+    params.append(id_contato)
+    return db_manager.execute_query(query, tuple(params), fetch_results=False)
+
+def deletar_contato_funcionario(db_manager, id_contato):
+    """
+    Deleta um registro de contato de funcionário pelo ID do contato.
+    # ... (restante dos docstrings) ...
+    """
+    query = "DELETE FROM funcionarios_contatos WHERE ID_Funcionario_Contato = %s;"
+    return db_manager.execute_query(query, (id_contato,), fetch_results=False)
+
+#---------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------
+# db_manager.py (final do arquivo)
+
+if __name__ == "__main__":
+    # --- Configurações do seu Banco de Dados ---
+    DB_CONFIG = {
+        "host": "localhost",
+        "database": "lumob",
+        "user": "mendes",
+        "password": "Galo13BH79&*" # !!! COLOQUE SUA SENHA DO USUÁRIO MENDES AQUI !!!
+    }
+
+    # db_manager.py (dentro do bloco 'if __name__ == "__main__":')
+
+if __name__ == "__main__":
+    DB_CONFIG = {
+        "host": "localhost",
+        "database": "lumob",
+        "user": "mendes",
+        "password": "Galo13BH79&*" # !!! COLOQUE SUA SENHA DO USUÁRIO MENDES AQUI !!!
+    }
+
+    try:
+        with DatabaseManager(**DB_CONFIG) as db_manager:
+            if db_manager.connection and db_manager.connection.is_connected():
+                # ... (Seus testes anteriores para Cargos, Níveis, Funcionários e Salários aqui) ...
+
+                # Definir uma matrícula de funcionário existente para os testes
+                # Certifique-se de que 'MATR001' (ou outra matrícula) já existe no seu BD
+                matricula_teste = 'MATR001' # Exemplo: Ana Silva
+                
+                # --- Testes de CRUD para Funcionários - Documentos ---
+                print("\n--- Testes de CRUD para Documentos de Funcionários ---")
+
+                # Adicionar Documento
+                print(f"\n--- Adicionando RG para {matricula_teste} ---")
+                if adicionar_documento_funcionario(db_manager, matricula_teste, 'RG', '123456789', '2010-01-15', 'SSP', 'MG', observacoes='RG primário'):
+                    print(f"RG adicionado com sucesso para {matricula_teste}!")
+                else:
+                    print(f"Falha ao adicionar RG para {matricula_teste}. (Pode já existir)")
+
+                print(f"\n--- Adicionando CPF para {matricula_teste} ---")
+                if adicionar_documento_funcionario(db_manager, matricula_teste, 'CPF', '98765432100', '2000-05-20', observacoes='CPF do titular'):
+                    print(f"CPF adicionado com sucesso para {matricula_teste}!")
+                else:
+                    print(f"Falha ao adicionar CPF para {matricula_teste}. (Pode já existir)")
+                
+                # Buscar Documentos do Funcionário
+                print(f"\n--- Buscando todos os documentos de {matricula_teste} ---")
+                docs_func = buscar_documentos_funcionario(db_manager, matricula_funcionario=matricula_teste)
+                if docs_func:
+                    for doc in docs_func:
+                        print(f"ID: {doc['ID_Funcionario_Documento']}, Tipo: {doc['Tipo_Documento']}, Número: {doc['Numero_Documento']}, Emissor: {doc['Orgao_Emissor']}-{doc['Uf_Emissor']}")
+                else:
+                    print(f"Nenhum documento encontrado para {matricula_teste}.")
+                
+                # Atualizar Documento (pegar o ID do RG para atualizar)
+                id_rg_para_atualizar = None
+                for doc in docs_func:
+                    if doc['Tipo_Documento'] == 'RG':
+                        id_rg_para_atualizar = doc['ID_Funcionario_Documento']
+                        break
+                
+                if id_rg_para_atualizar:
+                    print(f"\n--- Atualizando RG (ID: {id_rg_para_atualizar}) de {matricula_teste} ---")
+                    if atualizar_documento_funcionario(db_manager, id_rg_para_atualizar, numero_documento='109876543', data_vencimento='2035-01-15'):
+                        print(f"RG do funcionário {matricula_teste} atualizado com sucesso!")
+                    else:
+                        print(f"Falha ao atualizar RG de {matricula_teste}.")
+                else:
+                    print(f"RG de {matricula_teste} não encontrado para atualização.")
+
+                # Deletar Documento (usar com cuidado, pode comentar após o primeiro teste)
+                # id_cpf_para_deletar = None
+                # cpf_docs = buscar_documentos_funcionario(db_manager, matricula_funcionario=matricula_teste, tipo_documento='CPF')
+                # if cpf_docs:
+                #     id_cpf_para_deletar = cpf_docs[0]['ID_Funcionario_Documento']
+                #     print(f"\n--- Deletando CPF (ID: {id_cpf_para_deletar}) de {matricula_teste} ---")
+                #     if deletar_documento_funcionario(db_manager, id_cpf_para_deletar):
+                #         print(f"CPF do funcionário {matricula_teste} deletado com sucesso!")
+                #     else:
+                #         print(f"Falha ao deletar CPF de {matricula_teste}.")
+                # else:
+                #     print(f"CPF de {matricula_teste} não encontrado para deleção.")
+
+
+                # --- Testes de CRUD para Funcionários - Endereços ---
+                print("\n--- Testes de CRUD para Endereços de Funcionários ---")
+
+                # Adicionar Endereço
+                print(f"\n--- Adicionando Endereço Residencial para {matricula_teste} ---")
+                if adicionar_endereco_funcionario(db_manager, matricula_teste, 'Residencial', 'Rua das Flores', '123',
+                                                 complemento='Apto 101', bairro='Centro', cidade='Belo Horizonte', estado='MG', cep='30123-000'):
+                    print(f"Endereço residencial adicionado com sucesso para {matricula_teste}!")
+                else:
+                    print(f"Falha ao adicionar endereço residencial para {matricula_teste}. (Pode já existir)")
+                
+                # Buscar Endereços do Funcionário
+                print(f"\n--- Buscando todos os endereços de {matricula_teste} ---")
+                enderecos_func = buscar_enderecos_funcionario(db_manager, matricula_funcionario=matricula_teste)
+                if enderecos_func:
+                    for end in enderecos_func:
+                        print(f"ID: {end['ID_Funcionario_Endereco']}, Tipo: {end['Tipo_Endereco']}, Logradouro: {end['Logradouro']}, Número: {end['Numero']}, Cidade: {end['Cidade']}-{end['Estado']}")
+                else:
+                    print(f"Nenhum endereço encontrado para {matricula_teste}.")
+
+                # Atualizar Endereço (pegar o ID do endereço residencial para atualizar)
+                id_end_residencial_para_atualizar = None
+                for end in enderecos_func:
+                    if end['Tipo_Endereco'] == 'Residencial':
+                        id_end_residencial_para_atualizar = end['ID_Funcionario_Endereco']
+                        break
+                
+                if id_end_residencial_para_atualizar:
+                    print(f"\n--- Atualizando Endereço Residencial (ID: {id_end_residencial_para_atualizar}) de {matricula_teste} ---")
+                    if atualizar_endereco_funcionario(db_manager, id_end_residencial_para_atualizar, logradouro='Avenida Principal', numero='456'):
+                        print(f"Endereço residencial do funcionário {matricula_teste} atualizado com sucesso!")
+                    else:
+                        print(f"Falha ao atualizar endereço residencial de {matricula_teste}.")
+                else:
+                    print(f"Endereço residencial de {matricula_teste} não encontrado para atualização.")
+
+                # Deletar Endereço (usar com cuidado, pode comentar após o primeiro teste)
+                # if id_end_residencial_para_atualizar:
+                #     print(f"\n--- Deletando Endereço Residencial (ID: {id_end_residencial_para_atualizar}) de {matricula_teste} ---")
+                #     if deletar_endereco_funcionario(db_manager, id_end_residencial_para_atualizar):
+                #         print(f"Endereço residencial do funcionário {matricula_teste} deletado com sucesso!")
+                #     else:
+                #         print(f"Falha ao deletar endereço residencial de {matricula_teste}.")
+
+
+                # --- Testes de CRUD para Funcionários - Contatos ---
+                print("\n--- Testes de CRUD para Contatos de Funcionários ---")
+
+                # Adicionar Contato
+                print(f"\n--- Adicionando Telefone Celular para {matricula_teste} ---")
+                if adicionar_contato_funcionario(db_manager, matricula_teste, 'Telefone Celular', '31998765432', observacoes='Contato principal'):
+                    print(f"Telefone celular adicionado com sucesso para {matricula_teste}!")
+                else:
+                    print(f"Falha ao adicionar telefone celular para {matricula_teste}. (Pode já existir)")
+
+                print(f"\n--- Adicionando Email Pessoal para {matricula_teste} ---")
+                if adicionar_contato_funcionario(db_manager, matricula_teste, 'Email Pessoal', 'ana.silva@email.com'):
+                    print(f"Email pessoal adicionado com sucesso para {matricula_teste}!")
+                else:
+                    print(f"Falha ao adicionar email pessoal para {matricula_teste}. (Pode já existir)")
+
+                # Buscar Contatos do Funcionário
+                print(f"\n--- Buscando todos os contatos de {matricula_teste} ---")
+                contatos_func = buscar_contatos_funcionario(db_manager, matricula_funcionario=matricula_teste)
+                if contatos_func:
+                    for cont in contatos_func:
+                        print(f"ID: {cont['ID_Funcionario_Contato']}, Tipo: {cont['Tipo_Contato']}, Valor: {cont['Valor_Contato']}")
+                else:
+                    print(f"Nenhum contato encontrado para {matricula_teste}.")
+
+                # Atualizar Contato (pegar o ID do Telefone Celular para atualizar)
+                id_celular_para_atualizar = None
+                for cont in contatos_func:
+                    if cont['Tipo_Contato'] == 'Telefone Celular':
+                        id_celular_para_atualizar = cont['ID_Funcionario_Contato']
+                        break
+                
+                if id_celular_para_atualizar:
+                    print(f"\n--- Atualizando Telefone Celular (ID: {id_celular_para_atualizar}) de {matricula_teste} ---")
+                    if atualizar_contato_funcionario(db_manager, id_celular_para_atualizar, valor_contato='31991234567'):
+                        print(f"Telefone celular do funcionário {matricula_teste} atualizado com sucesso!")
+                    else:
+                        print(f"Falha ao atualizar telefone celular de {matricula_teste}.")
+                else:
+                    print(f"Telefone celular de {matricula_teste} não encontrado para atualização.")
+
+                # Deletar Contato (usar com cuidado, pode comentar após o primeiro teste)
+                # id_email_para_deletar = None
+                # email_contatos = buscar_contatos_funcionario(db_manager, matricula_funcionario=matricula_teste, tipo_contato='Email Pessoal')
+                # if email_contatos:
+                #     id_email_para_deletar = email_contatos[0]['ID_Funcionario_Contato']
+                #     print(f"\n--- Deletando Email Pessoal (ID: {id_email_para_deletar}) de {matricula_teste} ---")
+                #     if deletar_contato_funcionario(db_manager, id_email_para_deletar):
+                #         print(f"Email pessoal do funcionário {matricula_teste} deletado com sucesso!")
+                #     else:
+                #         print(f"Falha ao deletar Email pessoal de {matricula_teste}.")
+                # else:
+                #     print(f"Email pessoal de {matricula_teste} não encontrado para deleção.")
+
+            else:
+                print("Não foi possível estabelecer a conexão com o banco de dados.")
+
+    except Exception as e:
+        print(f"Ocorreu um erro no bloco principal de teste: {e}")

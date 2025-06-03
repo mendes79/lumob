@@ -1,0 +1,7 @@
+ID_Funcionario_Contato,Matricula_Funcionario,Tipo_Contato,Valor_Contato,Observacoes,Data_Criacao,Data_Modificacao
+1,MATR001,Telefone Celular,31991234567,Contato principal de Ana,2025-05-28 17:00:20,2025-05-28 17:01:53
+2,MATR001,Email Pessoal,ana.silva@email.com,,2025-05-28 17:00:20,2025-05-28 17:00:20
+3,MATR002,Telefone Fixo,1133334444,Telefone residencial de Bruno,2025-05-28 17:00:20,2025-05-28 17:00:20
+6,001ABC,Email Pessoal,joao.silva@example.com,,2025-05-29 16:19:20,2025-05-29 16:19:20
+7,001ABC,Telefone Celular,31997776655,,2025-05-29 16:19:20,2025-05-29 16:19:20
+8,002DEF,Email Corporativo,maria.souza.novo@company.com,,2025-05-29 16:41:40,2025-05-29 16:41:40

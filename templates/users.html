@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LUMOB - Gerenciar Usuários</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style_welcome.css') }}"
+    />
+    <style>
+      /* Estilos básicos para o módulo de usuários (sem estilização complexa) */
+      body {
+        font-family: sans-serif;
+        background-color: #f4f4f4;
+        color: #333;
+      }
+      .container {
+        max-width: 900px;
+        margin: 50px auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        text-align: center;
+        color: #0056b3;
+      }
+      .flash-messages {
+        list-style: none;
+        padding: 0;
+        margin-bottom: 20px;
+      }
+      .flash-messages li {
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+      }
+      .flash-messages li.success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .flash-messages li.danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .flash-messages li.info {
+        background-color: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+      .add-button {
+        display: block;
+        width: 200px;
+        padding: 10px;
+        margin: 20px auto;
+        background-color: #28a745;
+        color: white;
+        text-align: center;
+        text-decoration: none;
+        border-radius: 5px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #007bff;
+        color: white;
+      }
+      .actions a,
+      .actions button {
+        padding: 5px 10px;
+        margin-right: 5px;
+        text-decoration: none;
+        border-radius: 3px;
+        cursor: pointer;
+        border: none;
+      }
+      .actions a.edit {
+        background-color: #ffc107;
+        color: #333;
+      }
+      .actions a.permissions {
+        background-color: #17a2b8;
+        color: white;
+      }
+      .actions button.delete {
+        background-color: #dc3545;
+        color: white;
+      }
+      .actions button.reset-password {
+        background-color: #6c757d;
+        color: white;
+      }
+      .back-link {
+        display: block;
+        margin-top: 30px;
+        text-align: center;
+      }
+      .back-link a {
+        color: #007bff;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Gerenciamento de Usuários</h1>
+
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %}
+      <ul class="flash-messages">
+        {% for category, message in messages %}
+        <li class="{{ category }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %} {% endwith %}
+
+      <a href="{{ url_for('add_user') }}" class="add-button"
+        >Adicionar Novo Usuário</a
+      >
+
+      {% if users %}
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nome de Usuário</th>
+            <th>Papel (Role)</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td>{{ u.id }}</td>
+            <td>{{ u.username }}</td>
+            <td>{{ u.role }}</td>
+            <td class="actions">
+              <a href="{{ url_for('edit_user', user_id=u.id) }}" class="edit"
+                >Editar</a
+              >
+              <a
+                href="{{ url_for('manage_user_permissions', user_id=u.id) }}"
+                class="permissions"
+                >Permissões</a
+              >
+              <form
+                action="{{ url_for('reset_password', user_id=u.id) }}"
+                method="POST"
+                style="display: inline"
+              >
+                <button
+                  type="submit"
+                  class="reset-password"
+                  onclick="return confirm('Tem certeza que deseja resetar a senha de {{ u.username }} para a padrão?');"
+                >
+                  Resetar Senha
+                </button>
+              </form>
+              {% if u.id != user.id %} {# Não permitir que o usuário logado se
+              delete #}
+              <form
+                action="{{ url_for('delete_user', user_id=u.id) }}"
+                method="POST"
+                style="display: inline"
+              >
+                <button
+                  type="submit"
+                  class="delete"
+                  onclick="return confirm('Tem certeza que deseja deletar o usuário {{ u.username }}? Esta ação é irreversível.');"
+                >
+                  Deletar
+                </button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p>Nenhum usuário encontrado.</p>
+      {% endif %}
+
+      <div class="back-link">
+        <a href="{{ url_for('welcome') }}">Voltar para a Página Principal</a>
+      </div>
+    </div>
+  </body>
+</html>

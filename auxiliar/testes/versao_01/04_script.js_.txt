@@ -1,0 +1,133 @@
+document.addEventListener("DOMContentLoaded", function () {
+  const openLoginPopupBtn = document.getElementById("openLoginPopup");
+  const closeLoginPopupBtn = document.getElementById("closeLoginPopup");
+  const loginPopupOverlay = document.getElementById("loginPopupOverlay");
+  const lumobTextContainer = document.querySelector(".lumob-text-container");
+  const lumobWord = document.querySelector(".lumob-word");
+  const themeToggleBtn = document.getElementById("themeToggle");
+  const body = document.body;
+
+  // --- Funções Auxiliares ---
+
+  // Gerencia a cor do texto "lumob" para que ele se misture com o fundo (invisível no estado inicial)
+  function setLumobInitialColorBasedOnTheme() {
+    if (body.classList.contains("light-mode")) {
+      lumobWord.style.color = "white"; // Corpo branco, lumob branco (invisível)
+    } else {
+      // dark-mode (padrão)
+      lumobWord.style.color = "black"; // Corpo preto, lumob preto (invisível)
+    }
+  }
+
+  // Define a cor do lumob para o estado animado (visível, contraste com o fundo)
+  function setLumobAnimatedColorBasedOnTheme() {
+    if (body.classList.contains("light-mode")) {
+      lumobWord.style.color = "black"; // Corpo branco, lumob preto (visível)
+    } else {
+      // dark-mode (padrão)
+      lumobWord.style.color = "white"; // Corpo preto, lumob branco (visível)
+    }
+  }
+
+  // --- Funções de Controle do Pop-up de Login e Animação do LUMOB ---
+
+  function openLoginPopup() {
+    console.log("FUNÇÃO: openLoginPopup() foi chamada."); // DEPURACAO
+    loginPopupOverlay.classList.add("active");
+    body.classList.add("login-popup-active"); // ADICIONA CLASSE PARA ATIVAR ANIMAÇÃO CSS DO LUMOB
+    setLumobAnimatedColorBasedOnTheme(); // Define a cor para o estado animado
+  }
+
+  function closeLoginPopup() {
+    loginPopupOverlay.classList.remove("active");
+    body.classList.remove("login-popup-active"); // REMOVE CLASSE PARA REVERTER ANIMAÇÃO CSS DO LUMOB
+    setLumobInitialColorBasedOnTheme(); // Volta a cor para o estado inicial (invisível)
+
+    // Limpa as mensagens flash (visualmente) ao fechar o pop-up manualmente
+    const flashMessages = document.querySelector(".flash-messages");
+    if (flashMessages) {
+      flashMessages.innerHTML = "";
+    }
+  }
+
+  // --- Lógica de Inicialização no carregamento da página ---
+
+  // Primeiro, define a cor inicial do lumob para ser invisível (mesma cor do fundo)
+  // Isso deve ser feito antes de qualquer tentativa de abrir o pop-up.
+  setLumobInitialColorBasedOnTheme();
+
+  // ***** CORREÇÃO AQUI: REORDENEI E SIMPLIFIQUEI ESTA SEÇÃO *****
+  // A lógica de abrir o pop-up se 'login-failed-initially' está presente
+  // deve ser a principal para controlar a visibilidade inicial.
+  if (body.classList.contains("login-failed-initially")) {
+    console.log("DETECÇÃO: 'login-failed-initially' detectada no body. Chamando openLoginPopup()."); // DEPURACAO
+    openLoginPopup(); // Abre o pop-up se a classe estiver presente (indica falha de login)
+  } else {
+    // Se não há falha de login (e portanto, a classe não está presente),
+    // garanta que o pop-up esteja fechado e o lumob no estado inicial.
+    // Isso é importante para o primeiro carregamento ou quando o login é bem-sucedido.
+    closeLoginPopup(); // Garante que o pop-up esteja fechado.
+  }
+
+
+  // --- Listeners de Eventos ---
+
+  if (openLoginPopupBtn) {
+    openLoginPopupBtn.addEventListener("click", openLoginPopup);
+  } else {
+    console.error("Elemento openLoginPopup não encontrado!");
+  }
+
+  if (closeLoginPopupBtn) {
+    closeLoginPopupBtn.addEventListener("click", closeLoginPopup);
+  } else {
+    console.error("Elemento closeLoginPopup não encontrado!");
+  }
+
+  if (loginPopupOverlay) {
+    loginPopupOverlay.addEventListener("click", function (event) {
+      if (event.target === loginPopupOverlay) {
+        closeLoginPopup();
+      }
+    });
+  } else {
+    console.error("Elemento loginPopupOverlay não encontrado!");
+  }
+
+  // --- Funcionalidade de Troca de Tema (Dark/Light Mode) ---
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener("click", function () {
+      if (body.classList.contains("light-mode")) {
+        body.classList.remove("light-mode");
+        body.classList.add("dark-mode");
+      } else {
+        body.classList.remove("dark-mode");
+        body.classList.add("light-mode");
+      }
+      // Sempre ajusta a cor do lumob após a troca de tema
+      // Se o pop-up está ativo, ele usa a cor animada, caso contrário, usa a inicial
+      if (body.classList.contains("login-popup-active")) {
+        setLumobAnimatedColorBasedOnTheme();
+      } else {
+        setLumobInitialColorBasedOnTheme();
+      }
+    });
+  } else {
+    console.error("Elemento themeToggle não encontrado!");
+  }
+
+  // --- Observer para garantir a cor do lumob caso o tema seja alterado externamente ---
+  const observer = new MutationObserver(function (mutations) {
+    mutations.forEach(function (mutation) {
+      if (mutation.attributeName === "class" && mutation.target === body) {
+        // Se a classe do body mudou, verifica o estado do pop-up para definir a cor do lumob
+        if (body.classList.contains("login-popup-active")) {
+          setLumobAnimatedColorBasedOnTheme();
+        } else {
+          setLumobInitialColorBasedOnTheme();
+        }
+      }
+    });
+  });
+  observer.observe(body, { attributes: true });
+});

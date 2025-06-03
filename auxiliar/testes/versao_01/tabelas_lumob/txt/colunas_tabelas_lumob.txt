@@ -1,0 +1,107 @@
+Table: cargos
+Columns:
+ID_Cargos int AI PK 
+Nome_Cargo varchar(100) 
+Descricao_Cargo text 
+Cbo varchar(10) 
+Data_Criacao datetime 
+Data_Modificacao datetime
+
+Table: funcionarios
+Columns:
+Matricula varchar(20) PK 
+Nome_Completo varchar(255) 
+Data_Admissao date 
+ID_Cargos int 
+ID_Niveis int 
+Status enum('Ativo','Inativo','Ferias','Afastado') 
+Data_Criacao datetime 
+Data_Modificacao datetime
+
+Table: funcionarios_contatos
+Columns:
+ID_Funcionario_Contato int AI PK 
+Matricula_Funcionario varchar(20) 
+Tipo_Contato varchar(50) 
+Valor_Contato varchar(255) 
+Observacoes text 
+Data_Criacao datetime 
+Data_Modificacao datetime
+
+Table: funcionarios_documentos
+Columns:
+ID_Funcionario_Documento int AI PK 
+Matricula_Funcionario varchar(20) 
+Tipo_Documento varchar(100) 
+Numero_Documento varchar(100) 
+Data_Emissao date 
+Orgao_Emissor varchar(50) 
+Uf_Emissor char(2) 
+Data_Vencimento date 
+Observacoes text 
+Data_Criacao datetime 
+Data_Modificacao dateti
+
+Table: funcionarios_enderecos
+Columns:
+ID_Funcionario_Endereco int AI PK 
+Matricula_Funcionario varchar(20) 
+Tipo_Endereco varchar(50) 
+Logradouro varchar(255) 
+Numero varchar(10) 
+Complemento varchar(100) 
+Bairro varchar(100) 
+Cidade varchar(100) 
+Estado char(2) 
+Cep varchar(10) 
+Data_Criacao datetime 
+Data_Modificacao datetime
+
+Table: modulos
+Columns:
+ID_Modulo int AI PK 
+Nome_Modulo varchar(100) 
+Data_Criacao datetime 
+Data_Modificacao datetime
+
+Table: niveis
+Columns:
+ID_Niveis int AI PK 
+Nome_Nivel varchar(50) 
+Descricao text 
+Data_Criacao datetime 
+Data_Modificacao datetime
+
+Table: permissoes_usuarios
+Columns:
+ID_Permissao_Usuario int AI PK 
+ID_Usuario int 
+ID_Modulo int 
+Data_Criacao datetime 
+Data_Modificacao datetime
+
+
+Table: salarios
+Columns:
+ID_Salarios int AI PK 
+ID_Cargos int 
+ID_Niveis int 
+Salario_Base decimal(10,2) 
+Periculosidade tinyint(1) 
+Insalubridade tinyint(1) 
+Ajuda_De_Custo decimal(10,2) 
+Vale_Refeicao decimal(10,2) 
+Gratificacao decimal(10,2) 
+Cesta_Basica tinyint(1) 
+Outros_Beneficios text 
+Data_Vigencia date 
+Data_Criacao datetime 
+Data_Modificacao datetime
+
+Table: usuarios
+Columns:
+id int AI PK 
+username varchar(50) 
+password varchar(255) 
+role varchar(50) 
+created_at timestamp
