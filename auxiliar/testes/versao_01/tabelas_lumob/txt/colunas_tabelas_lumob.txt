@@ -104,4 +104,5 @@ id int AI PK
 username varchar(50) 
 password varchar(255) 
 role varchar(50) 
-created_at timestamp
+created_at timestamp 
+Email varchar(255)

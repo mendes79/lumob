@@ -14,6 +14,9 @@ lumob/
 │ ├── base.html
 │ ├── login.html
 │ ├── welcome.html
+│ ├── safety/ (vazio, a ser preenchido)
+│ ├── works/ (vazio, a ser preenchido)
+│ ├── personal/ (vazio, a ser preenchido)
 │ └── users/
 │ ├── users_module.html
 │ ├── add_user.html
@@ -48,11 +51,29 @@ Estrutura básica das rotas para módulos (/pessoal, /obras, /seguranca) com ver
 Rotas CRUD para o módulo "Usuários" (/users, /users/add, /users/edit/<id>, /users/delete/<id>).
 Funcionalidade de reset de senha para usuários.
 Gerenciamento de permissões por módulo para usuários (exceto admins).
+Concluímos a integração do campo Email no módulo de usuários, incluindo:
+
+- templates/users/add_user.html: Adição do campo de e-mail com persistência de dados em caso de erros de validação.
+- templates/users/edit_user.html: Inclusão do campo de e-mail para visualização e edição.
+- templates/users/users_module.html: Adição da coluna "Email" na listagem de usuários.
+- app.py: Ajuste das rotas add_user, edit_user, users_module e manage_user_permissions para considerar o novo campo email e utilizar os caminhos corretos dos templates na nova estrutura de pastas.
+- database/db_user_manager.py: Assumiu-se que o CRUD (add_user, update_user, find_user_by_id, authenticate_user, find_user_by_email) foi adaptado para manipular o campo email no banco de dados.
 
 \*\*\* Estado Atual e Próximos Passos (Revisões Necessárias):
-O sistema está com o login funcional. A tabela Users no banco de dados foi atualizada para incluir a coluna Email, e os e-mails dos usuários de teste foram inseridos.
+Revisar as tabelas do banco de dados do módulo pessoal e refletir as mudanças no CRUD. Por exemplo, inserir em funcionário o tipo de contratação (CLT ou PJ);
 
-\*\*\* Próxima Etapa: Integrar o campo Email em todas as funcionalidades de gerenciamento de usuários.
+\*\*\* Próxima Etapa: Após ajustar as tabelas do módulo pessoal:
+A próxima fase do projeto focará no módulo Pessoal. As tabelas do banco de dados relacionadas a este módulo passarão por revisões. Após a conclusão dessas revisões, precisaremos:
+Desenvolver/Incrementar o CRUD (Create, Read, Update, Delete) do módulo Pessoal, adaptando as funções de gerenciamento de dados às novas estruturas de tabela.
+Criar as respectivas rotas no app.py para lidar com as operações do módulo Pessoal (ex: add_personal, edit_personal, view_personals).
+Atualizar o app.py para integrar essas novas rotas e a lógica de negócio do módulo Pessoal.
+
+\*\*\* Premissas e Restrições Importantes:
+Foco na Funcionalidade: A prioridade é garantir que a integração do Email esteja perfeita e que o CRUD de usuários funcione sem falhas.
+Estilização e Animações (CSS/JS): Devem ser IGNORADAS por enquanto. Não propor ou incluir alterações em arquivos CSS (static/css/style.css, static/css/style_welcome.css) ou scripts JavaScript de estilização/animação (static/js/script.js, static/js/script_welcome.js), a menos que uma alteração seja estritamente necessária para uma funcionalidade principal e seja explicitamente justificada.
+Intervenção Mínima: Sugerir alterações apenas nos arquivos e nas seções de código que são estritamente necessárias para a tarefa atual. Se uma alteração for necessária em um arquivo não esperado, a necessidade será justificada.
+
+<!-- questões da revisão anterior
 
 \*\*\* Arquivos que precisam ser revisados para tratar a coluna Email:
 
@@ -89,3 +110,4 @@ Para a integração do campo Email, a ordem que minimizará os conflitos:
 2. app.py: Depois, passamos para o app.py para garantir que ele chame os métodos corretos de db_user_manager.py e passe os dados do Email corretamente entre os formulários e o banco de dados.
 3. templates/users/\*.html: Por fim, ajustamos os templates para exibir e coletar o campo Email, pois eles dependem da lógica já estabelecida em app.py.
    Ao seguir essa ordem e você fornecer feedback se algo parecer desalinhado, garantiremos que o projeto se mantenha coeso.
+-->
