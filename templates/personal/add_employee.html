@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Adicionar Funcionário - LUMOB</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+      form div {
+        margin-bottom: 10px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      input[type="text"],
+      input[type="date"],
+      select {
+        width: calc(100% - 22px);
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box; /* Garante que padding e border sejam incluídos na largura total */
+      }
+      button {
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-right: 10px;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      .flash {
+        padding: 10px;
+        margin-bottom: 15px;
+        border-radius: 4px;
+      }
+      .flash.success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .flash.danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Adicionar Novo Funcionário</h1>
+
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %} {% endif %} {% endwith %}
+
+      <form action="{{ url_for('add_employee') }}" method="POST">
+        <div>
+          <label for="matricula">Matrícula:</label>
+          <input
+            type="text"
+            id="matricula"
+            name="matricula"
+            value="{{ next_matricula }}"
+            required
+          />
+        </div>
+        <div>
+          <label for="nome_completo">Nome Completo:</label>
+          <input type="text" id="nome_completo" name="nome_completo" required />
+        </div>
+        <div>
+          <label for="data_admissao">Data de Admissão:</label>
+          <input type="date" id="data_admissao" name="data_admissao" required />
+        </div>
+        <div>
+          <label for="id_cargo">Cargo:</label>
+          <select id="id_cargo" name="id_cargo" required>
+            <option value="">Selecione um Cargo</option>
+            {% for cargo in all_cargos %}
+            <option value="{{ cargo.ID_Cargos }}">
+              {{ cargo.Nome_Cargo }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label for="id_nivel">Nível:</label>
+          <select id="id_nivel" name="id_nivel" required>
+            <option value="">Selecione um Nível</option>
+            {% for nivel in all_niveis %}
+            <option value="{{ nivel.ID_Niveis }}">
+              {{ nivel.Nome_Nivel }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label for="status">Status:</label>
+          <select id="status" name="status" required>
+            <option value="">Selecione o Status</option>
+            <option value="Ativo">Ativo</option>
+            <option value="Inativo">Inativo</option>
+            <option value="Férias">Férias</option>
+            <option value="Afastado">Afastado</option>
+          </select>
+        </div>
+        <div>
+          <label for="tipo_contratacao">Tipo de Contratação:</label>
+          <select id="tipo_contratacao" name="tipo_contratacao" required>
+            <option value="">Selecione o Tipo</option>
+            <option value="CLT">CLT</option>
+            <option value="PJ">PJ</option>
+            <option value="Temporario">Temporário</option>
+          </select>
+        </div>
+        <div>
+          <button type="submit">Adicionar</button>
+          <button
+            type="button"
+            onclick="window.location.href='{{ url_for('personal_module') }}'"
+          >
+            Cancelar
+          </button>
+        </div>
+      </form>
+      <div class="back-link">
+        <p>
+          <a href="{{ url_for('personal_module') }}"
+            >Voltar para a Lista de Funcionários</a
+          >
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

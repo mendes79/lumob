@@ -162,6 +162,7 @@ class DBModulosPermissoesManager:
             if cursor:
                 cursor.close()
 
+
 # --- SCRIPT DE TESTE INTEGRADO ---
 if __name__ == "__main__":
     # Configurações do Banco de Dados para o teste
