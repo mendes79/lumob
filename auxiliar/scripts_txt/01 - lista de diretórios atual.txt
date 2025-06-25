@@ -1,0 +1,41 @@
+lumob
+├── database/
+│   ├── __init__.py
+│   ├── db_base.py
+│   ├── db_hr_manager.py
+│   ├── db_modulos_permissoes_manager.py
+│   └── db_user_manager.py
+├── static/
+│   ├── css/
+│   │   ├── style.css
+│   │   └── style_welcome.css
+│   ├── fonts/
+│   │   ├── MODERNA_.TTF
+│   │   ├── grandview.zip
+│   │   ├── moderna.zip
+│   │   └── read_me.pdf
+│   ├── img/
+│   │   ├── branco.png
+│   │   ├── landscape-construction.jpg
+│   │   ├── landscape-construction1.jpg
+│   │   ├── lightbulb-icon.png
+│   │   ├── obras_colorful.jpg
+│   │   ├── pessoal_colorful.jpg
+│   │   ├── seguranca_colorful.jpg
+│   │   └── users_colorful.jpg
+│   └── js/
+│       ├── script.js
+│       └── script_welcome.js
+├── templates/
+│   ├── safety/
+│   ├── works/
+│   ├── add_user.html
+│   ├── edit_user.html
+│   ├── login.html
+│   ├── manage_permissions.html
+│   ├── users.html
+│   └── welcome.html
+├── app.py
+├── conexao_db.py
+├── db_manager.py
+└── test_db_managers.py

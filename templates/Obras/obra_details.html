@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Detalhes da Obra - LUMOB</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+      p {
+        margin-bottom: 8px;
+      }
+      strong {
+        display: inline-block;
+        width: 200px;
+      } /* Aumentado para labels mais longos */
+      .actions {
+        text-align: center;
+        margin-top: 20px;
+      }
+      .actions button,
+      .actions a {
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 0 5px;
+        text-decoration: none;
+        display: inline-block;
+      }
+      .actions button.delete {
+        background-color: #dc3545;
+      }
+      .actions button:hover {
+        background-color: #0056b3;
+      }
+      .actions button.delete:hover {
+        background-color: #c82333;
+      }
+      .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Detalhes da Obra: {{ obra.Nome_Obra }}</h1>
+
+      <div>
+        <p><strong>ID da Obra:</strong> {{ obra.ID_Obras }}</p>
+        <p><strong>Número da Obra:</strong> {{ obra.Numero_Obra }}</p>
+        <p><strong>Nome da Obra:</strong> {{ obra.Nome_Obra }}</p>
+        <p>
+          <strong>Contrato Associado:</strong> {{ obra.Numero_Contrato }}
+          (Cliente: {{ obra.Nome_Cliente }})
+        </p>
+        <p><strong>Endereço:</strong> {{ obra.Endereco_Obra }}</p>
+        <p><strong>Escopo:</strong> {{ obra.Escopo_Obra }}</p>
+        <p>
+          <strong>Valor da Obra:</strong> R$ {{ "%.2f"|format(obra.Valor_Obra)
+          }}
+        </p>
+        <p>
+          <strong>Valor Aditivos:</strong> R$ {{
+          "%.2f"|format(obra.Valor_Aditivo_Total) }}
+        </p>
+        <p><strong>Status:</strong> {{ obra.Status_Obra }}</p>
+        <p>
+          <strong>Data Início Prevista:</strong> {{
+          obra.Data_Inicio_Prevista.strftime('%d/%m/%Y') if
+          obra.Data_Inicio_Prevista else 'N/A' }}
+        </p>
+        <p>
+          <strong>Data Fim Prevista:</strong> {{
+          obra.Data_Fim_Prevista.strftime('%d/%m/%Y') if obra.Data_Fim_Prevista
+          else 'N/A' }}
+        </p>
+        <p>
+          <strong>Data de Criação:</strong> {{
+          obra.Data_Criacao.strftime('%d/%m/%Y %H:%M:%S') if obra.Data_Criacao
+          else 'N/A' }}
+        </p>
+        <p>
+          <strong>Última Modificação:</strong> {{
+          obra.Data_Modificacao.strftime('%d/%m/%Y %H:%M:%S') if
+          obra.Data_Modificacao else 'N/A' }}
+        </p>
+      </div>
+
+      <div class="actions">
+        <a href="{{ url_for('edit_obra', obra_id=obra.ID_Obras) }}">Editar</a>
+        <form
+          action="{{ url_for('delete_obra', obra_id=obra.ID_Obras) }}"
+          method="POST"
+          style="display: inline"
+          onsubmit="return confirm('Tem certeza que deseja excluir esta obra? Esta ação é irreversível.');"
+        >
+          <button type="submit" class="delete">Excluir</button>
+        </form>
+      </div>
+
+      <div class="back-link">
+        <p>
+          <a href="{{ url_for('gerenciar_obras_lista') }}"
+            >Voltar para a Lista de Obras</a
+          >
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

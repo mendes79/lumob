@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Obra - LUMOB</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        h1 { text-align: center; color: #333; }
+        form div { margin-bottom: 10px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], input[type="date"], input[type="number"], select, textarea {
+            width: calc(100% - 22px); padding: 10px; border: 1px solid #ddd; border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px;
+            cursor: pointer; font-size: 16px; margin-right: 10px;
+        }
+        button:hover { background-color: #0056b3; }
+        .flash { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
+        .flash.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .flash.danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .cancel-link {
+            padding: 10px 15px; background-color: #6c757d; color: white; border: none; border-radius: 4px;
+            cursor: pointer; font-size: 16px; text-decoration: none; display: inline-block; vertical-align: middle;
+        }
+        .cancel-link:hover { background-color: #5a6268; }
+        .back-link { display: block; text-align: center; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Editar Obra: {{ obra.Nome_Obra }}</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('edit_obra', obra_id=obra.ID_Obras) }}" method="POST">
+            <div>
+                <label for="obra_id">ID da Obra:</label>
+                <input type="text" id="obra_id" name="obra_id" value="{{ obra.ID_Obras }}" readonly>
+            </div>
+            <div>
+                <label for="id_contratos">Contrato:</label>
+                <select id="id_contratos" name="id_contratos" required>
+                    <option value="">Selecione um Contrato</option>
+                    {% for contrato in all_contratos %}
+                        <option value="{{ contrato.ID_Contratos }}" {% if (form_data and form_data['id_contratos']|default('')|int == contrato.ID_Contratos) or (not form_data and obra.ID_Contratos == contrato.ID_Contratos) %}selected{% endif %}> {# Corrigido #}
+                            {{ contrato.Numero_Contrato }} ({{ contrato.Nome_Cliente }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="numero_obra">Número da Obra:</label>
+                <input type="text" id="numero_obra" name="numero_obra" value="{{ form_data['numero_obra'] if form_data else obra.Numero_Obra }}" required> {# Corrigido #}
+            </div>
+            <div>
+                <label for="nome_obra">Nome da Obra:</label>
+                <input type="text" id="nome_obra" name="nome_obra" value="{{ form_data['nome_obra'] if form_data else obra.Nome_Obra }}" required> {# Corrigido #}
+            </div>
+            <div>
+                <label for="endereco_obra">Endereço da Obra:</label>
+                <input type="text" id="endereco_obra" name="endereco_obra" value="{{ form_data['endereco_obra'] if form_data else obra.Endereco_Obra }}"> {# Corrigido #}
+            </div>
+            <div>
+                <label for="escopo_obra">Escopo da Obra:</label>
+                <textarea id="escopo_obra" name="escopo_obra" rows="5">{{ form_data['escopo_obra'] if form_data else obra.Escopo_Obra }}</textarea> {# Corrigido #}
+            </div>
+            <div>
+                <label for="valor_obra">Valor da Obra (R$):</label>
+                <input type="number" step="0.01" id="valor_obra" name="valor_obra" value="{{ form_data['valor_obra'] if form_data else '%.2f'|format(obra.Valor_Obra) }}" required> {# Corrigido #}
+            </div>
+            <div>
+                <label for="valor_aditivo_total">Valor Total de Aditivos (R$):</label>
+                <input type="number" step="0.01" id="valor_aditivo_total" name="valor_aditivo_total" value="{{ form_data['valor_aditivo_total'] if form_data else '%.2f'|format(obra.Valor_Aditivo_Total) }}"> {# Corrigido #}
+            </div>
+            <div>
+                <label for="status_obra">Status da Obra:</label>
+                <select id="status_obra" name="status_obra" required>
+                    <option value="">Selecione o Status</option>
+                    {% for status in status_options %}
+                        <option value="{{ status }}" {% if (form_data and form_data['status_obra'] == status) or (not form_data and obra.Status_Obra == status) %}selected{% endif %}>{{ status }}</option> {# Corrigido #}
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="data_inicio_prevista">Data Início Prevista:</label>
+                <input type="date" id="data_inicio_prevista" name="data_inicio_prevista" value="{{ form_data['data_inicio_prevista'] if form_data else obra.Data_Inicio_Prevista }}" required> {# Corrigido #}
+            </div>
+            <div>
+                <label for="data_fim_prevista">Data Fim Prevista:</label>
+                <input type="date" id="data_fim_prevista" name="data_fim_prevista" value="{{ form_data['data_fim_prevista'] if form_data else obra.Data_Fim_Prevista }}" required> {# Corrigido #}
+            </div>
+            <div>
+                <button type="submit">Salvar Alterações</button>
+                <a href="{{ url_for('gerenciar_obras_lista') }}" class="cancel-link">Cancelar</a>
+            </div>
+        </form>
+        <div class="back-link">
+            <p><a href="{{ url_for('gerenciar_obras_lista') }}">Voltar para a Lista de Obras</a></p>
+        </div>
+    </div>
+</body>
+</html>

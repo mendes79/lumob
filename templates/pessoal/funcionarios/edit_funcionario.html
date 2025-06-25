@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Funcionário - LUMOB</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        .container { max-width: 900px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        h1 { text-align: center; color: #333; }
+        .section-title { margin-top: 25px; margin-bottom: 15px; background-color: #e9ecef; padding: 10px; border-radius: 5px; font-weight: bold; }
+        form div { margin-bottom: 10px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], input[type="date"], input[type="number"], select, textarea {
+            width: calc(100% - 22px); padding: 10px; border: 1px solid #ddd; border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px;
+            cursor: pointer; font-size: 16px; margin-right: 10px;
+        }
+        button:hover { background-color: #0056b3; }
+        .flash { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
+        .flash.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .flash.danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6fb; }
+        .cancel-link {
+            padding: 10px 15px; background-color: #6c757d; color: white; border: none; border-radius: 4px;
+            cursor: pointer; font-size: 16px; text-decoration: none; display: inline-block; vertical-align: middle;
+        }
+        .cancel-link:hover { background-color: #5a6268; }
+        .back-link { display: block; text-align: center; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Editar Funcionário: {{ funcionario.Nome_Completo }} (Matrícula: {{ funcionario.Matricula }})</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('edit_funcionario', matricula=funcionario.Matricula) }}" method="POST">
+            <div class="section-title">Dados Cadastrais</div>
+            <div>
+                <label for="matricula">Matrícula:</label>
+                <input type="text" id="matricula" name="matricula" value="{{ form_data['matricula'] if form_data else funcionario.Matricula }}" required>
+            </div>
+            <div>
+                <label for="nome_completo">Nome Completo:</label>
+                <input type="text" id="nome_completo" name="nome_completo" value="{{ form_data['nome_completo'] if form_data else funcionario.Nome_Completo }}" required>
+            </div>
+            <div>
+                <label for="data_admissao">Data de Admissão:</label>
+                <input type="date" id="data_admissao" name="data_admissao" value="{{ form_data['data_admissao'] if form_data else funcionario.Data_Admissao }}" required>
+            </div>
+            <div>
+                <label for="id_cargos">Cargo:</label>
+                <select id="id_cargos" name="id_cargos" required>
+                    <option value="">Selecione um Cargo</option>
+                    {% for cargo in all_cargos %}
+                        <option value="{{ cargo.ID_Cargos }}" {% if (form_data and form_data['id_cargos']|default('')|int == cargo.ID_Cargos) or (not form_data and funcionario.ID_Cargos == cargo.ID_Cargos) %}selected{% endif %}>
+                            {{ cargo.Nome_Cargo }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="id_niveis">Nível:</label>
+                <select id="id_niveis" name="id_niveis" required>
+                    <option value="">Selecione um Nível</option>
+                    {% for nivel in all_niveis %}
+                        <option value="{{ nivel.ID_Niveis }}" {% if (form_data and form_data['id_niveis']|default('')|int == nivel.ID_Niveis) or (not form_data and funcionario.ID_Niveis == nivel.ID_Niveis) %}selected{% endif %}>
+                            {{ nivel.Nome_Nivel }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="status">Status:</label>
+                <select id="status" name="status" required>
+                    <option value="">Selecione o Status</option>
+                    {% for status_opt in status_options %}
+                        <option value="{{ status_opt }}" {% if (form_data and form_data['status']|default('') == status_opt) or (not form_data and funcionario.Status == status_opt) %}selected{% endif %}>{{ status_opt }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="section-title">Dados Pessoais e Documentos</div>
+            <div>
+                <label for="rg">RG:</label>
+                <input type="text" id="rg" name="rg" value="{{ form_data['rg'] if form_data else funcionario.get('rg', '') }}">
+            </div>
+            <div>
+                <label for="cpf">CPF:</label>
+                <input type="text" id="cpf" name="cpf" value="{{ form_data['cpf'] if form_data else funcionario.get('cpf', '') }}">
+            </div>
+            <div>
+                <label for="data_nascimento">Data de Nascimento:</label>
+                <input type="date" id="data_nascimento" name="data_nascimento" value="{{ form_data['data_nascimento'] if form_data else funcionario.get('data_nascimento', '') }}">
+            </div>
+            <div>
+                <label for="estado_civil">Estado Civil:</label>
+                <select id="estado_civil" name="estado_civil">
+                    <option value="">Selecione</option>
+                    {% for ec in estado_civil_options %}
+                        <option value="{{ ec }}" {% if (form_data and form_data['estado_civil']|default('') == ec) or (not form_data and funcionario.get('estado_civil') == ec) %}selected{% endif %}>{{ ec }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="nacionalidade">Nacionalidade:</label>
+                <input type="text" id="nacionalidade" name="nacionalidade" value="{{ form_data['nacionalidade'] if form_data else funcionario.get('nacionalidade', 'Brasileira') }}">
+            </div>
+            <div>
+                <label for="genero">Gênero:</label>
+                <select id="genero" name="genero">
+                    <option value="">Selecione</option>
+                    {% for gen in genero_options %}
+                        <option value="{{ gen }}" {% if (form_data and form_data['genero']|default('') == gen) or (not form_data and funcionario.get('genero') == gen) %}selected{% endif %}>{{ gen }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="ctps_numero">CTPS Número:</label>
+                <input type="text" id="ctps_numero" name="ctps_numero" value="{{ form_data['ctps_numero'] if form_data else funcionario.get('ctps_numero', '') }}">
+            </div>
+            <div>
+                <label for="ctps_serie">CTPS Série:</label>
+                <input type="text" id="ctps_serie" name="ctps_serie" value="{{ form_data['ctps_serie'] if form_data else funcionario.get('ctps_serie', '') }}">
+            </div>
+            <div>
+                <label for="pis_pasep">PIS/PASEP:</label>
+                <input type="text" id="pis_pasep" name="pis_pasep" value="{{ form_data['pis_pasep'] if form_data else funcionario.get('pis_pasep', '') }}">
+            </div>
+            <div>
+                <label for="cnh_numero">CNH Número:</label>
+                <input type="text" id="cnh_numero" name="cnh_numero" value="{{ form_data['cnh_numero'] if form_data else funcionario.get('cnh_numero', '') }}">
+            </div>
+            <div>
+                <label for="cnh_categoria">CNH Categoria:</label>
+                <input type="text" id="cnh_categoria" name="cnh_categoria" value="{{ form_data['cnh_categoria'] if form_data else funcionario.get('cnh_categoria', '') }}">
+            </div>
+            <div>
+                <label for="titulo_eleitor_numero">Título de Eleitor Número:</label>
+                <input type="text" id="titulo_eleitor_numero" name="titulo_eleitor_numero" value="{{ form_data['titulo_eleitor_numero'] if form_data else funcionario.get('titulo_eleitor_numero', '') }}">
+            </div>
+            <div>
+                <label for="titulo_eleitor_zona">Título de Eleitor Zona:</label>
+                <input type="text" id="titulo_eleitor_zona" name="titulo_eleitor_zona" value="{{ form_data['titulo_eleitor_zona'] if form_data else funcionario.get('titulo_eleitor_zona', '') }}">
+            </div>
+            <div>
+                <label for="titulo_eleitor_secao">Título de Eleitor Seção:</label>
+                <input type="text" id="titulo_eleitor_secao" name="titulo_eleitor_secao" value="{{ form_data['titulo_eleitor_secao'] if form_data else funcionario.get('titulo_eleitor_secao', '') }}">
+            </div>
+
+            <div class="section-title">Endereço Residencial</div>
+            <div>
+                <label for="logradouro">Logradouro:</label>
+                <input type="text" id="logradouro" name="logradouro" value="{{ form_data['logradouro'] if form_data else funcionario.get('logradouro', '') }}">
+            </div>
+            <div>
+                <label for="numero_end">Número:</label>
+                <input type="text" id="numero_end" name="numero_end" value="{{ form_data['numero_end'] if form_data else funcionario.get('numero_end', '') }}">
+            </div>
+            <div>
+                <label for="complemento">Complemento:</label>
+                <input type="text" id="complemento" name="complemento" value="{{ form_data['complemento'] if form_data else funcionario.get('complemento', '') }}">
+            </div>
+            <div>
+                <label for="bairro">Bairro:</label>
+                <input type="text" id="bairro" name="bairro" value="{{ form_data['bairro'] if form_data else funcionario.get('bairro', '') }}">
+            </div>
+            <div>
+                <label for="cidade">Cidade:</label>
+                <input type="text" id="cidade" name="cidade" value="{{ form_data['cidade'] if form_data else funcionario.get('cidade', '') }}">
+            </div>
+            <div>
+                <label for="estado_end">Estado (UF):</label>
+                <input type="text" id="estado_end" name="estado_end" value="{{ form_data['estado_end'] if form_data else funcionario.get('estado_end', '') }}">
+            </div>
+            <div>
+                <label for="cep">CEP:</label>
+                <input type="text" id="cep" name="cep" value="{{ form_data['cep'] if form_data else funcionario.get('cep', '') }}">
+            </div>
+
+            <div class="section-title">Contatos</div>
+            <div>
+                <label for="tel_principal">Telefone Principal:</label>
+                <input type="text" id="tel_principal" name="tel_principal" value="{{ form_data['tel_principal'] if form_data else funcionario.get('tel_principal', '') }}">
+            </div>
+            <div>
+                <label for="email_pessoal">E-mail Pessoal:</label>
+                <input type="email" id="email_pessoal" name="email_pessoal" value="{{ form_data['email_pessoal'] if form_data else funcionario.get('email_pessoal', '') }}">
+            </div>
+
+            <div>
+                <button type="submit">Salvar Alterações</button>
+                <a href="{{ url_for('funcionarios_module') }}" class="cancel-link">Cancelar</a>
+            </div>
+        </form>
+        <div class="back-link">
+            <p><a href="{{ url_for('funcionarios_module') }}">Voltar para a Lista de Funcionários</a></p>
+        </div>
+    </div>
+</body>
+</html>

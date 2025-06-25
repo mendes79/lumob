@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Detalhes da Medição - LUMOB</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+      p {
+        margin-bottom: 8px;
+      }
+      strong {
+        display: inline-block;
+        width: 220px;
+      }
+      .actions {
+        text-align: center;
+        margin-top: 20px;
+      }
+      .actions button,
+      .actions a {
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 0 5px;
+        text-decoration: none;
+        display: inline-block;
+      }
+      .actions button.delete {
+        background-color: #dc3545;
+      }
+      .actions button:hover {
+        background-color: #0056b3;
+      }
+      .actions button.delete:hover {
+        background-color: #c82333;
+      }
+      .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>
+        Detalhes da Medição: {{ medicao.Numero_Medicao }} (Obra: {{
+        medicao.Nome_Obra }})
+      </h1>
+
+      <div>
+        <p><strong>ID da Medição:</strong> {{ medicao.ID_Medicoes }}</p>
+        <p><strong>Número da Medição:</strong> {{ medicao.Numero_Medicao }}</p>
+        <p>
+          <strong>Obra Associada:</strong> {{ medicao.Numero_Obra }} - {{
+          medicao.Nome_Obra }}
+        </p>
+        <p>
+          <strong>Valor da Medição:</strong> R$ {{
+          "%.2f"|format(medicao.Valor_Medicao) }}
+        </p>
+        <p>
+          <strong>Data da Medição:</strong> {{
+          medicao.Data_Medicao.strftime('%d/%m/%Y') if medicao.Data_Medicao else
+          'N/A' }}
+        </p>
+        <p>
+          <strong>Mês de Referência:</strong> {{ medicao.Mes_Referencia if
+          medicao.Mes_Referencia else 'N/A' }}
+        </p>
+        <p>
+          <strong>Data de Aprovação:</strong> {{
+          medicao.Data_Aprovacao.strftime('%d/%m/%Y') if medicao.Data_Aprovacao
+          else 'N/A' }}
+        </p>
+        <p><strong>Status da Medição:</strong> {{ medicao.Status_Medicao }}</p>
+        <p><strong>Observações:</strong> {{ medicao.Observacao_Medicao }}</p>
+        <p>
+          <strong>Data de Criação:</strong> {{
+          medicao.Data_Criacao.strftime('%d/%m/%Y %H:%M:%S') if
+          medicao.Data_Criacao else 'N/A' }}
+        </p>
+        <p>
+          <strong>Última Modificação:</strong> {{
+          medicao.Data_Modificacao.strftime('%d/%m/%Y %H:%M:%S') if
+          medicao.Data_Modificacao else 'N/A' }}
+        </p>
+      </div>
+
+      <div class="actions">
+        <a href="{{ url_for('edit_medicao', medicao_id=medicao.ID_Medicoes) }}"
+          >Editar</a
+        >
+        <form
+          action="{{ url_for('delete_medicao', medicao_id=medicao.ID_Medicoes) }}"
+          method="POST"
+          style="display: inline"
+          onsubmit="return confirm('Tem certeza que deseja excluir esta Medição? Esta ação é irreversível.');"
+        >
+          <button type="submit" class="delete">Excluir</button>
+        </form>
+      </div>
+
+      <div class="back-link">
+        <p>
+          <a href="{{ url_for('medicoes_module') }}"
+            >Voltar para a Lista de Medições</a
+          >
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

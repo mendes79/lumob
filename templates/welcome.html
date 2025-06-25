@@ -117,7 +117,7 @@
         module.Nome_Modulo %} {% set module_url = '#' %} {# Default para módulos
         sem rota #} {# Mapeamento de Nome do Módulo para URL da Rota #} {% if
         module_name == 'Pessoal' %} {% set module_url =
-        url_for('personal_module') %} {% elif module_name == 'Obras' %} {% set
+        url_for('pessoal_module') %} {% elif module_name == 'Obras' %} {% set
         module_url = url_for('obras_module') %} {% elif module_name ==
         'Usuários' %} {% set module_url = url_for('users_module') %} {% elif
         module_name == 'Segurança' %} {% set module_url =

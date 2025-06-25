@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Seguro - LUMOB</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        h1 { text-align: center; color: #333; }
+        form div { margin-bottom: 10px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], input[type="date"], input[type="number"], select, textarea {
+            width: calc(100% - 22px); padding: 10px; border: 1px solid #ddd; border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px;
+            cursor: pointer; font-size: 16px; margin-right: 10px;
+        }
+        button:hover { background-color: #0056b3; }
+        .flash { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
+        .flash.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .flash.danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6fb; }
+        .cancel-link {
+            padding: 10px 15px; background-color: #6c757d; color: white; border: none; border-radius: 4px;
+            cursor: pointer; font-size: 16px; text-decoration: none; display: inline-block; vertical-align: middle;
+        }
+        .cancel-link:hover { background-color: #5a6268; }
+        .back-link { display: block; text-align: center; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Editar Seguro: {{ seguro.Numero_Apolice }} (Obra: {{ seguro.Nome_Obra }})</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('edit_seguro', seguro_id=seguro.ID_Seguros) }}" method="POST">
+            <div>
+                <label for="seguro_id">ID do Seguro:</label>
+                <input type="text" id="seguro_id" name="seguro_id" value="{{ seguro.ID_Seguros }}" readonly>
+            </div>
+            <div>
+                <label for="id_obras">Obra:</label>
+                <select id="id_obras" name="id_obras" required>
+                    <option value="">Selecione uma Obra</option>
+                    {% for obra in all_obras %}
+                        <option value="{{ obra.ID_Obras }}" {% if (form_data and form_data['id_obras']|default('')|int == obra.ID_Obras) or (not form_data and seguro.ID_Obras == obra.ID_Obras) %}selected{% endif %}>
+                            {{ obra.Numero_Obra }} - {{ obra.Nome_Obra }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="numero_apolice">Número da Apólice:</label>
+                <input type="text" id="numero_apolice" name="numero_apolice" value="{{ form_data['numero_apolice'] if form_data else seguro.Numero_Apolice }}" required>
+            </div>
+            <div>
+                <label for="seguradora">Seguradora:</label>
+                <input type="text" id="seguradora" name="seguradora" value="{{ form_data['seguradora'] if form_data else seguro.Seguradora }}" required>
+            </div>
+            <div>
+                <label for="tipo_seguro">Tipo de Seguro:</label>
+                <select id="tipo_seguro" name="tipo_seguro" required>
+                    <option value="">Selecione o Tipo</option>
+                    {% for tipo in tipo_seguro_options %}
+                        <option value="{{ tipo }}" {% if (form_data and form_data['tipo_seguro'] == tipo) or (not form_data and seguro.Tipo_Seguro == tipo) %}selected{% endif %}>{{ tipo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="valor_segurado">Valor Segurado (R$):</label>
+                <input type="number" step="0.01" id="valor_segurado" name="valor_segurado" value="{{ form_data['valor_segurado'] if form_data else '%.2f'|format(seguro.Valor_Segurado) }}">
+            </div>
+            <div>
+                <label for="data_inicio_vigencia">Data Início Vigência:</label>
+                <input type="date" id="data_inicio_vigencia" name="data_inicio_vigencia" value="{{ form_data['data_inicio_vigencia'] if form_data else (seguro.Data_Inicio_Vigencia) }}">
+            </div>
+            <div>
+                <label for="data_fim_vigencia">Data Fim Vigência:</label>
+                <input type="date" id="data_fim_vigencia" name="data_fim_vigencia" value="{{ form_data['data_fim_vigencia'] if form_data else (seguro.Data_Fim_Vigencia) }}">
+            </div>
+            <div>
+                <label for="status_seguro">Status do Seguro:</label>
+                <select id="status_seguro" name="status_seguro">
+                    <option value="">Selecione o Status</option>
+                    {% for status in status_options %}
+                        <option value="{{ status }}" {% if (form_data and form_data['status_seguro'] == status) or (not form_data and seguro.Status_Seguro == status) %}selected{% endif %}>{{ status }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="observacoes_seguro">Observações:</label>
+                <textarea id="observacoes_seguro" name="observacoes_seguro" rows="3">{{ form_data['observacoes_seguro'] if form_data else seguro.Observacoes_Seguro }}</textarea>
+            </div>
+            <div>
+                <button type="submit">Salvar Alterações</button>
+                <a href="{{ url_for('seguros_module') }}" class="cancel-link">Cancelar</a>
+            </div>
+        </form>
+        <div class="back-link">
+            <p><a href="{{ url_for('seguros_module') }}">Voltar para a Lista de Seguros</a></p>
+        </div>
+    </div>
+</body>
+</html>

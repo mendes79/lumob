@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Detalhes do Funcionário - LUMOB</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 20px;
+      }
+      .container {
+        max-width: 900px;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+      .section-title {
+        margin-top: 25px;
+        margin-bottom: 15px;
+        background-color: #e9ecef;
+        padding: 10px;
+        border-radius: 5px;
+        font-weight: bold;
+      }
+      p {
+        margin-bottom: 8px;
+      }
+      strong {
+        display: inline-block;
+        width: 220px;
+      }
+      .actions {
+        text-align: center;
+        margin-top: 20px;
+      }
+      .actions button,
+      .actions a {
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 0 5px;
+        text-decoration: none;
+        display: inline-block;
+      }
+      .actions button.delete {
+        background-color: #dc3545;
+      }
+      .actions button:hover {
+        background-color: #0056b3;
+      }
+      .actions button.delete:hover {
+        background-color: #c82333;
+      }
+      .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+      }
+
+      /* Estilo para impressão */
+      @media print {
+        .actions,
+        .back-link {
+          display: none; /* Esconde botões e links na impressão */
+        }
+        .container {
+          box-shadow: none;
+          border: none;
+          margin: 0;
+          padding: 0;
+        }
+        body {
+          margin: 0;
+          padding: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Detalhes do Funcionário: {{ funcionario.Nome_Completo }}</h1>
+
+      <div class="section-title">Dados Cadastrais</div>
+      <div>
+        <p><strong>Matrícula:</strong> {{ funcionario.Matricula }}</p>
+        <p><strong>Nome Completo:</strong> {{ funcionario.Nome_Completo }}</p>
+        <p>
+          <strong>Data de Admissão:</strong> {{
+          funcionario.Data_Admissao.strftime('%d/%m/%Y') if
+          funcionario.Data_Admissao else 'N/A' }}
+        </p>
+        <p><strong>Cargo:</strong> {{ funcionario.Nome_Cargo }}</p>
+        <p><strong>Nível:</strong> {{ funcionario.Nome_Nivel }}</p>
+        <p><strong>Status:</strong> {{ funcionario.Status }}</p>
+        <p>
+          <strong>Data de Criação:</strong> {{
+          funcionario.Data_Criacao.strftime('%d/%m/%Y %H:%M:%S') if
+          funcionario.Data_Criacao else 'N/A' }}
+        </p>
+        <p>
+          <strong>Última Modificação:</strong> {{
+          funcionario.Data_Modificacao.strftime('%d/%m/%Y %H:%M:%S') if
+          funcionario.Data_Modificacao else 'N/A' }}
+        </p>
+      </div>
+
+      <div class="section-title">Dados Pessoais e Documentos</div>
+      {% if funcionario_docs %} {% for doc in funcionario_docs %}
+      <div>
+        <p><strong>Tipo Documento:</strong> {{ doc.Tipo_Documento }}</p>
+        <p><strong>Número Documento:</strong> {{ doc.Numero_Documento }}</p>
+        {% if doc.Data_Emissao %}
+        <p>
+          <strong>Data de Emissão:</strong> {{
+          doc.Data_Emissao.strftime('%d/%m/%Y') }}
+        </p>
+        {% endif %} {% if doc.Orgao_Emissor %}
+        <p><strong>Órgão Emissor:</strong> {{ doc.Orgao_Emissor }}</p>
+        {% endif %} {% if doc.Uf_Emissor %}
+        <p><strong>UF Emissor:</strong> {{ doc.Uf_Emissor }}</p>
+        {% endif %} {% if doc.Data_Vencimento %}
+        <p>
+          <strong>Data de Vencimento:</strong> {{
+          doc.Data_Vencimento.strftime('%d/%m/%Y') }}
+        </p>
+        {% endif %} {% if doc.Observacoes %}
+        <p><strong>Observações:</strong> {{ doc.Observacoes }}</p>
+        {% endif %} {% if doc.Data_Nascimento %}
+        <p>
+          <strong>Data de Nascimento:</strong> {{
+          doc.Data_Nascimento.strftime('%d/%m/%Y') }}
+        </p>
+        {% endif %} {% if doc.Estado_Civil %}
+        <p><strong>Estado Civil:</strong> {{ doc.Estado_Civil }}</p>
+        {% endif %} {% if doc.Nacionalidade %}
+        <p><strong>Nacionalidade:</strong> {{ doc.Nacionalidade }}</p>
+        {% endif %} {% if doc.Genero %}
+        <p><strong>Gênero:</strong> {{ doc.Genero }}</p>
+        {% endif %}
+        <hr style="border-top: 1px dashed #ccc; margin: 10px 0" />
+      </div>
+      {% endfor %} {% else %}
+      <p>Nenhum documento ou dado pessoal detalhado encontrado.</p>
+      {% endif %}
+
+      <div class="section-title">Endereços</div>
+      {% if funcionario_enderecos %} {% for end in funcionario_enderecos %}
+      <div>
+        <p><strong>Tipo Endereço:</strong> {{ end.Tipo_Endereco }}</p>
+        <p>
+          <strong>Logradouro:</strong> {{ end.Logradouro }}, {{ end.Numero }} {%
+          if end.Complemento %}- {{ end.Complemento }}{% endif %}
+        </p>
+        <p><strong>Bairro:</strong> {{ end.Bairro }}</p>
+        <p>
+          <strong>Cidade/Estado/CEP:</strong> {{ end.Cidade }} / {{ end.Estado
+          }} - {{ end.Cep }}
+        </p>
+        <hr style="border-top: 1px dashed #ccc; margin: 10px 0" />
+      </div>
+      {% endfor %} {% else %}
+      <p>Nenhum endereço encontrado.</p>
+      {% endif %}
+
+      <div class="section-title">Contatos</div>
+      {% if funcionario_contatos %} {% for contato in funcionario_contatos %}
+      <div>
+        <p><strong>Tipo Contato:</strong> {{ contato.Tipo_Contato }}</p>
+        <p><strong>Valor:</strong> {{ contato.Valor_Contato }}</p>
+        {% if contato.Observacoes %}
+        <p><strong>Observações:</strong> {{ contato.Observacoes }}</p>
+        {% endif %}
+        <hr style="border-top: 1px dashed #ccc; margin: 10px 0" />
+      </div>
+      {% endfor %} {% else %}
+      <p>Nenhum contato encontrado.</p>
+      {% endif %}
+
+      <div class="actions">
+        <a
+          href="{{ url_for('edit_funcionario', matricula=funcionario.Matricula) }}"
+          >Editar</a
+        >
+        <button
+          type="button"
+          onclick="window.print()"
+          style="background-color: #007bff"
+        >
+          Imprimir
+        </button>
+        <form
+          action="{{ url_for('delete_funcionario', matricula=funcionario.Matricula) }}"
+          method="POST"
+          style="display: inline"
+          onsubmit="return confirm('Tem certeza que deseja excluir este funcionário? Esta ação é irreversível.');"
+        >
+          <button type="submit" class="delete">Excluir</button>
+        </form>
+      </div>
+
+      <div class="back-link">
+        <p>
+          <a href="{{ url_for('funcionarios_module') }}"
+            >Voltar para a Lista de Funcionários</a
+          >
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

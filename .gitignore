@@ -1,0 +1,13 @@
+# Ignorar arquivos Python de cache
+__pycache__/
+*.pyc
+
+# Ignorar arquivos de backup e temporários
+*.bak
+* bkp *.py
+*.mwb # Ou outros arquivos gerados que não são para versionar
+*.log
+
+# Ignorar arquivos específicos do sistema operacional
+.DS_Store
+Thumbs.db

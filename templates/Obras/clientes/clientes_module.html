@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LUMOB - Clientes</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style_welcome.css') }}"
+    />
+    <style>
+      body {
+        font-family: sans-serif;
+        background-color: #f4f4f4;
+        color: #333;
+        margin: 20px;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 50px auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        text-align: center;
+        color: #0056b3;
+      }
+      .flash-messages {
+        list-style: none;
+        padding: 0;
+        margin-bottom: 20px;
+      }
+      .flash-messages li {
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+      }
+      .flash-messages li.success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .flash-messages li.danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .flash-messages li.info {
+        background-color: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+
+      .action-buttons {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+      .add-button,
+      .print-button,
+      .export-excel-button {
+        display: block;
+        padding: 10px 20px;
+        color: white;
+        text-align: center;
+        text-decoration: none;
+        border-radius: 5px;
+        margin-left: 10px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        border: none;
+      }
+      .add-button {
+        background-color: #28a745;
+      }
+      .print-button {
+        background-color: #007bff;
+      }
+      .export-excel-button {
+        background-color: #1e7e34;
+      }
+      .add-button:hover {
+        background-color: #218838;
+      }
+      .print-button:hover {
+        background-color: #0056b3;
+      }
+      .export-excel-button:hover {
+        background-color: #17642a;
+      }
+
+      .filter-form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+      }
+      .filter-form label {
+        white-space: nowrap;
+        margin-right: 5px;
+        align-self: center;
+      }
+      .filter-form input,
+      .filter-form select,
+      .filter-form button {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      .filter-form button {
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
+      }
+      .filter-form button:hover {
+        background-color: #0056b3;
+      }
+      .filter-form .button {
+        background-color: #6c757d;
+        color: white;
+        text-decoration: none;
+        padding: 8px 10px;
+        border-radius: 4px;
+        display: inline-block;
+      }
+      .filter-form .button:hover {
+        background-color: #5a6268;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #007bff;
+        color: white;
+      }
+      .actions a,
+      .actions button {
+        padding: 5px 10px;
+        margin-right: 5px;
+        text-decoration: none;
+        border-radius: 3px;
+        cursor: pointer;
+        border: none;
+        margin-bottom: 5px;
+        display: inline-block;
+      }
+      .actions a.view {
+        background-color: #17a2b8;
+        color: white;
+      }
+      .actions a.edit {
+        background-color: #ffc107;
+        color: #333;
+      }
+      .actions button.delete {
+        background-color: #dc3545;
+        color: white;
+      }
+      .actions a:hover,
+      .actions button:hover {
+        opacity: 0.9;
+      }
+      .back-link {
+        display: block;
+        margin-top: 30px;
+        text-align: center;
+      }
+      .back-link a {
+        color: #007bff;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Gerenciamento de Clientes</h1>
+
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %}
+      <ul class="flash-messages">
+        {% for category, message in messages %}
+        <li class="{{ category }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %} {% endwith %}
+
+      <div class="action-buttons">
+        <a href="{{ url_for('add_cliente') }}" class="add-button"
+          >Adicionar Novo Cliente</a
+        >
+        <button type="button" onclick="window.print()" class="print-button">
+          Imprimir Relação
+        </button>
+        <a
+          href="{{ url_for('export_clientes_excel') }}"
+          class="export-excel-button"
+          >Exportar para Excel</a
+        >
+      </div>
+
+      <form
+        method="GET"
+        class="filter-form"
+        action="{{ url_for('clientes_module') }}"
+      >
+        <label for="nome_cliente">Nome do Cliente:</label>
+        <input
+          type="text"
+          id="nome_cliente"
+          name="nome_cliente"
+          value="{{ selected_nome if selected_nome else '' }}"
+          placeholder="Buscar por Nome"
+        />
+
+        <label for="cnpj_cliente">CNPJ:</label>
+        <input
+          type="text"
+          id="cnpj_cliente"
+          name="cnpj_cliente"
+          value="{{ selected_cnpj if selected_cnpj else '' }}"
+          placeholder="Buscar por CNPJ"
+        />
+
+        <button type="submit">Filtrar</button>
+        <a href="{{ url_for('clientes_module') }}" class="button"
+          >Limpar Filtros</a
+        >
+      </form>
+
+      {% if clientes %}
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nome do Cliente</th>
+            <th>CNPJ</th>
+            <th>Telefone</th>
+            <th>Email</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for cliente in clientes %}
+          <tr>
+            <td>{{ cliente.ID_Clientes }}</td>
+            <td>{{ cliente.Nome_Cliente }}</td>
+            <td>{{ cliente.CNPJ_Cliente }}</td>
+            <td>{{ cliente.Telefone_Cliente }}</td>
+            <td>{{ cliente.Email_Cliente }}</td>
+            <td class="actions">
+              <a
+                href="{{ url_for('cliente_details', cliente_id=cliente.ID_Clientes) }}"
+                class="view"
+                >Detalhes</a
+              >
+              <a
+                href="{{ url_for('edit_cliente', cliente_id=cliente.ID_Clientes) }}"
+                class="edit"
+                >Editar</a
+              >
+              <form
+                action="{{ url_for('delete_cliente', cliente_id=cliente.ID_Clientes) }}"
+                method="POST"
+                style="display: inline"
+                onsubmit="return confirm('Tem certeza que deseja excluir o cliente {{ cliente.Nome_Cliente }}? Esta ação é irreversível.');"
+              >
+                <button type="submit" class="delete">Excluir</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p>Nenhum cliente encontrado.</p>
+      {% endif %}
+
+      <div class="back-link">
+        <a href="{{ url_for('obras_module') }}">Voltar para o Módulo Obras</a>
+        {# Aponta para o hub obras_welcome.html #}
+      </div>
+    </div>
+  </body>
+</html>

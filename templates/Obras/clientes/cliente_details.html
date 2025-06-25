@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Detalhes do Cliente - LUMOB</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+      p {
+        margin-bottom: 8px;
+      }
+      strong {
+        display: inline-block;
+        width: 180px;
+      }
+      .actions {
+        text-align: center;
+        margin-top: 20px;
+      }
+      .actions button,
+      .actions a {
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 0 5px;
+        text-decoration: none;
+        display: inline-block;
+      }
+      .actions button.delete {
+        background-color: #dc3545;
+      }
+      .actions button:hover {
+        background-color: #0056b3;
+      }
+      .actions button.delete:hover {
+        background-color: #c82333;
+      }
+      .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Detalhes do Cliente: {{ cliente.Nome_Cliente }}</h1>
+
+      <div>
+        <p><strong>ID do Cliente:</strong> {{ cliente.ID_Clientes }}</p>
+        <p><strong>Nome do Cliente:</strong> {{ cliente.Nome_Cliente }}</p>
+        <p><strong>CNPJ:</strong> {{ cliente.CNPJ_Cliente }}</p>
+        <p><strong>Razão Social:</strong> {{ cliente.Razao_Social_Cliente }}</p>
+        <p><strong>Endereço:</strong> {{ cliente.Endereco_Cliente }}</p>
+        <p><strong>Telefone:</strong> {{ cliente.Telefone_Cliente }}</p>
+        <p><strong>Email:</strong> {{ cliente.Email_Cliente }}</p>
+        <p>
+          <strong>Contato Principal:</strong> {{ cliente.Contato_Principal_Nome
+          }}
+        </p>
+        <p>
+          <strong>Data de Criação:</strong> {{
+          cliente.Data_Criacao.strftime('%d/%m/%Y %H:%M:%S') if
+          cliente.Data_Criacao else 'N/A' }}
+        </p>
+        <p>
+          <strong>Última Modificação:</strong> {{
+          cliente.Data_Modificacao.strftime('%d/%m/%Y %H:%M:%S') if
+          cliente.Data_Modificacao else 'N/A' }}
+        </p>
+      </div>
+
+      <div class="actions">
+        <a href="{{ url_for('edit_cliente', cliente_id=cliente.ID_Clientes) }}"
+          >Editar</a
+        >
+        <form
+          action="{{ url_for('delete_cliente', cliente_id=cliente.ID_Clientes) }}"
+          method="POST"
+          style="display: inline"
+          onsubmit="return confirm('Tem certeza que deseja excluir este cliente? Esta ação é irreversível.');"
+        >
+          <button type="submit" class="delete">Excluir</button>
+        </form>
+      </div>
+
+      <div class="back-link">
+        <p>
+          <a href="{{ url_for('clientes_module') }}"
+            >Voltar para a Lista de Clientes</a
+          >
+        </p>
+        {# Aponta para a lista de clientes #}
+      </div>
+    </div>
+  </body>
+</html>
