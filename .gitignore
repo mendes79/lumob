@@ -11,3 +11,11 @@ __pycache__/
 # Ignorar arquivos específicos do sistema operacional
 .DS_Store
 Thumbs.db
+
+# Arquivos de backup pessoais
+*bkp*.py
+*bkp*.txt
+*.old
+
+# Arquivos gerados que não devem ser versionados (ex: diagramas, se não forem parte do código)
+*.mwb
