@@ -1,0 +1,17 @@
+# Arquivos de cache do Python
+__pycache__/
+*.pyc
+
+# Arquivos de backup pessoais
+*bkp*.py
+*bkp*.txt
+*.bak
+*.old
+
+# Arquivos gerados que não devem ser versionados (ex: diagramas, se não forem parte do código)
+*.mwb
+
+# Diretórios de módulos temporários/gerados automaticamente
+templates/Obras/
+templates/pessoal/
+templates/seguranca/
