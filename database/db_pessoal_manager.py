@@ -562,6 +562,8 @@ class PessoalManager:
             return [self._format_date_fields(item) for item in results]
         return []
 
+# Verificar se preciso desses 2 métodos "dropdown" <<<<<
+
     # --- Métodos de Cargos (Dropdown) ---
     def get_all_cargos_for_dropdown(self):
         """Retorna uma lista de cargos para preencher dropdowns."""
@@ -573,3 +575,203 @@ class PessoalManager:
         """Retorna uma lista de níveis para preencher dropdowns."""
         query = "SELECT ID_Niveis, Nome_Nivel FROM niveis ORDER BY Nome_Nivel"
         return self.db.execute_query(query, fetch_results=True)
+
+# database/db_pessoal_manager.py (Adicione estes métodos dentro da classe PessoalManager, após os métodos de Funcionários)
+
+    # --- Métodos de Cargos ---
+    def get_all_cargos(self, search_nome=None):
+        """
+        Retorna uma lista de todos os cargos, opcionalmente filtrada.
+        """
+        query = """
+            SELECT
+                ID_Cargos,
+                Nome_Cargo,
+                Descricao_Cargo,
+                Cbo,
+                Data_Criacao,
+                Data_Modificacao
+            FROM
+                cargos
+            WHERE 1=1
+        """
+        params = []
+        if search_nome:
+            query += " AND Nome_Cargo LIKE %s"
+            params.append(f"%{search_nome}%")
+        
+        query += " ORDER BY Nome_Cargo"
+
+        results = self.db.execute_query(query, tuple(params), fetch_results=True)
+        if results:
+            return [self._format_date_fields(item) for item in results]
+        return results
+
+    def add_cargo(self, nome_cargo, descricao_cargo, cbo):
+        """
+        Adiciona um novo cargo ao banco de dados.
+        """
+        query = """
+            INSERT INTO cargos (Nome_Cargo, Descricao_Cargo, Cbo, Data_Criacao, Data_Modificacao)
+            VALUES (%s, %s, %s, NOW(), NOW())
+        """
+        params = (nome_cargo, descricao_cargo, cbo)
+        return self.db.execute_query(query, params, fetch_results=False)
+
+    def get_cargo_by_id(self, cargo_id):
+        """
+        Retorna os dados de um cargo pelo ID.
+        """
+        query = """
+            SELECT
+                ID_Cargos,
+                Nome_Cargo,
+                Descricao_Cargo,
+                Cbo,
+                Data_Criacao,
+                Data_Modificacao
+            FROM
+                cargos
+            WHERE ID_Cargos = %s
+        """
+        result = self.db.execute_query(query, (cargo_id,), fetch_results=True)
+        if result:
+            return self._format_date_fields(result[0])
+        return None
+
+    def update_cargo(self, cargo_id, nome_cargo, descricao_cargo, cbo):
+        """
+        Atualiza os dados de um cargo existente.
+        """
+        query = """
+            UPDATE cargos
+            SET
+                Nome_Cargo = %s,
+                Descricao_Cargo = %s,
+                Cbo = %s,
+                Data_Modificacao = NOW()
+            WHERE ID_Cargos = %s
+        """
+        params = (nome_cargo, descricao_cargo, cbo, cargo_id)
+        return self.db.execute_query(query, params, fetch_results=False)
+
+    def delete_cargo(self, cargo_id):
+        """
+        Exclui um cargo do banco de dados.
+        Retorna False se houver funcionários associados.
+        """
+        # Verificar se há funcionários associados a este cargo
+        check_query = "SELECT COUNT(*) AS count FROM funcionarios WHERE ID_Cargos = %s"
+        result = self.db.execute_query(check_query, (cargo_id,), fetch_results=True)
+        if result and result[0]['count'] > 0:
+            print(f"Não é possível excluir o cargo ID {cargo_id}: Existem funcionários associados.")
+            return False # Não permite exclusão se houver funcionários
+
+        query = "DELETE FROM cargos WHERE ID_Cargos = %s"
+        return self.db.execute_query(query, (cargo_id,), fetch_results=False)
+
+    def get_cargo_by_nome(self, nome_cargo):
+        """
+        Verifica se um cargo com o dado nome já existe.
+        """
+        query = "SELECT ID_Cargos FROM cargos WHERE Nome_Cargo = %s"
+        result = self.db.execute_query(query, (nome_cargo,), fetch_results=True)
+        return result[0] if result else None
+
+
+    # --- Métodos de Níveis ---
+    def get_all_niveis(self, search_nome=None):
+        """
+        Retorna uma lista de todos os níveis, opcionalmente filtrada.
+        """
+        query = """
+            SELECT
+                ID_Niveis,
+                Nome_Nivel,
+                Descricao,
+                Data_Criacao,
+                Data_Modificacao
+            FROM
+                niveis
+            WHERE 1=1
+        """
+        params = []
+        if search_nome:
+            query += " AND Nome_Nivel LIKE %s"
+            params.append(f"%{search_nome}%")
+        
+        query += " ORDER BY Nome_Nivel"
+
+        results = self.db.execute_query(query, tuple(params), fetch_results=True)
+        if results:
+            return [self._format_date_fields(item) for item in results]
+        return results
+
+    def add_nivel(self, nome_nivel, descricao):
+        """
+        Adiciona um novo nível ao banco de dados.
+        """
+        query = """
+            INSERT INTO niveis (Nome_Nivel, Descricao, Data_Criacao, Data_Modificacao)
+            VALUES (%s, %s, NOW(), NOW())
+        """
+        params = (nome_nivel, descricao)
+        return self.db.execute_query(query, params, fetch_results=False)
+
+    def get_nivel_by_id(self, nivel_id):
+        """
+        Retorna os dados de um nível pelo ID.
+        """
+        query = """
+            SELECT
+                ID_Niveis,
+                Nome_Nivel,
+                Descricao,
+                Data_Criacao,
+                Data_Modificacao
+            FROM
+                niveis
+            WHERE ID_Niveis = %s
+        """
+        result = self.db.execute_query(query, (nivel_id,), fetch_results=True)
+        if result:
+            return self._format_date_fields(result[0])
+        return None
+
+    def update_nivel(self, nivel_id, nome_nivel, descricao):
+        """
+        Atualiza os dados de um nível existente.
+        """
+        query = """
+            UPDATE niveis
+            SET
+                Nome_Nivel = %s,
+                Descricao = %s,
+                Data_Modificacao = NOW()
+            WHERE ID_Niveis = %s
+        """
+        params = (nome_nivel, descricao, nivel_id)
+        return self.db.execute_query(query, params, fetch_results=False)
+
+    def delete_nivel(self, nivel_id):
+        """
+        Exclui um nível do banco de dados.
+        Retorna False se houver funcionários associados.
+        """
+        # Verificar se há funcionários associados a este nível
+        check_query = "SELECT COUNT(*) AS count FROM funcionarios WHERE ID_Niveis = %s"
+        result = self.db.execute_query(check_query, (nivel_id,), fetch_results=True)
+        if result and result[0]['count'] > 0:
+            print(f"Não é possível excluir o nível ID {nivel_id}: Existem funcionários associados.")
+            return False # Não permite exclusão se houver funcionários
+
+        query = "DELETE FROM niveis WHERE ID_Niveis = %s"
+        return self.db.execute_query(query, (nivel_id,), fetch_results=False)
+
+    def get_nivel_by_nome(self, nome_nivel):
+        """
+        Verifica se um nível com o dado nome já existe.
+        """
+        query = "SELECT ID_Niveis FROM niveis WHERE Nome_Nivel = %s"
+        result = self.db.execute_query(query, (nome_nivel,), fetch_results=True)
+        return result[0] if result else None

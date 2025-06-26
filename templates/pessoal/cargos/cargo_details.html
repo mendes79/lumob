@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Detalhes do Cargo - LUMOB</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+      p {
+        margin-bottom: 8px;
+      }
+      strong {
+        display: inline-block;
+        width: 220px;
+      }
+      .actions {
+        text-align: center;
+        margin-top: 20px;
+      }
+      .actions button,
+      .actions a {
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 0 5px;
+        text-decoration: none;
+        display: inline-block;
+      }
+      .actions button.delete {
+        background-color: #dc3545;
+      }
+      .actions button:hover {
+        background-color: #0056b3;
+      }
+      .actions button.delete:hover {
+        background-color: #c82333;
+      }
+      .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Detalhes do Cargo: {{ cargo.Nome_Cargo }}</h1>
+
+      <div>
+        <p><strong>ID do Cargo:</strong> {{ cargo.ID_Cargos }}</p>
+        <p><strong>Nome do Cargo:</strong> {{ cargo.Nome_Cargo }}</p>
+        <p><strong>Descrição do Cargo:</strong> {{ cargo.Descricao_Cargo }}</p>
+        <p><strong>CBO:</strong> {{ cargo.Cbo if cargo.Cbo else 'N/A' }}</p>
+        <p>
+          <strong>Data de Criação:</strong> {{
+          cargo.Data_Criacao.strftime('%d/%m/%Y %H:%M:%S') if cargo.Data_Criacao
+          else 'N/A' }}
+        </p>
+        <p>
+          <strong>Última Modificação:</strong> {{
+          cargo.Data_Modificacao.strftime('%d/%m/%Y %H:%M:%S') if
+          cargo.Data_Modificacao else 'N/A' }}
+        </p>
+      </div>
+
+      <div class="actions">
+        <a href="{{ url_for('edit_cargo', cargo_id=cargo.ID_Cargos) }}"
+          >Editar</a
+        >
+        <form
+          action="{{ url_for('delete_cargo', cargo_id=cargo.ID_Cargos) }}"
+          method="POST"
+          style="display: inline"
+          onsubmit="return confirm('Tem certeza que deseja excluir este cargo? Esta ação é irreversível.');"
+        >
+          <button type="submit" class="delete">Excluir</button>
+        </form>
+      </div>
+
+      <div class="back-link">
+        <p>
+          <a href="{{ url_for('cargos_module') }}"
+            >Voltar para a Lista de Cargos</a
+          >
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

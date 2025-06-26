@@ -785,6 +785,503 @@ def export_funcionarios_excel():
         print(f"Erro ao exportar funcionários Excel: {e}")
         return redirect(url_for('funcionarios_module'))
 
+# --- ROTAS DO SUBMÓDULO PESSOAL: CARGOS ---
+
+@app.route('/pessoal/cargos')
+@login_required
+def cargos_module():
+    if not current_user.can_access_module('Pessoal'): # Ou uma permissão mais específica para cargos
+        flash('Acesso negado. Você não tem permissão para acessar a Gestão de Cargos.', 'warning')
+        return redirect(url_for('welcome'))
+
+    search_nome = request.args.get('nome_cargo')
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            cargos = pessoal_manager.get_all_cargos(search_nome=search_nome)
+
+        return render_template(
+            'pessoal/cargos/cargos_module.html',
+            user=current_user,
+            cargos=cargos,
+            selected_nome=search_nome
+        )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados ao carregar cargos: {e}", 'danger')
+        print(f"Erro de banco de dados em cargos_module: {e}")
+        return redirect(url_for('pessoal_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado ao carregar cargos: {e}", 'danger')
+        print(f"Erro inesperado em cargos_module: {e}")
+        return redirect(url_for('pessoal_module'))
+
+
+@app.route('/pessoal/cargos/add', methods=['GET', 'POST'])
+@login_required
+def add_cargo():
+    if not current_user.can_access_module('Pessoal'):
+        flash('Acesso negado. Você não tem permissão para adicionar cargos.', 'warning')
+        return redirect(url_for('welcome'))
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            
+            if request.method == 'POST':
+                nome_cargo = request.form['nome_cargo'].strip()
+                descricao_cargo = request.form.get('descricao_cargo', '').strip()
+                cbo = request.form.get('cbo', '').strip()
+
+                if not nome_cargo:
+                    flash('O nome do cargo é obrigatório.', 'danger')
+                    return render_template(
+                        'pessoal/cargos/add_cargo.html',
+                        user=current_user,
+                        form_data=request.form
+                    )
+                
+                if pessoal_manager.get_cargo_by_nome(nome_cargo):
+                    flash('Já existe um cargo com este nome.', 'danger')
+                    return render_template(
+                        'pessoal/cargos/add_cargo.html',
+                        user=current_user,
+                        form_data=request.form
+                    )
+
+                success = pessoal_manager.add_cargo(nome_cargo, descricao_cargo, cbo)
+                if success:
+                    flash('Cargo adicionado com sucesso!', 'success')
+                    return redirect(url_for('cargos_module'))
+                else:
+                    flash('Erro ao adicionar cargo. Verifique os dados e tente novamente.', 'danger')
+            
+            # GET request
+            return render_template(
+                'pessoal/cargos/add_cargo.html',
+                user=current_user,
+                form_data={}
+            )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados: {e}", 'danger')
+        print(f"Erro de banco de dados em add_cargo: {e}")
+        return redirect(url_for('cargos_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+        print(f"Erro inesperado em add_cargo: {e}")
+        return redirect(url_for('cargos_module'))
+
+
+@app.route('/pessoal/cargos/edit/<int:cargo_id>', methods=['GET', 'POST'])
+@login_required
+def edit_cargo(cargo_id):
+    if not current_user.can_access_module('Pessoal'):
+        flash('Acesso negado. Você não tem permissão para editar cargos.', 'warning')
+        return redirect(url_for('welcome'))
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            cargo = pessoal_manager.get_cargo_by_id(cargo_id)
+
+            if not cargo:
+                flash('Cargo não encontrado.', 'danger')
+                return redirect(url_for('cargos_module'))
+
+            if request.method == 'POST':
+                nome_cargo = request.form['nome_cargo'].strip()
+                descricao_cargo = request.form.get('descricao_cargo', '').strip()
+                cbo = request.form.get('cbo', '').strip()
+
+                if not nome_cargo:
+                    flash('O nome do cargo é obrigatório.', 'danger')
+                    return render_template(
+                        'pessoal/cargos/edit_cargo.html',
+                        user=current_user,
+                        cargo=cargo,
+                        form_data=request.form
+                    )
+                
+                existing_cargo = pessoal_manager.get_cargo_by_nome(nome_cargo)
+                if existing_cargo and existing_cargo['ID_Cargos'] != cargo_id:
+                    flash('Já existe um cargo com este nome.', 'danger')
+                    return render_template(
+                        'pessoal/cargos/edit_cargo.html',
+                        user=current_user,
+                        cargo=cargo,
+                        form_data=request.form
+                    )
+
+                success = pessoal_manager.update_cargo(cargo_id, nome_cargo, descricao_cargo, cbo)
+                if success:
+                    flash('Cargo atualizado com sucesso!', 'success')
+                    return redirect(url_for('cargos_module'))
+                else:
+                    flash('Erro ao atualizar cargo.', 'danger')
+            
+            # GET request
+            return render_template(
+                'pessoal/cargos/edit_cargo.html',
+                user=current_user,
+                cargo=cargo
+            )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados: {e}", 'danger')
+        print(f"Erro de banco de dados em edit_cargo: {e}")
+        return redirect(url_for('cargos_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+        print(f"Erro inesperado em edit_cargo: {e}")
+        return redirect(url_for('cargos_module'))
+
+
+@app.route('/pessoal/cargos/delete/<int:cargo_id>', methods=['POST'])
+@login_required
+def delete_cargo(cargo_id):
+    if not current_user.can_access_module('Pessoal'):
+        flash('Acesso negado. Você não tem permissão para excluir cargos.', 'warning')
+        return redirect(url_for('welcome'))
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            success = pessoal_manager.delete_cargo(cargo_id)
+            if success:
+                flash('Cargo excluído com sucesso!', 'success')
+            else:
+                flash('Erro ao excluir cargo. Certifique-se de que não há funcionários associados a ele.', 'danger')
+        return redirect(url_for('cargos_module'))
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados: {e}", 'danger')
+        print(f"Erro de banco de dados em delete_cargo: {e}")
+        return redirect(url_for('cargos_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+        print(f"Erro inesperado em delete_cargo: {e}")
+        return redirect(url_for('cargos_module'))
+
+
+@app.route('/pessoal/cargos/details/<int:cargo_id>')
+@login_required
+def cargo_details(cargo_id):
+    if not current_user.can_access_module('Pessoal'):
+        flash('Acesso negado. Você não tem permissão para ver detalhes de cargos.', 'warning')
+        return redirect(url_for('welcome'))
+    
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            cargo = pessoal_manager.get_cargo_by_id(cargo_id)
+
+            if not cargo:
+                flash('Cargo não encontrado.', 'danger')
+                return redirect(url_for('cargos_module'))
+
+        return render_template(
+            'pessoal/cargos/cargo_details.html',
+            user=current_user,
+            cargo=cargo
+        )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados: {e}", 'danger')
+        print(f"Erro de banco de dados em cargo_details: {e}")
+        return redirect(url_for('cargos_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+        print(f"Erro inesperado em cargo_details: {e}")
+        return redirect(url_for('cargos_module'))
+
+
+@app.route('/pessoal/cargos/export/excel')
+@login_required
+def export_cargos_excel():
+    if not current_user.can_access_module('Pessoal'):
+        flash('Acesso negado. Você não tem permissão para exportar dados de cargos.', 'warning')
+        return redirect(url_for('welcome'))
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            search_nome = request.args.get('nome_cargo')
+            cargos_data = pessoal_manager.get_all_cargos(search_nome=search_nome)
+
+            if not cargos_data:
+                flash('Nenhum cargo encontrado para exportar.', 'info')
+                return redirect(url_for('cargos_module'))
+
+            df = pd.DataFrame(cargos_data)
+            df = df.rename(columns={
+                'ID_Cargos': 'ID Cargo',
+                'Nome_Cargo': 'Nome do Cargo',
+                'Descricao_Cargo': 'Descrição do Cargo',
+                'Cbo': 'CBO',
+                'Data_Criacao': 'Data de Criação',
+                'Data_Modificacao': 'Última Modificação'
+            })
+            
+            excel_buffer = BytesIO()
+            df.to_excel(excel_buffer, index=False, engine='openpyxl')
+            excel_buffer.seek(0)
+
+            return send_file(
+                excel_buffer,
+                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                as_attachment=True,
+                download_name='relatorio_cargos.xlsx'
+            )
+
+    except Exception as e:
+        flash(f"Ocorreu um erro ao exportar cargos para Excel: {e}", 'danger')
+        print(f"Erro ao exportar cargos Excel: {e}")
+        return redirect(url_for('cargos_module'))
+
+
+# --- ROTAS DO SUBMÓDULO PESSOAL: NÍVEIS ---
+
+@app.route('/pessoal/niveis')
+@login_required
+def niveis_module():
+    if not current_user.can_access_module('Pessoal'): # Ou uma permissão mais específica para níveis
+        flash('Acesso negado. Você não tem permissão para acessar a Gestão de Níveis.', 'warning')
+        return redirect(url_for('welcome'))
+
+    search_nome = request.args.get('nome_nivel')
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            niveis = pessoal_manager.get_all_niveis(search_nome=search_nome)
+
+        return render_template(
+            'pessoal/niveis/niveis_module.html',
+            user=current_user,
+            niveis=niveis,
+            selected_nome=search_nome
+        )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados ao carregar níveis: {e}", 'danger')
+        print(f"Erro de banco de dados em niveis_module: {e}")
+        return redirect(url_for('pessoal_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado ao carregar níveis: {e}", 'danger')
+        print(f"Erro inesperado em niveis_module: {e}")
+        return redirect(url_for('pessoal_module'))
+
+
+@app.route('/pessoal/niveis/add', methods=['GET', 'POST'])
+@login_required
+def add_nivel():
+    if not current_user.can_access_module('Pessoal'):
+        flash('Acesso negado. Você não tem permissão para adicionar níveis.', 'warning')
+        return redirect(url_for('welcome'))
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            
+            if request.method == 'POST':
+                nome_nivel = request.form['nome_nivel'].strip()
+                descricao = request.form.get('descricao', '').strip()
+
+                if not nome_nivel:
+                    flash('O nome do nível é obrigatório.', 'danger')
+                    return render_template(
+                        'pessoal/niveis/add_nivel.html',
+                        user=current_user,
+                        form_data=request.form
+                    )
+                
+                if pessoal_manager.get_nivel_by_nome(nome_nivel):
+                    flash('Já existe um nível com este nome.', 'danger')
+                    return render_template(
+                        'pessoal/niveis/add_nivel.html',
+                        user=current_user,
+                        form_data=request.form
+                    )
+
+                success = pessoal_manager.add_nivel(nome_nivel, descricao)
+                if success:
+                    flash('Nível adicionado com sucesso!', 'success')
+                    return redirect(url_for('niveis_module'))
+                else:
+                    flash('Erro ao adicionar nível. Verifique os dados e tente novamente.', 'danger')
+            
+            # GET request
+            return render_template(
+                'pessoal/niveis/add_nivel.html',
+                user=current_user,
+                form_data={}
+            )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados: {e}", 'danger')
+        print(f"Erro de banco de dados em add_nivel: {e}")
+        return redirect(url_for('niveis_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+        print(f"Erro inesperado em add_nivel: {e}")
+        return redirect(url_for('niveis_module'))
+
+
+@app.route('/pessoal/niveis/edit/<int:nivel_id>', methods=['GET', 'POST'])
+@login_required
+def edit_nivel(nivel_id):
+    if not current_user.can_access_module('Pessoal'):
+        flash('Acesso negado. Você não tem permissão para editar níveis.', 'warning')
+        return redirect(url_for('welcome'))
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            nivel = pessoal_manager.get_nivel_by_id(nivel_id)
+
+            if not nivel:
+                flash('Nível não encontrado.', 'danger')
+                return redirect(url_for('niveis_module'))
+
+            if request.method == 'POST':
+                nome_nivel = request.form['nome_nivel'].strip()
+                descricao = request.form.get('descricao', '').strip()
+
+                if not nome_nivel:
+                    flash('O nome do nível é obrigatório.', 'danger')
+                    return render_template(
+                        'pessoal/niveis/edit_nivel.html',
+                        user=current_user,
+                        nivel=nivel,
+                        form_data=request.form
+                    )
+                
+                existing_nivel = pessoal_manager.get_nivel_by_nome(nome_nivel)
+                if existing_nivel and existing_nivel['ID_Niveis'] != nivel_id:
+                    flash('Já existe um nível com este nome.', 'danger')
+                    return render_template(
+                        'pessoal/niveis/edit_nivel.html',
+                        user=current_user,
+                        nivel=nivel,
+                        form_data=request.form
+                    )
+
+                success = pessoal_manager.update_nivel(nivel_id, nome_nivel, descricao)
+                if success:
+                    flash('Nível atualizado com sucesso!', 'success')
+                    return redirect(url_for('niveis_module'))
+                else:
+                    flash('Erro ao atualizar nível.', 'danger')
+            
+            # GET request
+            return render_template(
+                'pessoal/niveis/edit_nivel.html',
+                user=current_user,
+                nivel=nivel
+            )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados: {e}", 'danger')
+        print(f"Erro de banco de dados em edit_nivel: {e}")
+        return redirect(url_for('niveis_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+        print(f"Erro inesperado em edit_nivel: {e}")
+        return redirect(url_for('niveis_module'))
+
+
+@app.route('/pessoal/niveis/delete/<int:nivel_id>', methods=['POST'])
+@login_required
+def delete_nivel(nivel_id):
+    if not current_user.can_access_module('Pessoal'):
+        flash('Acesso negado. Você não tem permissão para excluir níveis.', 'warning')
+        return redirect(url_for('welcome'))
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            success = pessoal_manager.delete_nivel(nivel_id)
+            if success:
+                flash('Nível excluído com sucesso!', 'success')
+            else:
+                flash('Erro ao excluir nível. Certifique-se de que não há funcionários associados a ele.', 'danger')
+        return redirect(url_for('niveis_module'))
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados: {e}", 'danger')
+        print(f"Erro de banco de dados em delete_nivel: {e}")
+        return redirect(url_for('niveis_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+        print(f"Erro inesperado em delete_nivel: {e}")
+        return redirect(url_for('niveis_module'))
+
+@app.route('/pessoal/niveis/details/<int:nivel_id>')
+@login_required
+def nivel_details(nivel_id):
+    if not current_user.can_access_module('Pessoal'):
+        flash('Acesso negado. Você não tem permissão para ver detalhes de níveis.', 'warning')
+        return redirect(url_for('welcome'))
+    
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            nivel = pessoal_manager.get_nivel_by_id(nivel_id)
+
+            if not nivel:
+                flash('Nível não encontrado.', 'danger')
+                return redirect(url_for('niveis_module'))
+
+        return render_template(
+            'pessoal/niveis/nivel_details.html',
+            user=current_user,
+            nivel=nivel
+        )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados: {e}", 'danger')
+        print(f"Erro de banco de dados em nivel_details: {e}")
+        return redirect(url_for('niveis_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+        print(f"Erro inesperado em nivel_details: {e}")
+        return redirect(url_for('niveis_module'))
+
+@app.route('/pessoal/niveis/export/excel')
+@login_required
+def export_niveis_excel():
+    if not current_user.can_access_module('Pessoal'):
+        flash('Acesso negado. Você não tem permissão para exportar dados de níveis.', 'warning')
+        return redirect(url_for('welcome'))
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            search_nome = request.args.get('nome_nivel')
+            niveis_data = pessoal_manager.get_all_niveis(search_nome=search_nome)
+
+            if not niveis_data:
+                flash('Nenhum nível encontrado para exportar.', 'info')
+                return redirect(url_for('niveis_module'))
+
+            df = pd.DataFrame(niveis_data)
+            df = df.rename(columns={
+                'ID_Niveis': 'ID Nível',
+                'Nome_Nivel': 'Nome do Nível',
+                'Descricao': 'Descrição',
+                'Data_Criacao': 'Data de Criação',
+                'Data_Modificacao': 'Última Modificação'
+            })
+            
+            excel_buffer = BytesIO()
+            df.to_excel(excel_buffer, index=False, engine='openpyxl')
+            excel_buffer.seek(0)
+
+            return send_file(
+                excel_buffer,
+                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                as_attachment=True,
+                download_name='relatorio_niveis.xlsx'
+            )
+
+    except Exception as e:
+        flash(f"Ocorreu um erro ao exportar níveis para Excel: {e}", 'danger')
+        print(f"Erro ao exportar níveis Excel: {e}")
+        return redirect(url_for('niveis_module'))
+
+
 #---------------------------------------------------------------------------------------------------
 # ROTAS PARA O MÓDULO OBRAS                                                                        |
 #---------------------------------------------------------------------------------------------------

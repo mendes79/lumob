@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Editar Cargo - LUMOB</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+      form div {
+        margin-bottom: 10px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      input[type="text"],
+      textarea {
+        width: calc(100% - 22px);
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+      button {
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-right: 10px;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      .flash {
+        padding: 10px;
+        margin-bottom: 15px;
+        border-radius: 4px;
+      }
+      .flash.success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .flash.danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6fb;
+      }
+      .cancel-link {
+        padding: 10px 15px;
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        text-decoration: none;
+        display: inline-block;
+        vertical-align: middle;
+      }
+      .cancel-link:hover {
+        background-color: #5a6268;
+      }
+      .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Editar Cargo: {{ cargo.Nome_Cargo }}</h1>
+
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %} {% endif %} {% endwith %}
+
+      <form
+        action="{{ url_for('edit_cargo', cargo_id=cargo.ID_Cargos) }}"
+        method="POST"
+      >
+        <div>
+          <label for="cargo_id">ID do Cargo:</label>
+          <input
+            type="text"
+            id="cargo_id"
+            name="cargo_id"
+            value="{{ cargo.ID_Cargos }}"
+            readonly
+          />
+        </div>
+        <div>
+          <label for="nome_cargo">Nome do Cargo:</label>
+          <input
+            type="text"
+            id="nome_cargo"
+            name="nome_cargo"
+            value="{{ form_data['nome_cargo'] if form_data else cargo.Nome_Cargo }}"
+            required
+          />
+        </div>
+        <div>
+          <label for="descricao_cargo">Descrição do Cargo:</label>
+          <textarea id="descricao_cargo" name="descricao_cargo" rows="4">
+{{ form_data['descricao_cargo'] if form_data else cargo.Descricao_Cargo }}</textarea
+          >
+        </div>
+        <div>
+          <label for="cbo">CBO:</label>
+          <input
+            type="text"
+            id="cbo"
+            name="cbo"
+            value="{{ form_data['cbo'] if form_data else cargo.Cbo }}"
+          />
+        </div>
+        <div>
+          <button type="submit">Salvar Alterações</button>
+          <a href="{{ url_for('cargos_module') }}" class="cancel-link"
+            >Cancelar</a
+          >
+        </div>
+      </form>
+      <div class="back-link">
+        <p>
+          <a href="{{ url_for('cargos_module') }}"
+            >Voltar para a Lista de Cargos</a
+          >
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

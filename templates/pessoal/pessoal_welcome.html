@@ -152,8 +152,12 @@
           </p>
         </div>
         <div class="module-card">
-          <a href="#">Cargos e Níveis (Em Breve)</a>
-          <p>Defina e gerencie os cargos e os níveis de carreira da empresa.</p>
+          <a href="{{ url_for('cargos_module') }}">Cargos</a>
+          <p>Gerencie a estrutura de cargos da empresa.</p>
+        </div>
+        <div class="module-card">
+          <a href="{{ url_for('niveis_module') }}">Níveis</a>
+          <p>Gerencie os níveis de carreira dos funcionários.</p>
         </div>
         <div class="module-card">
           <a href="#">Salários e Benefícios (Em Breve)</a>

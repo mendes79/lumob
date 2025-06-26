@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Editar Nível - LUMOB</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+      form div {
+        margin-bottom: 10px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      input[type="text"],
+      textarea {
+        width: calc(100% - 22px);
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+      button {
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-right: 10px;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      .flash {
+        padding: 10px;
+        margin-bottom: 15px;
+        border-radius: 4px;
+      }
+      .flash.success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .flash.danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6fb;
+      }
+      .cancel-link {
+        padding: 10px 15px;
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        text-decoration: none;
+        display: inline-block;
+        vertical-align: middle;
+      }
+      .cancel-link:hover {
+        background-color: #5a6268;
+      }
+      .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Editar Nível: {{ nivel.Nome_Nivel }}</h1>
+
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %} {% endif %} {% endwith %}
+
+      <form
+        action="{{ url_for('edit_nivel', nivel_id=nivel.ID_Niveis) }}"
+        method="POST"
+      >
+        <div>
+          <label for="nivel_id">ID do Nível:</label>
+          <input
+            type="text"
+            id="nivel_id"
+            name="nivel_id"
+            value="{{ nivel.ID_Niveis }}"
+            readonly
+          />
+        </div>
+        <div>
+          <label for="nome_nivel">Nome do Nível:</label>
+          <input
+            type="text"
+            id="nome_nivel"
+            name="nome_nivel"
+            value="{{ form_data['nome_nivel'] if form_data else nivel.Nome_Nivel }}"
+            required
+          />
+        </div>
+        <div>
+          <label for="descricao">Descrição:</label>
+          <textarea id="descricao" name="descricao" rows="4">
+{{ form_data['descricao'] if form_data else nivel.Descricao }}</textarea
+          >
+        </div>
+        <div>
+          <button type="submit">Salvar Alterações</button>
+          <a href="{{ url_for('niveis_module') }}" class="cancel-link"
+            >Cancelar</a
+          >
+        </div>
+      </form>
+      <div class="back-link">
+        <p>
+          <a href="{{ url_for('niveis_module') }}"
+            >Voltar para a Lista de Níveis</a
+          >
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
