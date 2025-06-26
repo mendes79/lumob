@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Detalhes do Registro de Férias - LUMOB</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+      p {
+        margin-bottom: 8px;
+      }
+      strong {
+        display: inline-block;
+        width: 220px;
+      }
+      .actions {
+        text-align: center;
+        margin-top: 20px;
+      }
+      .actions button,
+      .actions a {
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 0 5px;
+        text-decoration: none;
+        display: inline-block;
+      }
+      .actions button.delete {
+        background-color: #dc3545;
+      }
+      .actions button:hover {
+        background-color: #0056b3;
+      }
+      .actions button.delete:hover {
+        background-color: #c82333;
+      }
+      .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Detalhes do Registro de Férias (ID: {{ ferias.ID_Ferias }})</h1>
+
+      <div>
+        <p><strong>ID do Registro:</strong> {{ ferias.ID_Ferias }}</p>
+        <p>
+          <strong>Funcionário (Matrícula):</strong> {{ ferias.Nome_Funcionario
+          }} ({{ ferias.Matricula_Funcionario }})
+        </p>
+        <p>
+          <strong>Período Aquisitivo:</strong> {{
+          ferias.Periodo_Aquisitivo_Inicio.strftime('%d/%m/%Y') if
+          ferias.Periodo_Aquisitivo_Inicio else 'N/A' }} a {{
+          ferias.Periodo_Aquisitivo_Fim.strftime('%d/%m/%Y') if
+          ferias.Periodo_Aquisitivo_Fim else 'N/A' }}
+        </p>
+        <p>
+          <strong>Data Início Gozo:</strong> {{
+          ferias.Data_Inicio_Gozo.strftime('%d/%m/%Y') if
+          ferias.Data_Inicio_Gozo else 'N/A' }}
+        </p>
+        <p>
+          <strong>Data Fim Gozo:</strong> {{
+          ferias.Data_Fim_Gozo.strftime('%d/%m/%Y') if ferias.Data_Fim_Gozo else
+          'N/A' }}
+        </p>
+        <p>
+          <strong>Dias de Gozo:</strong> {{ ferias.Dias_Gozo if ferias.Dias_Gozo
+          is not none else 'N/A' }}
+        </p>
+        <p><strong>Status das Férias:</strong> {{ ferias.Status_Ferias }}</p>
+        <p>
+          <strong>Observações:</strong> {{ ferias.Observacoes if
+          ferias.Observacoes else 'N/A' }}
+        </p>
+        <p>
+          <strong>Data de Criação:</strong> {{
+          ferias.Data_Criacao.strftime('%d/%m/%Y %H:%M:%S') if
+          ferias.Data_Criacao else 'N/A' }}
+        </p>
+        <p>
+          <strong>Última Modificação:</strong> {{
+          ferias.Data_Modificacao.strftime('%d/%m/%Y %H:%M:%S') if
+          ferias.Data_Modificacao else 'N/A' }}
+        </p>
+      </div>
+
+      <div class="actions">
+        <a href="{{ url_for('edit_ferias', ferias_id=ferias.ID_Ferias) }}"
+          >Editar</a
+        >
+        <form
+          action="{{ url_for('delete_ferias', ferias_id=ferias.ID_Ferias) }}"
+          method="POST"
+          style="display: inline"
+          onsubmit="return confirm('Tem certeza que deseja excluir este registro de férias? Esta ação é irreversível.');"
+        >
+          <button type="submit" class="delete">Excluir</button>
+        </form>
+      </div>
+
+      <div class="back-link">
+        <p>
+          <a href="{{ url_for('ferias_module') }}"
+            >Voltar para a Lista de Férias</a
+          >
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

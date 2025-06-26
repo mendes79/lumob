@@ -164,14 +164,14 @@
           <p>Gerencie os pacotes salariais e benefícios por cargo e nível.</p>
         </div>
         <div class="module-card">
-          <a href="#">Controle de Férias (Em Breve)</a>
-          <p>Gerencie os períodos de férias, saldos e agendamentos.</p>
+          <a href="{{ url_for('ferias_module') }}">Controle de Férias</a>
+          <p>Gerencie períodos aquisitivos e de gozo de férias.</p>
         </div>
         <div class="module-card">
-          <a href="#">Dependentes (Em Breve)</a>
-          <p>
-            Gerencie informações sobre dependentes e contatos de emergência.
-          </p>
+          <a href="{{ url_for('dependentes_module') }}"
+            >Dependentes e Emergência</a
+          >
+          <p>Gerencie dependentes e contatos de emergência dos funcionários.</p>
         </div>
         <!-- Adicione mais cards conforme novos submódulos forem implementados -->
       </div>

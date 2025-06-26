@@ -10,12 +10,9 @@ from datetime import datetime, date # Garante que datetime e date estejam dispon
 # Importações dos managers de banco de dados
 from database.db_base import DatabaseManager
 from database.db_user_manager import UserManager
-from database.db_hr_manager import HrManager # Para o módulo de RH/DP (mantido para estrutura) <<< ver se ainda precisa!
+from database.db_hr_manager import HrManager # Para o módulo de RH/DP (mantido para estrutura) <<< ver se ainda precisa! Pode apagar!!!
 from database.db_obras_manager import ObrasManager # Para o módulo Obras
 from database.db_seguranca_manager import SegurancaManager # Para o módulo Segurança
-
-# Importação para o CRUD do módulo Pessoal
-#from database.db_personal_manager import PersonalManager alterado em 2025-06-24 conforme abaixo.
 from database.db_pessoal_manager import PessoalManager
 
 # Para a adição da opção exportar para Excel no módulo Pessoal
@@ -1651,6 +1648,830 @@ def export_salarios_excel():
         flash(f"Ocorreu um erro ao exportar Salários para Excel: {e}", 'danger')
         print(f"Erro ao exportar Salários Excel: {e}")
         return redirect(url_for('salarios_module'))
+
+# --- ROTAS DO SUBMÓDULO PESSOAL: FÉRIAS ---
+
+@app.route('/pessoal/ferias')
+@login_required
+def ferias_module():
+    if not current_user.can_access_module('Pessoal'): # Ou permissão específica para férias
+        flash('Acesso negado. Você não tem permissão para acessar a Gestão de Férias.', 'warning')
+        return redirect(url_for('welcome'))
+
+    search_matricula = request.args.get('matricula')
+    search_status = request.args.get('status')
+    search_periodo_inicio = request.args.get('periodo_inicio')
+    search_periodo_fim = request.args.get('periodo_fim')
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            
+            ferias = pessoal_manager.get_all_ferias(
+                search_matricula=search_matricula,
+                search_status=search_status,
+                search_periodo_inicio=datetime.strptime(search_periodo_inicio, '%Y-%m-%d').date() if search_periodo_inicio else None,
+                search_periodo_fim=datetime.strptime(search_periodo_fim, '%Y-%m-%d').date() if search_periodo_fim else None
+            )
+            
+            # Obter lista de funcionários para o dropdown de filtro e adição/edição
+            all_funcionarios = pessoal_manager.get_all_funcionarios() # Você já tem este método
+
+            status_options = ['Programada', 'Aprovada', 'Gozo', 'Concluída', 'Cancelada']
+
+        return render_template(
+            'pessoal/ferias/ferias_module.html',
+            user=current_user,
+            ferias=ferias,
+            all_funcionarios=all_funcionarios,
+            status_options=status_options,
+            selected_matricula=search_matricula,
+            selected_status=search_status,
+            selected_periodo_inicio=search_periodo_inicio,
+            selected_periodo_fim=search_periodo_fim
+        )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados ao carregar Férias: {e}", 'danger')
+        print(f"Erro de banco de dados em ferias_module: {e}")
+        return redirect(url_for('pessoal_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado ao carregar Férias: {e}", 'danger')
+        print(f"Erro inesperado em ferias_module: {e}")
+        return redirect(url_for('pessoal_module'))
+
+
+@app.route('/pessoal/ferias/add', methods=['GET', 'POST'])
+@login_required
+def add_ferias():
+    if not current_user.can_access_module('Pessoal'):
+        flash('Acesso negado. Você não tem permissão para adicionar Férias.', 'warning')
+        return redirect(url_for('welcome'))
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            
+            # Carrega opções para os dropdowns, independentemente do método (GET/POST)
+            all_funcionarios = pessoal_manager.get_all_funcionarios()
+            status_options = ['Programada', 'Aprovada', 'Gozo', 'Concluída', 'Cancelada']
+
+            # Inicializa form_data_to_template para preencher o formulário em caso de erro ou GET
+            form_data_to_template = {}
+
+            if request.method == 'POST':
+                # Copia os dados do formulário para um dicionário mutável
+                form_data_received = request.form.to_dict()
+
+                # Tenta converter as datas primeiro
+                periodo_aquisitivo_inicio = None
+                periodo_aquisitivo_fim = None
+                data_inicio_gozo = None
+                data_fim_gozo = None
+
+                is_valid = True
+
+                try:
+                    periodo_aquisitivo_inicio = datetime.strptime(form_data_received.get('periodo_aquisitivo_inicio', '').strip(), '%Y-%m-%d').date()
+                    periodo_aquisitivo_fim = datetime.strptime(form_data_received.get('periodo_aquisitivo_fim', '').strip(), '%Y-%m-%d').date()
+                except ValueError:
+                    flash('Formato de Data de Período Aquisitivo inválido. Use AAAA-MM-DD.', 'danger')
+                    is_valid = False
+                
+                try:
+                    if form_data_received.get('data_inicio_gozo', '').strip():
+                        data_inicio_gozo = datetime.strptime(form_data_received.get('data_inicio_gozo').strip(), '%Y-%m-%d').date()
+                except ValueError:
+                    flash('Formato de Data de Início de Gozo inválido. Use AAAA-MM-DD.', 'danger')
+                    is_valid = False
+
+                try:
+                    if form_data_received.get('data_fim_gozo', '').strip():
+                        data_fim_gozo = datetime.strptime(form_data_received.get('data_fim_gozo').strip(), '%Y-%m-%d').date()
+                except ValueError:
+                    flash('Formato de Data Final de Gozo inválido. Use AAAA-MM-DD.', 'danger')
+                    is_valid = False
+                
+                # Recarrega os dados do formulário para o dicionário que será passado para o template em caso de falha
+                form_data_to_template = form_data_received
+                # Formata as datas de volta para string para o input type="date"
+                form_data_to_template['periodo_aquisitivo_inicio'] = periodo_aquisitivo_inicio.strftime('%Y-%m-%d') if periodo_aquisitivo_inicio else ''
+                form_data_to_template['periodo_aquisitivo_fim'] = periodo_aquisitivo_fim.strftime('%Y-%m-%d') if periodo_aquisitivo_fim else ''
+                form_data_to_template['data_inicio_gozo'] = data_inicio_gozo.strftime('%Y-%m-%d') if data_inicio_gozo else ''
+                form_data_to_template['data_fim_gozo'] = data_fim_gozo.strftime('%Y-%m-%d') if data_fim_gozo else ''
+
+
+                # Validação de campos obrigatórios e conversões numéricas
+                matricula_funcionario = form_data_received.get('matricula_funcionario', '').strip()
+                dias_gozo = int(form_data_received.get('dias_gozo', 0))
+                status_ferias = form_data_received.get('status_ferias', '').strip()
+                observacoes = form_data_received.get('observacoes', '').strip()
+
+                if not all([matricula_funcionario, periodo_aquisitivo_inicio, periodo_aquisitivo_fim, status_ferias]):
+                    flash('Campos obrigatórios (Funcionário, Período Aquisitivo, Status) não podem ser vazios.', 'danger')
+                    is_valid = False
+                
+                # --- DEBUG PRINTS ---
+                # print(f"DEBUG_ADD_FERIAS: Periodo Aquisitivo Inicio (Tipo): {type(periodo_aquisitivo_inicio)}, Valor: {periodo_aquisitivo_inicio}")
+                # print(f"DEBUG_ADD_FERIAS: Periodo Aquisitivo Fim (Tipo): {type(periodo_aquisitivo_fim)}, Valor: {periodo_aquisitivo_fim}")
+                # print(f"DEBUG_ADD_FERIAS: Comparacao: {periodo_aquisitivo_fim} < {periodo_aquisitivo_inicio} = {periodo_aquisitivo_fim < periodo_aquisitivo_inicio}")
+                # --- FIM DEBUG PRINTS ---
+
+                # Regra de Negócio: Periodo_Aquisitivo_Fim deve ser posterior à Periodo_Aquisitivo_Inicio
+                if is_valid and periodo_aquisitivo_fim < periodo_aquisitivo_inicio:
+                    flash('Data final do período aquisitivo deve ser posterior à data inicial.', 'danger')
+                    is_valid = False
+                
+                # Regra de Negócio: Data_Fim_Gozo deve ser posterior à Data_Inicio_Gozo (se ambos existirem)
+                if is_valid and data_inicio_gozo and data_fim_gozo and data_fim_gozo < data_inicio_gozo:
+                    flash('Data final de gozo deve ser posterior à data inicial de gozo.', 'danger')
+                    is_valid = False
+
+                if is_valid:
+                    success = pessoal_manager.add_ferias(
+                        matricula_funcionario, periodo_aquisitivo_inicio, periodo_aquisitivo_fim,
+                        data_inicio_gozo, data_fim_gozo, dias_gozo, status_ferias, observacoes
+                    )
+                    if success:
+                        flash('Registro de férias adicionado com sucesso!', 'success')
+                        return redirect(url_for('ferias_module'))
+                    else:
+                        flash('Erro ao adicionar registro de férias. Verifique os dados e tente novamente.', 'danger')
+            
+            # GET request ou POST com falha de validação: Renderiza o formulário com dados existentes/submetidos
+            return render_template(
+                'pessoal/ferias/add_ferias.html',
+                user=current_user,
+                all_funcionarios=all_funcionarios,
+                status_options=status_options,
+                form_data=form_data_to_template # Passa os dados para preencher o formulário
+            )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados: {e}", 'danger')
+        print(f"Erro de banco de dados em add_ferias: {e}")
+        return redirect(url_for('ferias_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+        print(f"Erro inesperado em add_ferias: {e}")
+        return redirect(url_for('ferias_module'))
+
+
+@app.route('/pessoal/ferias/edit/<int:ferias_id>', methods=['GET', 'POST'])
+@login_required
+def edit_ferias(ferias_id):
+    if not current_user.can_access_module('Pessoal'):
+        flash('Acesso negado. Você não tem permissão para editar Férias.', 'warning')
+        return redirect(url_for('welcome'))
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            
+            # Carrega opções para os dropdowns
+            all_funcionarios = pessoal_manager.get_all_funcionarios()
+            status_options = ['Programada', 'Aprovada', 'Gozo', 'Concluída', 'Cancelada']
+
+            # Sempre busca o registro de férias para o GET inicial ou para re-exibir em caso de POST com erro
+            ferias_from_db = pessoal_manager.get_ferias_by_id(ferias_id)
+            if not ferias_from_db:
+                flash('Registro de férias não encontrado.', 'danger')
+                return redirect(url_for('ferias_module'))
+
+            # Inicializa form_data_to_template para preencher o formulário
+            form_data_to_template = {}
+
+
+            if request.method == 'POST':
+                form_data_received = request.form.to_dict()
+
+                # Tenta converter as datas primeiro
+                periodo_aquisitivo_inicio = None
+                periodo_aquisitivo_fim = None
+                data_inicio_gozo = None
+                data_fim_gozo = None
+
+                is_valid = True
+
+                try:
+                    periodo_aquisitivo_inicio = datetime.strptime(form_data_received.get('periodo_aquisitivo_inicio', '').strip(), '%Y-%m-%d').date()
+                    periodo_aquisitivo_fim = datetime.strptime(form_data_received.get('periodo_aquisitivo_fim', '').strip(), '%Y-%m-%d').date()
+                except ValueError:
+                    flash('Formato de Data de Período Aquisitivo inválido. Use AAAA-MM-DD.', 'danger')
+                    is_valid = False
+                
+                try:
+                    if form_data_received.get('data_inicio_gozo', '').strip():
+                        data_inicio_gozo = datetime.strptime(form_data_received.get('data_inicio_gozo').strip(), '%Y-%m-%d').date()
+                except ValueError:
+                    flash('Formato de Data de Início de Gozo inválido. Use AAAA-MM-DD.', 'danger')
+                    is_valid = False
+
+                try:
+                    if form_data_received.get('data_fim_gozo', '').strip():
+                        data_fim_gozo = datetime.strptime(form_data_received.get('data_fim_gozo').strip(), '%Y-%m-%d').date()
+                except ValueError:
+                    flash('Formato de Data Final de Gozo inválido. Use AAAA-MM-DD.', 'danger')
+                    is_valid = False
+
+                # Recarrega os dados do formulário para o dicionário que será passado para o template em caso de falha
+                form_data_to_template = form_data_received
+                # Formata as datas de volta para string para o input type="date"
+                form_data_to_template['periodo_aquisitivo_inicio'] = periodo_aquisitivo_inicio.strftime('%Y-%m-%d') if periodo_aquisitivo_inicio else ''
+                form_data_to_template['periodo_aquisitivo_fim'] = periodo_aquisitivo_fim.strftime('%Y-%m-%d') if periodo_aquisitivo_fim else ''
+                form_data_to_template['data_inicio_gozo'] = data_inicio_gozo.strftime('%Y-%m-%d') if data_inicio_gozo else ''
+                form_data_to_template['data_fim_gozo'] = data_fim_gozo.strftime('%Y-%m-%d') if data_fim_gozo else ''
+
+
+                # Validação de campos obrigatórios e conversões numéricas
+                matricula_funcionario = form_data_received.get('matricula_funcionario', '').strip()
+                dias_gozo = int(form_data_received.get('dias_gozo', 0))
+                status_ferias = form_data_received.get('status_ferias', '').strip()
+                observacoes = form_data_received.get('observacoes', '').strip()
+
+                if not all([matricula_funcionario, periodo_aquisitivo_inicio, periodo_aquisitivo_fim, status_ferias]):
+                    flash('Campos obrigatórios (Funcionário, Período Aquisitivo, Status) não podem ser vazios.', 'danger')
+                    is_valid = False
+
+                # --- DEBUG PRINTS ---
+                # print(f"DEBUG_EDIT_FERIAS: Periodo Aquisitivo Inicio (Tipo): {type(periodo_aquisitivo_inicio)}, Valor: {periodo_aquisitivo_inicio}")
+                # print(f"DEBUG_EDIT_FERIAS: Periodo Aquisitivo Fim (Tipo): {type(periodo_aquisitivo_fim)}, Valor: {periodo_aquisitivo_fim}")
+                # print(f"DEBUG_EDIT_FERIAS: Comparacao: {periodo_aquisitivo_fim} < {periodo_aquisitivo_inicio} = {periodo_aquisitivo_fim < periodo_aquisitivo_inicio}")
+                # --- FIM DEBUG PRINTS ---
+
+                # Regra de Negócio: Periodo_Aquisitivo_Fim deve ser posterior à Periodo_Aquisitivo_Inicio
+                if is_valid and periodo_aquisitivo_fim < periodo_aquisitivo_inicio:
+                    flash('Data final do período aquisitivo deve ser posterior à data inicial.', 'danger')
+                    is_valid = False
+                
+                # Regra de Negócio: Data_Fim_Gozo deve ser posterior à Data_Inicio_Gozo (se ambos existirem)
+                if is_valid and data_inicio_gozo and data_fim_gozo and data_fim_gozo < data_inicio_gozo:
+                    flash('Data final de gozo deve ser posterior à data inicial de gozo.', 'danger')
+                    is_valid = False
+
+                if is_valid:
+                    success = pessoal_manager.update_ferias(
+                        ferias_id, matricula_funcionario, periodo_aquisitivo_inicio, periodo_aquisitivo_fim,
+                        data_inicio_gozo, data_fim_gozo, dias_gozo, status_ferias, observacoes
+                    )
+                    if success:
+                        flash('Registro de férias atualizado com sucesso!', 'success')
+                        return redirect(url_for('ferias_module'))
+                    else:
+                        flash('Erro ao atualizar registro de férias. Verifique os dados e tente novamente.', 'danger')
+            
+            else: # GET request
+                # Prepara os dados do DB para exibição inicial no formulário GET
+                form_data_to_template = ferias_from_db.copy()
+                # Formatar datas para o input type="date"
+                form_data_to_template['Periodo_Aquisitivo_Inicio'] = form_data_to_template['Periodo_Aquisitivo_Inicio'].strftime('%Y-%m-%d') if form_data_to_template['Periodo_Aquisitivo_Inicio'] else ''
+                form_data_to_template['Periodo_Aquisitivo_Fim'] = form_data_to_template['Periodo_Aquisitivo_Fim'].strftime('%Y-%m-%d') if form_data_to_template['Periodo_Aquisitivo_Fim'] else ''
+                form_data_to_template['Data_Inicio_Gozo'] = form_data_to_template['Data_Inicio_Gozo'].strftime('%Y-%m-%d') if form_data_to_template['Data_Inicio_Gozo'] else ''
+                form_data_to_template['Data_Fim_Gozo'] = form_data_to_template['Data_Fim_Gozo'].strftime('%Y-%m-%d') if form_data_to_template['Data_Fim_Gozo'] else ''
+
+            return render_template(
+                'pessoal/ferias/edit_ferias.html',
+                user=current_user,
+                ferias=form_data_to_template, # Passa os dados preparados aqui
+                all_funcionarios=all_funcionarios,
+                status_options=status_options
+            )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados: {e}", 'danger')
+        print(f"Erro de banco de dados em edit_ferias: {e}")
+        return redirect(url_for('ferias_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+        print(f"Erro inesperado em edit_ferias: {e}")
+        return redirect(url_for('ferias_module'))
+
+@app.route('/pessoal/ferias/delete/<int:ferias_id>', methods=['POST'])
+@login_required
+def delete_ferias(ferias_id):
+    if not current_user.can_access_module('Pessoal'):
+        flash('Acesso negado. Você não tem permissão para excluir Férias.', 'warning')
+        return redirect(url_for('welcome'))
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            success = pessoal_manager.delete_ferias(ferias_id)
+            if success:
+                flash('Registro de férias excluído com sucesso!', 'success')
+            else:
+                flash('Erro ao excluir registro de férias. Verifique se ele existe.', 'danger')
+        return redirect(url_for('ferias_module'))
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados: {e}", 'danger')
+        print(f"Erro de banco de dados em delete_ferias: {e}")
+        return redirect(url_for('ferias_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+        print(f"Erro inesperado em delete_ferias: {e}")
+        return redirect(url_for('ferias_module'))
+
+
+@app.route('/pessoal/ferias/details/<int:ferias_id>')
+@login_required
+def ferias_details(ferias_id):
+    if not current_user.can_access_module('Pessoal'):
+        flash('Acesso negado. Você não tem permissão para ver detalhes de Férias.', 'warning')
+        return redirect(url_for('welcome'))
+    
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            ferias = pessoal_manager.get_ferias_by_id(ferias_id)
+
+            if not ferias:
+                flash('Registro de férias não encontrado.', 'danger')
+                return redirect(url_for('ferias_module'))
+
+        return render_template(
+            'pessoal/ferias/ferias_details.html',
+            user=current_user,
+            ferias=ferias
+        )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados: {e}", 'danger')
+        print(f"Erro de banco de dados em ferias_details: {e}")
+        return redirect(url_for('ferias_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+        print(f"Erro inesperado em ferias_details: {e}")
+        return redirect(url_for('ferias_module'))
+
+
+@app.route('/pessoal/ferias/export/excel')
+@login_required
+def export_ferias_excel():
+    if not current_user.can_access_module('Pessoal'):
+        flash('Acesso negado. Você não tem permissão para exportar dados de Férias.', 'warning')
+        return redirect(url_for('welcome'))
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            
+            search_matricula = request.args.get('matricula')
+            search_status = request.args.get('status')
+            search_periodo_inicio = request.args.get('periodo_inicio')
+            search_periodo_fim = request.args.get('periodo_fim')
+
+            ferias_data = pessoal_manager.get_all_ferias(
+                search_matricula=search_matricula,
+                search_status=search_status,
+                search_periodo_inicio=datetime.strptime(search_periodo_inicio, '%Y-%m-%d').date() if search_periodo_inicio else None,
+                search_periodo_fim=datetime.strptime(search_periodo_fim, '%Y-%m-%d').date() if search_periodo_fim else None
+            )
+
+            if not ferias_data:
+                flash('Nenhum registro de férias encontrado para exportar.', 'info')
+                return redirect(url_for('ferias_module'))
+
+            df = pd.DataFrame(ferias_data)
+
+            # Renomeie colunas para serem mais amigáveis no Excel
+            df = df.rename(columns={
+                'ID_Ferias': 'ID Férias',
+                'Matricula_Funcionario': 'Matrícula',
+                'Nome_Funcionario': 'Nome do Funcionário',
+                'Periodo_Aquisitivo_Inicio': 'Início Período Aquisitivo',
+                'Periodo_Aquisitivo_Fim': 'Fim Período Aquisitivo',
+                'Data_Inicio_Gozo': 'Início Gozo',
+                'Data_Fim_Gozo': 'Fim Gozo',
+                'Dias_Gozo': 'Dias de Gozo',
+                'Status_Ferias': 'Status',
+                'Observacoes': 'Observações',
+                'Data_Criacao': 'Data de Criação',
+                'Data_Modificacao': 'Última Modificação'
+            })
+            
+            # Ordenar colunas para melhor visualização no Excel (opcional)
+            ordered_columns = [
+                'ID Férias', 'Matrícula', 'Nome do Funcionário',
+                'Início Período Aquisitivo', 'Fim Período Aquisitivo',
+                'Início Gozo', 'Fim Gozo', 'Dias de Gozo', 'Status',
+                'Observações', 'Data de Criação', 'Última Modificação'
+            ]
+            df = df[[col for col in ordered_columns if col in df.columns]]
+
+            excel_buffer = BytesIO()
+            df.to_excel(excel_buffer, index=False, engine='openpyxl')
+            excel_buffer.seek(0)
+
+            return send_file(
+                excel_buffer,
+                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                as_attachment=True,
+                download_name='relatorio_ferias.xlsx'
+            )
+
+    except Exception as e:
+        flash(f"Ocorreu um erro ao exportar Férias para Excel: {e}", 'danger')
+        print(f"Erro ao exportar Férias Excel: {e}")
+        return redirect(url_for('ferias_module'))
+
+#
+#  DEPENDENTES - MÓDULO PESSOAL
+#  2026-06-26 - MENDES/GEMINI
+
+# Função auxiliar para calcular idade (Certifique-se de que esta é a versão atualizada)
+def calculate_age(born_date):
+    """Calcula a idade em anos a partir de uma data de nascimento."""
+    # Garante que born_date é um objeto date e não None
+    if not isinstance(born_date, date):
+        print(f"DEBUG_CALCULATE_AGE: Data de nascimento inválida ou não é objeto date: {born_date} (Tipo: {type(born_date)}). Retornando None.")
+        return None
+    
+    today = date.today()
+    age = today.year - born_date.year - ((today.month, today.day) < (born_date.month, born_date.day))
+    print(f"DEBUG_CALCULATE_AGE: Data Nascimento: {born_date}, Hoje: {today}, Idade Calculada: {age}")
+    return age
+
+
+# --- ROTAS DO SUBMÓDULO PESSOAL: DEPENDENTES E CONTATOS DE EMERGÊNCIA ---
+
+@app.route('/pessoal/dependentes')
+@login_required
+def dependentes_module():
+    if not current_user.can_access_module('Pessoal'): # Ou permissão específica para dependentes
+        flash('Acesso negado. Você não tem permissão para acessar a Gestão de Dependentes.', 'warning')
+        return redirect(url_for('welcome'))
+
+    search_matricula = request.args.get('matricula')
+    search_nome = request.args.get('nome')
+    search_parentesco = request.args.get('parentesco')
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            
+            # Obtém todos os dependentes com base nos filtros
+            dependentes = pessoal_manager.get_all_dependentes(
+                search_matricula=search_matricula,
+                search_nome=search_nome,
+                search_parentesco=search_parentesco
+            )
+            
+            # Lista para armazenar os dependentes com a idade calculada
+            processed_dependentes = []
+            for dep in dependentes:
+                # É importante criar uma cópia mutável do dicionário para adicionar a idade
+                dep_copy = dep.copy() 
+                
+                # DEBUG: Verificar o tipo e valor de Data_Nascimento antes de calcular a idade
+                print(f"DEBUG_DEPENDENTES_MODULE: Processando dependente: {dep_copy.get('Nome_Completo')}")
+                print(f"DEBUG_DEPENDENTES_MODULE: Data_Nascimento original: {dep_copy.get('Data_Nascimento')} (Tipo: {type(dep_copy.get('Data_Nascimento'))})")
+                
+                # Calcula a idade e adiciona ao dicionário
+                dep_copy['Idade'] = calculate_age(dep_copy.get('Data_Nascimento'))
+                
+                print(f"DEBUG_DEPENDENTES_MODULE: Idade calculada: {dep_copy['Idade']}")
+                processed_dependentes.append(dep_copy)
+
+            # DEBUG FINAL: Imprime a lista completa que será enviada para o template
+            print(f"DEBUG_DEPENDENTES_MODULE: Dados finais para o template: {processed_dependentes}")
+
+
+            # Obter lista de funcionários para o dropdown de filtro (e futuros formulários)
+            all_funcionarios = pessoal_manager.get_all_funcionarios()
+            
+            # Opções de parentesco para o filtro
+            parentesco_options = ['Filho(a)', 'Cônjuge', 'Pai', 'Mãe', 'Irmão(ã)', 'Outro']
+
+        return render_template(
+            'pessoal/dependentes/dependentes_module.html',
+            user=current_user,
+            dependentes=processed_dependentes, # Passa a lista com as idades calculadas
+            all_funcionarios=all_funcionarios,
+            parentesco_options=parentesco_options,
+            selected_matricula=search_matricula,
+            selected_nome=search_nome,
+            selected_parentesco=search_parentesco
+        )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados ao carregar Dependentes: {e}", 'danger')
+        print(f"Erro de banco de dados em dependentes_module: {e}")
+        return redirect(url_for('pessoal_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado ao carregar Dependentes: {e}", 'danger')
+        print(f"Erro inesperado em dependentes_module: {e}")
+        # Redireciona para a página principal do módulo Pessoal para evitar um loop de erro
+        return redirect(url_for('pessoal_module'))
+
+@app.route('/pessoal/dependentes/add', methods=['GET', 'POST'])
+@login_required
+def add_dependente():
+    if not current_user.can_access_module('Pessoal'):
+        flash('Acesso negado. Você não tem permissão para adicionar Dependentes.', 'warning')
+        return redirect(url_for('welcome'))
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            
+            # Carrega opções para os dropdowns, independentemente do método (GET/POST)
+            all_funcionarios = pessoal_manager.get_all_funcionarios()
+            parentesco_options = ['Filho(a)', 'Cônjuge', 'Pai', 'Mãe', 'Irmão(ã)', 'Outro']
+
+            form_data_to_template = {}
+
+            if request.method == 'POST':
+                form_data_received = request.form.to_dict()
+
+                matricula_funcionario = form_data_received.get('matricula_funcionario', '').strip()
+                nome_completo = form_data_received.get('nome_completo', '').strip()
+                parentesco = form_data_received.get('parentesco', '').strip()
+                data_nascimento_str = form_data_received.get('data_nascimento', '').strip()
+                cpf = form_data_received.get('cpf', '').replace('.', '').replace('-', '').strip()
+                contato_emergencia = 'contato_emergencia' in request.form
+                telefone_emergencia = form_data_received.get('telefone_emergencia', '').strip()
+                observacoes = form_data_received.get('observacoes', '').strip()
+
+                data_nascimento = None
+                is_valid = True
+
+                if not all([matricula_funcionario, nome_completo, parentesco]):
+                    flash('Campos obrigatórios (Funcionário, Nome Completo, Parentesco) não podem ser vazios.', 'danger')
+                    is_valid = False
+                
+                if data_nascimento_str:
+                    try:
+                        data_nascimento = datetime.strptime(data_nascimento_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        flash('Formato de Data de Nascimento inválido. Use AAAA-MM-DD.', 'danger')
+                        is_valid = False
+                
+                if cpf:
+                    existing_dependente = pessoal_manager.get_dependente_by_cpf(cpf)
+                    if existing_dependente:
+                        flash('Já existe um dependente com este CPF.', 'danger')
+                        is_valid = False
+
+                # Recarrega os dados do formulário para o dicionário que será passado para o template em caso de falha
+                form_data_to_template = form_data_received
+                form_data_to_template['data_nascimento'] = data_nascimento_str # Mantém a string original para re-preencher o input date
+                form_data_to_template['contato_emergencia'] = contato_emergencia # Para checagem do checkbox
+
+                if is_valid:
+                    success = pessoal_manager.add_dependente(
+                        matricula_funcionario, nome_completo, parentesco, data_nascimento,
+                        cpf if cpf else None, contato_emergencia, telefone_emergencia, observacoes
+                    )
+                    if success:
+                        flash('Dependente adicionado com sucesso!', 'success')
+                        return redirect(url_for('dependentes_module'))
+                    else:
+                        flash('Erro ao adicionar dependente. Verifique os dados e tente novamente.', 'danger')
+            
+            # GET request ou POST com falha de validação: Renderiza o formulário com dados existentes/submetidos
+            return render_template(
+                'pessoal/dependentes/add_dependente.html',
+                user=current_user,
+                all_funcionarios=all_funcionarios,
+                parentesco_options=parentesco_options,
+                form_data=form_data_to_template
+            )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados: {e}", 'danger')
+        print(f"Erro de banco de dados em add_dependente: {e}")
+        return redirect(url_for('dependentes_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+        print(f"Erro inesperado em add_dependente: {e}")
+        return redirect(url_for('dependentes_module'))
+
+
+@app.route('/pessoal/dependentes/edit/<int:dependente_id>', methods=['GET', 'POST'])
+@login_required
+def edit_dependente(dependente_id):
+    if not current_user.can_access_module('Pessoal'):
+        flash('Acesso negado. Você não tem permissão para editar Dependentes.', 'warning')
+        return redirect(url_for('welcome'))
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            
+            # Carrega opções para os dropdowns
+            all_funcionarios = pessoal_manager.get_all_funcionarios()
+            parentesco_options = ['Filho(a)', 'Cônjuge', 'Pai', 'Mãe', 'Irmão(ã)', 'Outro']
+
+            # Sempre busca o registro de dependente para o GET inicial ou para re-exibir em caso de POST com erro
+            dependente_from_db = pessoal_manager.get_dependente_by_id(dependente_id)
+            if not dependente_from_db:
+                flash('Dependente não encontrado.', 'danger')
+                return redirect(url_for('dependentes_module'))
+
+            form_data_to_template = {} # Inicializa para o GET ou falha do POST
+
+            if request.method == 'POST':
+                form_data_received = request.form.to_dict()
+
+                matricula_funcionario = form_data_received.get('matricula_funcionario', '').strip()
+                nome_completo = form_data_received.get('nome_completo', '').strip()
+                parentesco = form_data_received.get('parentesco', '').strip()
+                data_nascimento_str = form_data_received.get('data_nascimento', '').strip()
+                cpf = form_data_received.get('cpf', '').replace('.', '').replace('-', '').strip()
+                contato_emergencia = 'contato_emergencia' in request.form
+                telefone_emergencia = form_data_received.get('telefone_emergencia', '').strip()
+                observacoes = form_data_received.get('observacoes', '').strip()
+
+                data_nascimento = None
+                is_valid = True
+
+                if not all([matricula_funcionario, nome_completo, parentesco]):
+                    flash('Campos obrigatórios (Funcionário, Nome Completo, Parentesco) não podem ser vazios.', 'danger')
+                    is_valid = False
+                
+                if data_nascimento_str:
+                    try:
+                        data_nascimento = datetime.strptime(data_nascimento_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        flash('Formato de Data de Nascimento inválido. Use AAAA-MM-DD.', 'danger')
+                        is_valid = False
+                
+                if cpf:
+                    existing_dependente = pessoal_manager.get_dependente_by_cpf(cpf, exclude_id=dependente_id)
+                    if existing_dependente:
+                        flash('Já existe um dependente com este CPF.', 'danger')
+                        is_valid = False
+
+                # Recarrega os dados do formulário para o dicionário que será passado para o template em caso de falha
+                form_data_to_template = form_data_received
+                form_data_to_template['data_nascimento'] = data_nascimento_str # Mantém a string original para re-preencher o input date
+                form_data_to_template['contato_emergencia'] = contato_emergencia # Para checagem do checkbox
+
+                if is_valid:
+                    success = pessoal_manager.update_dependente(
+                        dependente_id, matricula_funcionario, nome_completo, parentesco, data_nascimento,
+                        cpf if cpf else None, contato_emergencia, telefone_emergencia, observacoes
+                    )
+                    if success:
+                        flash('Dependente atualizado com sucesso!', 'success')
+                        return redirect(url_for('dependentes_module'))
+                    else:
+                        flash('Erro ao atualizar dependente. Verifique os dados e tente novamente.', 'danger')
+            
+            else: # GET request
+                # Prepara os dados do DB para exibição inicial no formulário GET
+                form_data_to_template = dependente_from_db.copy()
+                # Formatar data de nascimento para o input type="date"
+                form_data_to_template['Data_Nascimento'] = form_data_to_template['Data_Nascimento'].strftime('%Y-%m-%d') if form_data_to_template['Data_Nascimento'] else ''
+                # Assegurar que 'contato_emergencia' no template reflete o booleano do DB
+                form_data_to_template['Contato_Emergencia'] = bool(form_data_to_template.get('Contato_Emergencia'))
+
+            return render_template(
+                'pessoal/dependentes/edit_dependente.html',
+                user=current_user,
+                dependente=form_data_to_template, # Passa os dados preparados aqui
+                all_funcionarios=all_funcionarios,
+                parentesco_options=parentesco_options
+            )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados: {e}", 'danger')
+        print(f"Erro de banco de dados em edit_dependente: {e}")
+        return redirect(url_for('dependentes_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+        print(f"Erro inesperado em edit_dependente: {e}")
+        return redirect(url_for('dependentes_module'))
+
+
+@app.route('/pessoal/dependentes/delete/<int:dependente_id>', methods=['POST'])
+@login_required
+def delete_dependente(dependente_id):
+    if not current_user.can_access_module('Pessoal'):
+        flash('Acesso negado. Você não tem permissão para excluir Dependentes.', 'warning')
+        return redirect(url_for('welcome'))
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            success = pessoal_manager.delete_dependente(dependente_id)
+            if success:
+                flash('Dependente excluído com sucesso!', 'success')
+            else:
+                flash('Erro ao excluir dependente. Verifique se ele existe.', 'danger')
+        return redirect(url_for('dependentes_module'))
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados: {e}", 'danger')
+        print(f"Erro de banco de dados em delete_dependente: {e}")
+        return redirect(url_for('dependentes_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+        print(f"Erro inesperado em delete_dependente: {e}")
+        return redirect(url_for('dependentes_module'))
+
+
+@app.route('/pessoal/dependentes/details/<int:dependente_id>')
+@login_required
+def dependente_details(dependente_id):
+    if not current_user.can_access_module('Pessoal'):
+        flash('Acesso negado. Você não tem permissão para ver detalhes de Dependentes.', 'warning')
+        return redirect(url_for('welcome'))
+    
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            dependente = pessoal_manager.get_dependente_by_id(dependente_id)
+
+            if not dependente:
+                flash('Dependente não encontrado.', 'danger')
+                return redirect(url_for('dependentes_module'))
+
+            # Calcular a idade para o dependente individual
+            dependente['Idade'] = calculate_age(dependente.get('Data_Nascimento'))
+
+        return render_template(
+            'pessoal/dependentes/dependente_details.html',
+            user=current_user,
+            dependente=dependente
+        )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados: {e}", 'danger')
+        print(f"Erro de banco de dados em dependente_details: {e}")
+        return redirect(url_for('dependentes_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+        print(f"Erro inesperado em dependente_details: {e}")
+        return redirect(url_for('dependentes_module'))
+
+
+@app.route('/pessoal/dependentes/export/excel')
+@login_required
+def export_dependentes_excel():
+    if not current_user.can_access_module('Pessoal'):
+        flash('Acesso negado. Você não tem permissão para exportar dados de Dependentes.', 'warning')
+        return redirect(url_for('welcome'))
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            
+            search_matricula = request.args.get('matricula')
+            search_nome = request.args.get('nome')
+            search_parentesco = request.args.get('parentesco')
+
+            dependentes_data = pessoal_manager.get_all_dependentes(
+                search_matricula=search_matricula,
+                search_nome=search_nome,
+                search_parentesco=search_parentesco
+            )
+
+            if not dependentes_data:
+                flash('Nenhum dependente encontrado para exportar.', 'info')
+                return redirect(url_for('dependentes_module'))
+
+            # Calcular a idade antes de criar o DataFrame
+            for dep in dependentes_data:
+                dep['Idade'] = calculate_age(dep.get('Data_Nascimento'))
+
+            df = pd.DataFrame(dependentes_data)
+
+            # Renomeie colunas para serem mais amigáveis no Excel
+            df = df.rename(columns={
+                'ID_Dependente': 'ID Dependente',
+                'Matricula_Funcionario': 'Matrícula Funcionário',
+                'Nome_Funcionario': 'Nome do Funcionário',
+                'Nome_Completo': 'Nome do Dependente',
+                'Parentesco': 'Parentesco',
+                'Data_Nascimento': 'Data de Nascimento',
+                'Idade': 'Idade (anos)', # Novo campo
+                'Cpf': 'CPF',
+                'Contato_Emergencia': 'Contato de Emergência',
+                'Telefone_Emergencia': 'Telefone de Emergência',
+                'Observacoes': 'Observações',
+                'Data_Criacao': 'Data de Criação',
+                'Data_Modificacao': 'Última Modificação'
+            })
+            
+            # Converter booleanos para 'Sim'/'Não' para melhor leitura no Excel
+            df['Contato de Emergência'] = df['Contato de Emergência'].apply(lambda x: 'Sim' if x else 'Não')
+
+            # Ordenar colunas para melhor visualização no Excel (opcional)
+            ordered_columns = [
+                'ID Dependente', 'Matrícula Funcionário', 'Nome do Funcionário',
+                'Nome do Dependente', 'Parentesco', 'Data de Nascimento', 'Idade (anos)', 'CPF',
+                'Contato de Emergência', 'Telefone de Emergência', 'Observações',
+                'Data de Criação', 'Última Modificação'
+            ]
+            df = df[[col for col in ordered_columns if col in df.columns]]
+
+            excel_buffer = BytesIO()
+            df.to_excel(excel_buffer, index=False, engine='openpyxl')
+            excel_buffer.seek(0)
+
+            return send_file(
+                excel_buffer,
+                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                as_attachment=True,
+                download_name='relatorio_dependentes.xlsx'
+            )
+
+    except Exception as e:
+        flash(f"Ocorreu um erro ao exportar Dependentes para Excel: {e}", 'danger')
+        print(f"Erro ao exportar Dependentes Excel: {e}")
+        return redirect(url_for('dependentes_module'))
 
 
 #---------------------------------------------------------------------------------------------------

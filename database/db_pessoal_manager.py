@@ -16,11 +16,15 @@ class PessoalManager:
             return None
         
         # Lista de campos de data/datetime que precisam de formatação para objeto date
+        # Inclua todos os campos de data de TODAS as tabelas gerenciadas por este manager
         date_fields_to_format = [
-            'Data_Criacao', 'Data_Modificacao', 
-            'Data_Admissao', 
-            'Data_Vigencia', 
-            'Data_Emissao', 'Data_Vencimento', 'Data_Nascimento' 
+            'Data_Criacao', 'Data_Modificacao', # Comuns em quase todas as tabelas
+            'Data_Admissao', # Funcionarios
+            'Data_Vigencia', # Salarios
+            'Data_Emissao', 'Data_Vencimento', # Funcionarios_Documentos
+            'Data_Nascimento', # Funcionarios_Documentos E Dependentes (NOVO!)
+            'Periodo_Aquisitivo_Inicio', 'Periodo_Aquisitivo_Fim', # Ferias
+            'Data_Inicio_Gozo', 'Data_Fim_Gozo' # Ferias
         ]
         
         for key in date_fields_to_format:
@@ -36,10 +40,11 @@ class PessoalManager:
                         try:
                             item[key] = datetime.strptime(value, '%Y-%m-%d %H:%M:%S').date()
                         except ValueError:
+                            # Se ainda falhar, pode ser um formato inesperado, mantenha como None
                             print(f"AVISO: Não foi possível converter a string de data '{value}' para objeto date para o campo '{key}'. Definindo como None.")
                             item[key] = None
                 elif isinstance(value, datetime):
-                    item[key] = value.date()
+                    item[key] = value.date() # Converte datetime para date
                 elif value is None:
                     item[key] = None
 
@@ -909,4 +914,246 @@ class PessoalManager:
         """
         query = "SELECT ID_Salarios FROM salarios WHERE ID_Cargos = %s AND ID_Niveis = %s AND Data_Vigencia = %s"
         result = self.db.execute_query(query, (id_cargos, id_niveis, data_vigencia), fetch_results=True)
+        return result[0] if result else None
+
+
+    # --- NOVOS MÉTODOS DE FÉRIAS ---
+    def get_all_ferias(self, search_matricula=None, search_status=None, search_periodo_inicio=None, search_periodo_fim=None):
+        """
+        Retorna uma lista de todos os registros de férias, opcionalmente filtrada,
+        incluindo informações do funcionário.
+        """
+        query = """
+            SELECT
+                f.ID_Ferias,
+                f.Matricula_Funcionario,
+                f.Periodo_Aquisitivo_Inicio,
+                f.Periodo_Aquisitivo_Fim,
+                f.Data_Inicio_Gozo,
+                f.Data_Fim_Gozo,
+                f.Dias_Gozo,
+                f.Status_Ferias,
+                f.Observacoes,
+                func.Nome_Completo AS Nome_Funcionario,
+                f.Data_Criacao,
+                f.Data_Modificacao
+            FROM
+                ferias f
+            LEFT JOIN
+                funcionarios func ON f.Matricula_Funcionario = func.Matricula
+            WHERE 1=1
+        """
+        params = []
+
+        if search_matricula:
+            query += " AND f.Matricula_Funcionario LIKE %s"
+            params.append(f"%{search_matricula}%")
+        if search_status:
+            query += " AND f.Status_Ferias = %s"
+            params.append(search_status)
+        if search_periodo_inicio:
+            query += " AND f.Periodo_Aquisitivo_Inicio >= %s"
+            params.append(search_periodo_inicio)
+        if search_periodo_fim:
+            query += " AND f.Periodo_Aquisitivo_Fim <= %s"
+            params.append(search_periodo_fim)
+        
+        query += " ORDER BY f.Periodo_Aquisitivo_Inicio DESC, func.Nome_Completo"
+
+        results = self.db.execute_query(query, tuple(params), fetch_results=True)
+        if results:
+            return [self._format_date_fields(item) for item in results]
+        return results
+
+    def add_ferias(self, matricula_funcionario, periodo_aquisitivo_inicio, periodo_aquisitivo_fim, data_inicio_gozo, data_fim_gozo, dias_gozo, status_ferias, observacoes):
+        """
+        Adiciona um novo registro de férias ao banco de dados.
+        """
+        query = """
+            INSERT INTO ferias (Matricula_Funcionario, Periodo_Aquisitivo_Inicio, Periodo_Aquisitivo_Fim, Data_Inicio_Gozo, Data_Fim_Gozo, Dias_Gozo, Status_Ferias, Observacoes, Data_Criacao, Data_Modificacao)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+        """
+        params = (matricula_funcionario, periodo_aquisitivo_inicio, periodo_aquisitivo_fim, data_inicio_gozo, data_fim_gozo, dias_gozo, status_ferias, observacoes)
+        return self.db.execute_query(query, params, fetch_results=False)
+
+    def get_ferias_by_id(self, ferias_id):
+        """
+        Retorna os dados de um registro de férias pelo ID.
+        """
+        query = """
+            SELECT
+                f.ID_Ferias,
+                f.Matricula_Funcionario,
+                f.Periodo_Aquisitivo_Inicio,
+                f.Periodo_Aquisitivo_Fim,
+                f.Data_Inicio_Gozo,
+                f.Data_Fim_Gozo,
+                f.Dias_Gozo,
+                f.Status_Ferias,
+                f.Observacoes,
+                func.Nome_Completo AS Nome_Funcionario,
+                f.Data_Criacao,
+                f.Data_Modificacao
+            FROM
+                ferias f
+            LEFT JOIN
+                funcionarios func ON f.Matricula_Funcionario = func.Matricula
+            WHERE f.ID_Ferias = %s
+        """
+        result = self.db.execute_query(query, (ferias_id,), fetch_results=True)
+        if result:
+            return self._format_date_fields(result[0])
+        return None
+
+    def update_ferias(self, ferias_id, matricula_funcionario, periodo_aquisitivo_inicio, periodo_aquisitivo_fim, data_inicio_gozo, data_fim_gozo, dias_gozo, status_ferias, observacoes):
+        """
+        Atualiza os dados de um registro de férias existente.
+        """
+        query = """
+            UPDATE ferias
+            SET
+                Matricula_Funcionario = %s,
+                Periodo_Aquisitivo_Inicio = %s,
+                Periodo_Aquisitivo_Fim = %s,
+                Data_Inicio_Gozo = %s,
+                Data_Fim_Gozo = %s,
+                Dias_Gozo = %s,
+                Status_Ferias = %s,
+                Observacoes = %s,
+                Data_Modificacao = NOW()
+            WHERE ID_Ferias = %s
+        """
+        params = (matricula_funcionario, periodo_aquisitivo_inicio, periodo_aquisitivo_fim, data_inicio_gozo, data_fim_gozo, dias_gozo, status_ferias, observacoes, ferias_id)
+        return self.db.execute_query(query, params, fetch_results=False)
+
+    def delete_ferias(self, ferias_id):
+        """
+        Exclui um registro de férias do banco de dados.
+        """
+        query = "DELETE FROM ferias WHERE ID_Ferias = %s"
+        return self.db.execute_query(query, (ferias_id,), fetch_results=False)
+    
+     # --- NOVOS MÉTODOS DE DEPENDENTES ---
+    def get_all_dependentes(self, search_matricula=None, search_nome=None, search_parentesco=None):
+        """
+        Retorna uma lista de todos os dependentes, opcionalmente filtrada,
+        incluindo informações do funcionário.
+        """
+        query = """
+            SELECT
+                d.ID_Dependente,
+                d.Matricula_Funcionario,
+                d.Nome_Completo,
+                d.Parentesco,
+                d.Data_Nascimento,
+                d.Cpf,
+                d.Contato_Emergencia,
+                d.Telefone_Emergencia,
+                d.Observacoes,
+                func.Nome_Completo AS Nome_Funcionario,
+                d.Data_Criacao,
+                d.Data_Modificacao
+            FROM
+                dependentes d
+            LEFT JOIN
+                funcionarios func ON d.Matricula_Funcionario = func.Matricula
+            WHERE 1=1
+        """
+        params = []
+
+        if search_matricula:
+            query += " AND d.Matricula_Funcionario LIKE %s"
+            params.append(f"%{search_matricula}%")
+        if search_nome:
+            query += " AND d.Nome_Completo LIKE %s"
+            params.append(f"%{search_nome}%")
+        if search_parentesco:
+            query += " AND d.Parentesco = %s"
+            params.append(search_parentesco)
+        
+        query += " ORDER BY func.Nome_Completo, d.Nome_Completo"
+
+        results = self.db.execute_query(query, tuple(params), fetch_results=True)
+        if results:
+            return [self._format_date_fields(item) for item in results]
+        return results
+
+    def add_dependente(self, matricula_funcionario, nome_completo, parentesco, data_nascimento, cpf, contato_emergencia, telefone_emergencia, observacoes):
+        """
+        Adiciona um novo dependente ao banco de dados.
+        """
+        query = """
+            INSERT INTO dependentes (Matricula_Funcionario, Nome_Completo, Parentesco, Data_Nascimento, Cpf, Contato_Emergencia, Telefone_Emergencia, Observacoes, Data_Criacao, Data_Modificacao)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+        """
+        params = (matricula_funcionario, nome_completo, parentesco, data_nascimento, cpf, contato_emergencia, telefone_emergencia, observacoes)
+        return self.db.execute_query(query, params, fetch_results=False)
+
+    def get_dependente_by_id(self, dependente_id):
+        """
+        Retorna os dados de um dependente pelo ID.
+        """
+        query = """
+            SELECT
+                d.ID_Dependente,
+                d.Matricula_Funcionario,
+                d.Nome_Completo,
+                d.Parentesco,
+                d.Data_Nascimento,
+                d.Cpf,
+                d.Contato_Emergencia,
+                d.Telefone_Emergencia,
+                d.Observacoes,
+                func.Nome_Completo AS Nome_Funcionario,
+                d.Data_Criacao,
+                d.Data_Modificacao
+            FROM
+                dependentes d
+            LEFT JOIN
+                funcionarios func ON d.Matricula_Funcionario = func.Matricula
+            WHERE d.ID_Dependente = %s
+        """
+        result = self.db.execute_query(query, (dependente_id,), fetch_results=True)
+        if result:
+            return self._format_date_fields(result[0])
+        return None
+
+    def update_dependente(self, dependente_id, matricula_funcionario, nome_completo, parentesco, data_nascimento, cpf, contato_emergencia, telefone_emergencia, observacoes):
+        """
+        Atualiza os dados de um dependente existente.
+        """
+        query = """
+            UPDATE dependentes
+            SET
+                Matricula_Funcionario = %s,
+                Nome_Completo = %s,
+                Parentesco = %s,
+                Data_Nascimento = %s,
+                Cpf = %s,
+                Contato_Emergencia = %s,
+                Telefone_Emergencia = %s,
+                Observacoes = %s,
+                Data_Modificacao = NOW()
+            WHERE ID_Dependente = %s
+        """
+        params = (matricula_funcionario, nome_completo, parentesco, data_nascimento, cpf, contato_emergencia, telefone_emergencia, observacoes, dependente_id)
+        return self.db.execute_query(query, params, fetch_results=False)
+
+    def delete_dependente(self, dependente_id):
+        """
+        Exclui um dependente do banco de dados.
+        """
+        query = "DELETE FROM dependentes WHERE ID_Dependente = %s"
+        return self.db.execute_query(query, (dependente_id,), fetch_results=False)
+
+    def get_dependente_by_cpf(self, cpf, exclude_id=None):
+        """
+        Verifica se um dependente com o dado CPF já existe (para CPF único).
+        """
+        query = "SELECT ID_Dependente FROM dependentes WHERE Cpf = %s"
+        params = [cpf]
+        if exclude_id:
+            query += " AND ID_Dependente != %s"
+            params.append(exclude_id)
+        result = self.db.execute_query(query, tuple(params), fetch_results=True)
         return result[0] if result else None
