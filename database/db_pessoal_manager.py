@@ -775,3 +775,138 @@ class PessoalManager:
         query = "SELECT ID_Niveis FROM niveis WHERE Nome_Nivel = %s"
         result = self.db.execute_query(query, (nome_nivel,), fetch_results=True)
         return result[0] if result else None
+    
+     # --- Métodos de Salários e Benefícios ---
+    def get_all_salarios(self, search_cargo_id=None, search_nivel_id=None):
+        """
+        Retorna uma lista de todos os pacotes salariais, opcionalmente filtrada,
+        incluindo informações de cargo e nível.
+        """
+        query = """
+            SELECT
+                s.ID_Salarios,
+                s.ID_Cargos,
+                s.ID_Niveis,
+                s.Salario_Base,
+                s.Periculosidade,
+                s.Insalubridade,
+                s.Ajuda_De_Custo,
+                s.Vale_Refeicao,
+                s.Gratificacao,
+                s.Cesta_Basica,
+                s.Outros_Beneficios,
+                s.Data_Vigencia,
+                c.Nome_Cargo,
+                n.Nome_Nivel,
+                s.Data_Criacao,
+                s.Data_Modificacao
+            FROM
+                salarios s
+            LEFT JOIN
+                cargos c ON s.ID_Cargos = c.ID_Cargos
+            LEFT JOIN
+                niveis n ON s.ID_Niveis = n.ID_Niveis
+            WHERE 1=1
+        """
+        params = []
+
+        if search_cargo_id:
+            query += " AND s.ID_Cargos = %s"
+            params.append(search_cargo_id)
+        if search_nivel_id:
+            query += " AND s.ID_Niveis = %s"
+            params.append(search_nivel_id)
+        
+        query += " ORDER BY c.Nome_Cargo, n.Nome_Nivel, s.Data_Vigencia DESC"
+
+        results = self.db.execute_query(query, tuple(params), fetch_results=True)
+        if results:
+            return [self._format_date_fields(item) for item in results]
+        return results
+
+    def add_salario(self, id_cargos, id_niveis, salario_base, periculosidade, insalubridade, ajuda_de_custo, vale_refeicao, gratificacao, cesta_basica, outros_beneficios, data_vigencia):
+        """
+        Adiciona um novo pacote salarial ao banco de dados.
+        """
+        query = """
+            INSERT INTO salarios (ID_Cargos, ID_Niveis, Salario_Base, Periculosidade, Insalubridade, Ajuda_De_Custo, Vale_Refeicao, Gratificacao, Cesta_Basica, Outros_Beneficios, Data_Vigencia, Data_Criacao, Data_Modificacao)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+        """
+        params = (id_cargos, id_niveis, salario_base, periculosidade, insalubridade, ajuda_de_custo, vale_refeicao, gratificacao, cesta_basica, outros_beneficios, data_vigencia)
+        return self.db.execute_query(query, params, fetch_results=False)
+
+    def get_salario_by_id(self, salario_id):
+        """
+        Retorna os dados de um pacote salarial pelo ID.
+        """
+        query = """
+            SELECT
+                s.ID_Salarios,
+                s.ID_Cargos,
+                s.ID_Niveis,
+                s.Salario_Base,
+                s.Periculosidade,
+                s.Insalubridade,
+                s.Ajuda_De_Custo,
+                s.Vale_Refeicao,
+                s.Gratificacao,
+                s.Cesta_Basica,
+                s.Outros_Beneficios,
+                s.Data_Vigencia,
+                c.Nome_Cargo,
+                n.Nome_Nivel,
+                s.Data_Criacao,
+                s.Data_Modificacao
+            FROM
+                salarios s
+            LEFT JOIN
+                cargos c ON s.ID_Cargos = c.ID_Cargos
+            LEFT JOIN
+                niveis n ON s.ID_Niveis = n.ID_Niveis
+            WHERE s.ID_Salarios = %s
+        """
+        result = self.db.execute_query(query, (salario_id,), fetch_results=True)
+        if result:
+            return self._format_date_fields(result[0])
+        return None
+
+    def update_salario(self, salario_id, id_cargos, id_niveis, salario_base, periculosidade, insalubridade, ajuda_de_custo, vale_refeicao, gratificacao, cesta_basica, outros_beneficios, data_vigencia):
+        """
+        Atualiza os dados de um pacote salarial existente.
+        """
+        query = """
+            UPDATE salarios
+            SET
+                ID_Cargos = %s,
+                ID_Niveis = %s,
+                Salario_Base = %s,
+                Periculosidade = %s,
+                Insalubridade = %s,
+                Ajuda_De_Custo = %s,
+                Vale_Refeicao = %s,
+                Gratificacao = %s,
+                Cesta_Basica = %s,
+                Outros_Beneficios = %s,
+                Data_Vigencia = %s,
+                Data_Modificacao = NOW()
+            WHERE ID_Salarios = %s
+        """
+        params = (id_cargos, id_niveis, salario_base, periculosidade, insalubridade, ajuda_de_custo, vale_refeicao, gratificacao, cesta_basica, outros_beneficios, data_vigencia, salario_id)
+        return self.db.execute_query(query, params, fetch_results=False)
+
+    def delete_salario(self, salario_id):
+        """
+        Exclui um pacote salarial do banco de dados.
+        """
+        # Nota: Não há FK direta de funcionarios para salarios,
+        # então a exclusão é mais simples.
+        query = "DELETE FROM salarios WHERE ID_Salarios = %s"
+        return self.db.execute_query(query, (salario_id,), fetch_results=False)
+
+    def get_salario_by_cargo_nivel_vigencia(self, id_cargos, id_niveis, data_vigencia):
+        """
+        Verifica se já existe um pacote salarial para a mesma combinação de cargo, nível e data de vigência.
+        """
+        query = "SELECT ID_Salarios FROM salarios WHERE ID_Cargos = %s AND ID_Niveis = %s AND Data_Vigencia = %s"
+        result = self.db.execute_query(query, (id_cargos, id_niveis, data_vigencia), fetch_results=True)
+        return result[0] if result else None

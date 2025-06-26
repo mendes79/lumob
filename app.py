@@ -1281,6 +1281,377 @@ def export_niveis_excel():
         print(f"Erro ao exportar níveis Excel: {e}")
         return redirect(url_for('niveis_module'))
 
+# --- ROTAS DO SUBMÓDULO PESSOAL: SALÁRIOS E BENEFÍCIOS ---
+
+@app.route('/pessoal/salarios')
+@login_required
+def salarios_module():
+    if not current_user.can_access_module('Pessoal'): # Ou permissão específica para salários
+        flash('Acesso negado. Você não tem permissão para acessar a Gestão de Salários.', 'warning')
+        return redirect(url_for('welcome'))
+
+    search_cargo_id = request.args.get('cargo_id')
+    search_nivel_id = request.args.get('nivel_id')
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            
+            salarios = pessoal_manager.get_all_salarios(
+                search_cargo_id=int(search_cargo_id) if search_cargo_id else None,
+                search_nivel_id=int(search_nivel_id) if search_nivel_id else None
+            )
+            
+            all_cargos = pessoal_manager.get_all_cargos_for_dropdown()
+            all_niveis = pessoal_manager.get_all_niveis_for_dropdown()
+
+        return render_template(
+            'pessoal/salarios/salarios_module.html',
+            user=current_user,
+            salarios=salarios,
+            all_cargos=all_cargos,
+            all_niveis=all_niveis,
+            selected_cargo_id=int(search_cargo_id) if search_cargo_id else None,
+            selected_nivel_id=int(search_nivel_id) if search_nivel_id else None
+        )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados ao carregar Salários: {e}", 'danger')
+        print(f"Erro de banco de dados em salarios_module: {e}")
+        return redirect(url_for('pessoal_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado ao carregar Salários: {e}", 'danger')
+        print(f"Erro inesperado em salarios_module: {e}")
+        return redirect(url_for('pessoal_module'))
+
+
+@app.route('/pessoal/salarios/add', methods=['GET', 'POST'])
+@login_required
+def add_salario():
+    if not current_user.can_access_module('Pessoal'):
+        flash('Acesso negado. Você não tem permissão para adicionar Salários.', 'warning')
+        return redirect(url_for('welcome'))
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            
+            if request.method == 'POST':
+                id_cargos = int(request.form['id_cargos'])
+                id_niveis = int(request.form['id_niveis'])
+                salario_base = float(request.form.get('salario_base', '0').replace(',', '.'))
+                periculosidade = 'periculosidade' in request.form
+                insalubridade = 'insalubridade' in request.form
+                ajuda_de_custo = float(request.form.get('ajuda_de_custo', '0').replace(',', '.'))
+                vale_refeicao = float(request.form.get('vale_refeicao', '0').replace(',', '.'))
+                gratificacao = float(request.form.get('gratificacao', '0').replace(',', '.'))
+                cesta_basica = 'cesta_basica' in request.form
+                outros_beneficios = request.form.get('outros_beneficios', '').strip()
+                data_vigencia_str = request.form.get('data_vigencia', '').strip()
+
+                if not all([id_cargos, id_niveis, salario_base, data_vigencia_str]):
+                    flash('Campos obrigatórios (Cargo, Nível, Salário Base, Data Vigência) não podem ser vazios.', 'danger')
+                    all_cargos = pessoal_manager.get_all_cargos_for_dropdown()
+                    all_niveis = pessoal_manager.get_all_niveis_for_dropdown()
+                    return render_template(
+                        'pessoal/salarios/add_salario.html',
+                        user=current_user,
+                        all_cargos=all_cargos,
+                        all_niveis=all_niveis,
+                        form_data=request.form
+                    )
+                
+                try:
+                    data_vigencia = datetime.strptime(data_vigencia_str, '%Y-%m-%d').date()
+                except ValueError:
+                    flash('Formato de Data de Vigência inválido. Use AAAA-MM-DD.', 'danger')
+                    all_cargos = pessoal_manager.get_all_cargos_for_dropdown()
+                    all_niveis = pessoal_manager.get_all_niveis_for_dropdown()
+                    return render_template(
+                        'pessoal/salarios/add_salario.html',
+                        user=current_user,
+                        all_cargos=all_cargos,
+                        all_niveis=all_niveis,
+                        form_data=request.form
+                    )
+                
+                if pessoal_manager.get_salario_by_cargo_nivel_vigencia(id_cargos, id_niveis, data_vigencia):
+                    flash('Já existe um pacote salarial para esta combinação de Cargo, Nível e Data de Vigência.', 'danger')
+                    all_cargos = pessoal_manager.get_all_cargos_for_dropdown()
+                    all_niveis = pessoal_manager.get_all_niveis_for_dropdown()
+                    return render_template(
+                        'pessoal/salarios/add_salario.html',
+                        user=current_user,
+                        all_cargos=all_cargos,
+                        all_niveis=all_niveis,
+                        form_data=request.form
+                    )
+
+                success = pessoal_manager.add_salario(
+                    id_cargos, id_niveis, salario_base, periculosidade, insalubridade, ajuda_de_custo, vale_refeicao, gratificacao, cesta_basica, outros_beneficios, data_vigencia
+                )
+                if success:
+                    flash('Pacote salarial adicionado com sucesso!', 'success')
+                    return redirect(url_for('salarios_module'))
+                else:
+                    flash('Erro ao adicionar pacote salarial. Verifique os dados e tente novamente.', 'danger')
+            
+            # GET request
+            all_cargos = pessoal_manager.get_all_cargos_for_dropdown()
+            all_niveis = pessoal_manager.get_all_niveis_for_dropdown()
+                
+            return render_template(
+                'pessoal/salarios/add_salario.html',
+                user=current_user,
+                all_cargos=all_cargos,
+                all_niveis=all_niveis,
+                form_data={}
+            )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados: {e}", 'danger')
+        print(f"Erro de banco de dados em add_salario: {e}")
+        return redirect(url_for('salarios_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+        print(f"Erro inesperado em add_salario: {e}")
+        return redirect(url_for('salarios_module'))
+
+
+@app.route('/pessoal/salarios/edit/<int:salario_id>', methods=['GET', 'POST'])
+@login_required
+def edit_salario(salario_id):
+    if not current_user.can_access_module('Pessoal'):
+        flash('Acesso negado. Você não tem permissão para editar Salários.', 'warning')
+        return redirect(url_for('welcome'))
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            salario = pessoal_manager.get_salario_by_id(salario_id)
+
+            if not salario:
+                flash('Pacote salarial não encontrado.', 'danger')
+                return redirect(url_for('salarios_module'))
+
+            if request.method == 'POST':
+                id_cargos = int(request.form['id_cargos'])
+                id_niveis = int(request.form['id_niveis'])
+                salario_base = float(request.form.get('salario_base', '0').replace(',', '.'))
+                periculosidade = 'periculosidade' in request.form
+                insalubridade = 'insalubridade' in request.form
+                ajuda_de_custo = float(request.form.get('ajuda_de_custo', '0').replace(',', '.'))
+                vale_refeicao = float(request.form.get('vale_refeicao', '0').replace(',', '.'))
+                gratificacao = float(request.form.get('gratificacao', '0').replace(',', '.'))
+                cesta_basica = 'cesta_basica' in request.form
+                outros_beneficios = request.form.get('outros_beneficios', '').strip()
+                data_vigencia_str = request.form.get('data_vigencia', '').strip()
+
+                if not all([id_cargos, id_niveis, salario_base, data_vigencia_str]):
+                    flash('Campos obrigatórios (Cargo, Nível, Salário Base, Data Vigência) não podem ser vazios.', 'danger')
+                    all_cargos = pessoal_manager.get_all_cargos_for_dropdown()
+                    all_niveis = pessoal_manager.get_all_niveis_for_dropdown()
+                    return render_template(
+                        'pessoal/salarios/edit_salario.html',
+                        user=current_user,
+                        salario=salario,
+                        all_cargos=all_cargos,
+                        all_niveis=all_niveis,
+                        form_data=request.form
+                    )
+                
+                try:
+                    data_vigencia = datetime.strptime(data_vigencia_str, '%Y-%m-%d').date()
+                except ValueError:
+                    flash('Formato de Data de Vigência inválido. Use AAAA-MM-DD.', 'danger')
+                    all_cargos = pessoal_manager.get_all_cargos_for_dropdown()
+                    all_niveis = pessoal_manager.get_all_niveis_for_dropdown()
+                    return render_template(
+                        'pessoal/salarios/edit_salario.html',
+                        user=current_user,
+                        salario=salario,
+                        all_cargos=all_cargos,
+                        all_niveis=all_niveis,
+                        form_data=request.form
+                    )
+                
+                existing_salario = pessoal_manager.get_salario_by_cargo_nivel_vigencia(id_cargos, id_niveis, data_vigencia)
+                if existing_salario and existing_salario['ID_Salarios'] != salario_id:
+                    flash('Já existe um pacote salarial para esta combinação de Cargo, Nível e Data de Vigência.', 'danger')
+                    all_cargos = pessoal_manager.get_all_cargos_for_dropdown()
+                    all_niveis = pessoal_manager.get_all_niveis_for_dropdown()
+                    return render_template(
+                        'pessoal/salarios/edit_salario.html',
+                        user=current_user,
+                        salario=salario,
+                        all_cargos=all_cargos,
+                        all_niveis=all_niveis,
+                        form_data=request.form
+                    )
+
+                success = pessoal_manager.update_salario(
+                    salario_id, id_cargos, id_niveis, salario_base, periculosidade, insalubridade, ajuda_de_custo, vale_refeicao, gratificacao, cesta_basica, outros_beneficios, data_vigencia
+                )
+                if success:
+                    flash('Pacote salarial atualizado com sucesso!', 'success')
+                    return redirect(url_for('salarios_module'))
+                else:
+                    flash('Erro ao atualizar pacote salarial.', 'danger')
+            
+            # GET request
+            all_cargos = pessoal_manager.get_all_cargos_for_dropdown()
+            all_niveis = pessoal_manager.get_all_niveis_for_dropdown()
+            
+            # Formatar data de vigência para o input type="date"
+            salario['Data_Vigencia'] = salario['Data_Vigencia'].strftime('%Y-%m-%d') if salario['Data_Vigencia'] else ''
+
+            return render_template(
+                'pessoal/salarios/edit_salario.html',
+                user=current_user,
+                salario=salario,
+                all_cargos=all_cargos,
+                all_niveis=all_niveis
+            )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados: {e}", 'danger')
+        print(f"Erro de banco de dados em edit_salario: {e}")
+        return redirect(url_for('salarios_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+        print(f"Erro inesperado em edit_salario: {e}")
+        return redirect(url_for('salarios_module'))
+
+
+@app.route('/pessoal/salarios/delete/<int:salario_id>', methods=['POST'])
+@login_required
+def delete_salario(salario_id):
+    if not current_user.can_access_module('Pessoal'):
+        flash('Acesso negado. Você não tem permissão para excluir Salários.', 'warning')
+        return redirect(url_for('welcome'))
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            success = pessoal_manager.delete_salario(salario_id)
+            if success:
+                flash('Pacote salarial excluído com sucesso!', 'success')
+            else:
+                flash('Erro ao excluir pacote salarial. Verifique se ele existe.', 'danger')
+        return redirect(url_for('salarios_module'))
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados: {e}", 'danger')
+        print(f"Erro de banco de dados em delete_salario: {e}")
+        return redirect(url_for('salarios_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+        print(f"Erro inesperado em delete_salario: {e}")
+        return redirect(url_for('salarios_module'))
+
+
+@app.route('/pessoal/salarios/details/<int:salario_id>')
+@login_required
+def salario_details(salario_id):
+    if not current_user.can_access_module('Pessoal'):
+        flash('Acesso negado. Você não tem permissão para ver detalhes de Salários.', 'warning')
+        return redirect(url_for('welcome'))
+    
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            salario = pessoal_manager.get_salario_by_id(salario_id)
+
+            if not salario:
+                flash('Pacote salarial não encontrado.', 'danger')
+                return redirect(url_for('salarios_module'))
+
+        return render_template(
+            'pessoal/salarios/salario_details.html',
+            user=current_user,
+            salario=salario
+        )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados: {e}", 'danger')
+        print(f"Erro de banco de dados em salario_details: {e}")
+        return redirect(url_for('salarios_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+        print(f"Erro inesperado em salario_details: {e}")
+        return redirect(url_for('salarios_module'))
+
+
+@app.route('/pessoal/salarios/export/excel')
+@login_required
+def export_salarios_excel():
+    if not current_user.can_access_module('Pessoal'):
+        flash('Acesso negado. Você não tem permissão para exportar dados de Salários.', 'warning')
+        return redirect(url_for('welcome'))
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            
+            search_cargo_id = request.args.get('cargo_id')
+            search_nivel_id = request.args.get('nivel_id')
+
+            salarios_data = pessoal_manager.get_all_salarios(
+                search_cargo_id=int(search_cargo_id) if search_cargo_id else None,
+                search_nivel_id=int(search_nivel_id) if search_nivel_id else None
+            )
+
+            if not salarios_data:
+                flash('Nenhum pacote salarial encontrado para exportar.', 'info')
+                return redirect(url_for('salarios_module'))
+
+            df = pd.DataFrame(salarios_data)
+
+            # Renomeie colunas para serem mais amigáveis no Excel
+            df = df.rename(columns={
+                'ID_Salarios': 'ID Salário',
+                'ID_Cargos': 'ID Cargo',
+                'ID_Niveis': 'ID Nível',
+                'Salario_Base': 'Salário Base (R$)',
+                'Periculosidade': 'Periculosidade',
+                'Insalubridade': 'Insalubridade',
+                'Ajuda_De_Custo': 'Ajuda de Custo (R$)',
+                'Vale_Refeicao': 'Vale Refeição (R$)',
+                'Gratificacao': 'Gratificação (R$)',
+                'Cesta_Basica': 'Cesta Básica',
+                'Outros_Beneficios': 'Outros Benefícios',
+                'Data_Vigencia': 'Data de Vigência',
+                'Nome_Cargo': 'Cargo',
+                'Nome_Nivel': 'Nível',
+                'Data_Criacao': 'Data de Criação',
+                'Data_Modificacao': 'Última Modificação'
+            })
+            
+            # Converter booleanos para 'Sim'/'Não' para melhor leitura no Excel
+            df['Periculosidade'] = df['Periculosidade'].apply(lambda x: 'Sim' if x else 'Não')
+            df['Insalubridade'] = df['Insalubridade'].apply(lambda x: 'Sim' if x else 'Não')
+            df['Cesta_Basica'] = df['Cesta_Basica'].apply(lambda x: 'Sim' if x else 'Não')
+
+            # Ordenar colunas para melhor visualização no Excel (opcional)
+            ordered_columns = [
+                'ID Salário', 'Cargo', 'Nível', 'Salário Base (R$)', 'Data de Vigência',
+                'Periculosidade', 'Insalubridade', 'Ajuda de Custo (R$)',
+                'Vale Refeição (R$)', 'Gratificação (R$)', 'Cesta Básica', 'Outros Benefícios',
+                'Data de Criação', 'Última Modificação'
+            ]
+            df = df[[col for col in ordered_columns if col in df.columns]]
+
+            excel_buffer = BytesIO()
+            df.to_excel(excel_buffer, index=False, engine='openpyxl')
+            excel_buffer.seek(0)
+
+            return send_file(
+                excel_buffer,
+                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                as_attachment=True,
+                download_name='relatorio_salarios.xlsx'
+            )
+
+    except Exception as e:
+        flash(f"Ocorreu um erro ao exportar Salários para Excel: {e}", 'danger')
+        print(f"Erro ao exportar Salários Excel: {e}")
+        return redirect(url_for('salarios_module'))
+
 
 #---------------------------------------------------------------------------------------------------
 # ROTAS PARA O MÓDULO OBRAS                                                                        |
