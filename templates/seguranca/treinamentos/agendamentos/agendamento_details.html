@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Detalhes do Agendamento - LUMOB</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+      p {
+        margin-bottom: 8px;
+      }
+      strong {
+        display: inline-block;
+        width: 220px;
+      }
+      .actions {
+        text-align: center;
+        margin-top: 20px;
+      }
+      .actions button,
+      .actions a {
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 0 5px;
+        text-decoration: none;
+        display: inline-block;
+      }
+      .actions button.delete {
+        background-color: #dc3545;
+      }
+      .actions button:hover {
+        background-color: #0056b3;
+      }
+      .actions button.delete:hover {
+        background-color: #c82333;
+      }
+      .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+      }
+
+      /* Estilo para impressão */
+      @media print {
+        .actions,
+        .back-link,
+        .participantes-section .add-button {
+          display: none;
+        }
+        .container {
+          box-shadow: none;
+          border: none;
+          margin: 0;
+          padding: 0;
+        }
+        body {
+          margin: 0;
+          padding: 0;
+        }
+        /* Estilo para a tabela de participantes na impressão */
+        .participantes-section table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 15px;
+        }
+        .participantes-section th,
+        .participantes-section td {
+          border: 1px solid #ddd;
+          padding: 8px;
+          text-align: left;
+        }
+        .participantes-section th {
+          background-color: #f2f2f2;
+          color: #333;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Detalhes do Agendamento (ID: {{ agendamento.ID_Agendamento }})</h1>
+
+      <div>
+        <p>
+          <strong>ID do Agendamento:</strong> {{ agendamento.ID_Agendamento }}
+        </p>
+        <p>
+          <strong>Treinamento:</strong> {{ agendamento.Nome_Treinamento }} ({{
+          agendamento.Tipo_Treinamento }})
+        </p>
+        <p>
+          <strong>Data e Hora de Início:</strong> {{
+          agendamento.Data_Hora_Inicio.strftime('%d/%m/%Y %H:%M') if
+          agendamento.Data_Hora_Inicio else 'N/A' }}
+        </p>
+        <p>
+          <strong>Data e Hora de Fim:</strong> {{
+          agendamento.Data_Hora_Fim.strftime('%d/%m/%Y %H:%M') if
+          agendamento.Data_Hora_Fim else 'N/A' }}
+        </p>
+        <p>
+          <strong>Local do Treinamento:</strong> {{
+          agendamento.Local_Treinamento if agendamento.Local_Treinamento else
+          'N/A' }}
+        </p>
+        <p>
+          <strong>Status do Agendamento:</strong> {{
+          agendamento.Status_Agendamento }}
+        </p>
+        <p>
+          <strong>Observações:</strong> {{ agendamento.Observacoes if
+          agendamento.Observacoes else 'N/A' }}
+        </p>
+        <p>
+          <strong>Data de Criação:</strong> {{
+          agendamento.Data_Criacao.strftime('%d/%m/%Y %H:%M:%S') if
+          agendamento.Data_Criacao else 'N/A' }}
+        </p>
+        <p>
+          <strong>Última Modificação:</strong> {{
+          agendamento.Data_Modificacao.strftime('%d/%m/%Y %H:%M:%S') if
+          agendamento.Data_Modificacao else 'N/A' }}
+        </p>
+      </div>
+
+      <div class="actions">
+        <a
+          href="{{ url_for('edit_treinamento_agendamento', agendamento_id=agendamento.ID_Agendamento) }}"
+          >Editar</a
+        >
+        <button
+          type="button"
+          onclick="window.print()"
+          style="background-color: #007bff"
+        >
+          Imprimir
+        </button>
+        <form
+          action="{{ url_for('delete_treinamento_agendamento', agendamento_id=agendamento.ID_Agendamento) }}"
+          method="POST"
+          style="display: inline"
+          onsubmit="return confirm('Tem certeza que deseja excluir este agendamento? Esta ação é irreversível.');"
+        >
+          <button type="submit" class="delete">Excluir</button>
+        </form>
+      </div>
+
+      <div class="participantes-section" style="margin-top: 30px">
+        <h2>Participantes Deste Agendamento</h2>
+        <div style="text-align: right; margin-bottom: 10px">
+          <a
+            href="{{ url_for('add_treinamento_participante', agendamento_id_prefill=agendamento.ID_Agendamento) }}"
+            class="add-button"
+            style="background-color: #28a745"
+            >Adicionar Participante</a
+          >
+        </div>
+        {% if participantes %}
+        <table style="width: 100%; border-collapse: collapse">
+          <thead>
+            <tr>
+              <th>Funcionário</th>
+              <th>Presença</th>
+              <th>Nota</th>
+              <th>Data Conclusão</th>
+              <th>Certificado</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for participante in participantes %}
+            <tr>
+              <td>
+                {{ participante.Nome_Funcionario }} ({{
+                participante.Matricula_Funcionario }})
+              </td>
+              <td>{{ 'Sim' if participante.Presenca else 'Não' }}</td>
+              <td>
+                {{ "%.2f"|format(participante.Nota_Avaliacao) if
+                participante.Nota_Avaliacao is not none else 'N/A' }}
+              </td>
+              <td>
+                {{ participante.Data_Conclusao.strftime('%d/%m/%Y') if
+                participante.Data_Conclusao else 'N/A' }}
+              </td>
+              <td>
+                {{ 'Sim' if participante.Certificado_Emitido else 'Não' }}
+              </td>
+              <td class="actions" style="text-align: left">
+                <a
+                  href="{{ url_for('edit_treinamento_participante', participante_id=participante.ID_Participante) }}"
+                  class="edit"
+                  style="background-color: #ffc107; color: #333"
+                  >Editar</a
+                >
+                <form
+                  action="{{ url_for('delete_treinamento_participante', participante_id=participante.ID_Participante) }}"
+                  method="POST"
+                  style="display: inline"
+                  onsubmit="return confirm('Tem certeza que deseja remover este participante?');"
+                >
+                  <button
+                    type="submit"
+                    class="delete"
+                    style="background-color: #dc3545; color: white"
+                  >
+                    Remover
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p>Nenhum participante registrado para este agendamento.</p>
+        {% endif %}
+      </div>
+
+      <div class="back-link">
+        <p>
+          <a href="{{ url_for('treinamentos_agendamentos_module') }}"
+            >Voltar para a Lista de Agendamentos</a
+          >
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

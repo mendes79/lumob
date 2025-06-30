@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Detalhes do ASO - LUMOB</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+      p {
+        margin-bottom: 8px;
+      }
+      strong {
+        display: inline-block;
+        width: 220px;
+      }
+      .actions {
+        text-align: center;
+        margin-top: 20px;
+      }
+      .actions button,
+      .actions a {
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 0 5px;
+        text-decoration: none;
+        display: inline-block;
+      }
+      .actions button.delete {
+        background-color: #dc3545;
+      }
+      .actions button:hover {
+        background-color: #0056b3;
+      }
+      .actions button.delete:hover {
+        background-color: #c82333;
+      }
+      .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+      }
+
+      /* Estilo para impressão */
+      @media print {
+        .actions,
+        .back-link {
+          display: none; /* Esconde botões e links na impressão */
+        }
+        .container {
+          box-shadow: none;
+          border: none;
+          margin: 0;
+          padding: 0;
+        }
+        body {
+          margin: 0;
+          padding: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Detalhes do ASO (ID: {{ aso.ID_ASO }})</h1>
+
+      <div>
+        <p><strong>ID do ASO:</strong> {{ aso.ID_ASO }}</p>
+        <p>
+          <strong>Funcionário:</strong> {{ aso.Nome_Funcionario }} ({{
+          aso.Matricula_Funcionario }})
+        </p>
+        <p><strong>Tipo de ASO:</strong> {{ aso.Tipo_ASO }}</p>
+        <p>
+          <strong>Data de Emissão:</strong> {{
+          aso.Data_Emissao.strftime('%d/%m/%Y') if aso.Data_Emissao else 'N/A'
+          }}
+        </p>
+        <p>
+          <strong>Data de Vencimento:</strong> {{
+          aso.Data_Vencimento.strftime('%d/%m/%Y') if aso.Data_Vencimento else
+          'N/A' }}
+        </p>
+        <p><strong>Resultado:</strong> {{ aso.Resultado }}</p>
+        <p>
+          <strong>Médico Responsável:</strong> {{ aso.Medico_Responsavel if
+          aso.Medico_Responsavel else 'N/A' }}
+        </p>
+        <p>
+          <strong>Observações:</strong> {{ aso.Observacoes if aso.Observacoes
+          else 'N/A' }}
+        </p>
+        <p>
+          <strong>Data de Criação:</strong> {{
+          aso.Data_Criacao.strftime('%d/%m/%Y %H:%M:%S') if aso.Data_Criacao
+          else 'N/A' }}
+        </p>
+        <p>
+          <strong>Última Modificação:</strong> {{
+          aso.Data_Modificacao.strftime('%d/%m/%Y %H:%M:%S') if
+          aso.Data_Modificacao else 'N/A' }}
+        </p>
+      </div>
+
+      <div class="actions">
+        <a href="{{ url_for('edit_aso', aso_id=aso.ID_ASO) }}">Editar</a>
+        <button
+          type="button"
+          onclick="window.print()"
+          style="background-color: #007bff"
+        >
+          Imprimir
+        </button>
+        {# NOVO BOTÃO IMPRIMIR #}
+        <form
+          action="{{ url_for('delete_aso', aso_id=aso.ID_ASO) }}"
+          method="POST"
+          style="display: inline"
+          onsubmit="return confirm('Tem certeza que deseja excluir este ASO? Esta ação é irreversível.');"
+        >
+          <button type="submit" class="delete">Excluir</button>
+        </form>
+      </div>
+
+      <div class="back-link">
+        <p>
+          <a href="{{ url_for('asos_module') }}">Voltar para a Lista de ASOs</a>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

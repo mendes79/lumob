@@ -139,15 +139,18 @@
           </p>
         </div>
         <div class="module-card">
-          <a href="#">Saúde Ocupacional (Em Breve)</a>
+          <a href="{{ url_for('asos_module') }}">Saúde Ocupacional (ASOs)</a>
           <p>
             Controle de ASOs, exames médicos e histórico de saúde dos
             funcionários.
           </p>
         </div>
         <div class="module-card">
-          <a href="#">Treinamentos SSMA (Em Breve)</a>
-          <p>Gerencie treinamentos, convocações e controle de validade.</p>
+          <a href="{{ url_for('treinamentos_module') }}"
+            >Treinamentos e Capacitação</a
+          >
+          {# NOVO LINK #}
+          <p>Gerencie treinamentos, agendamentos e participantes.</p>
         </div>
         {# Você pode adicionar mais cards aqui para outras funcionalidades
         futuras: #} {#

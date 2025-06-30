@@ -58,6 +58,24 @@
         text-align: center;
         margin-top: 20px;
       }
+
+      /* Estilo para impressão */
+      @media print {
+        .actions,
+        .back-link {
+          display: none; /* Esconde botões e links na impressão */
+        }
+        .container {
+          box-shadow: none;
+          border: none;
+          margin: 0;
+          padding: 0;
+        }
+        body {
+          margin: 0;
+          padding: 0;
+        }
+      }
     </style>
   </head>
   <body>
@@ -136,6 +154,14 @@
           href="{{ url_for('edit_incidente_acidente', incidente_id=incidente.ID_Incidente_Acidente) }}"
           >Editar</a
         >
+        <button
+          type="button"
+          onclick="window.print()"
+          style="background-color: #007bff"
+        >
+          Imprimir
+        </button>
+        {# NOVO BOTÃO IMPRIMIR #}
         <form
           action="{{ url_for('delete_incidente_acidente', incidente_id=incidente.ID_Incidente_Acidente) }}"
           method="POST"

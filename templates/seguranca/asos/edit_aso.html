@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar ASO - LUMOB</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        h1 { text-align: center; color: #333; }
+        form div { margin-bottom: 10px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], input[type="date"], select, textarea {
+            width: calc(100% - 22px); padding: 10px; border: 1px solid #ddd; border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px;
+            cursor: pointer; font-size: 16px; margin-right: 10px;
+        }
+        button:hover { background-color: #0056b3; }
+        .flash { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
+        .flash.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .flash.danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6fb; }
+        .cancel-link {
+            padding: 10px 15px; background-color: #6c757d; color: white; border: none; border-radius: 4px;
+            cursor: pointer; font-size: 16px; text-decoration: none; display: inline-block; vertical-align: middle;
+        }
+        .cancel-link:hover { background-color: #5a6268; }
+        .back-link { display: block; text-align: center; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Editar ASO (ID: {{ aso.ID_ASO }})</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('edit_aso', aso_id=aso.ID_ASO) }}" method="POST">
+            <div>
+                <label for="aso_id">ID do ASO:</label>
+                <input type="text" id="aso_id" name="aso_id" value="{{ aso.ID_ASO }}" readonly>
+            </div>
+            <div>
+                <label for="matricula_funcionario">Funcionário:</label>
+                <select id="matricula_funcionario" name="matricula_funcionario" required>
+                    <option value="">Selecione um Funcionário</option>
+                    {% for func in all_funcionarios %}
+                        <option value="{{ func.Matricula }}" {% if (form_data and form_data['matricula_funcionario']|default('') == func.Matricula) or (not form_data and aso.Matricula_Funcionario == func.Matricula) %}selected{% endif %}>
+                            {{ func.Matricula }} - {{ func.Nome_Completo }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="tipo_aso">Tipo de ASO:</label>
+                <select id="tipo_aso" name="tipo_aso" required>
+                    <option value="">Selecione o Tipo</option>
+                    {% for tipo in tipo_aso_options %}
+                        <option value="{{ tipo }}" {% if (form_data and form_data['tipo_aso']|default('') == tipo) or (not form_data and aso.Tipo_ASO == tipo) %}selected{% endif %}>{{ tipo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="data_emissao">Data de Emissão:</label>
+                <input type="date" id="data_emissao" name="data_emissao" value="{{ form_data['data_emissao'] if form_data else aso.Data_Emissao }}" required>
+            </div>
+            <div>
+                <label for="data_vencimento">Data de Vencimento (Opcional):</label>
+                <input type="date" id="data_vencimento" name="data_vencimento" value="{{ form_data['data_vencimento'] if form_data else aso.Data_Vencimento }}">
+            </div>
+            <div>
+                <label for="resultado">Resultado:</label>
+                <select id="resultado" name="resultado" required>
+                    <option value="">Selecione o Resultado</option>
+                    {% for res in resultado_options %}
+                        <option value="{{ res }}" {% if (form_data and form_data['resultado']|default('') == res) or (not form_data and aso.Resultado == res) %}selected{% endif %}>{{ res }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="medico_responsavel">Médico Responsável:</label>
+                <input type="text" id="medico_responsavel" name="medico_responsavel" value="{{ form_data['medico_responsavel'] if form_data else aso.Medico_Responsavel }}">
+            </div>
+            <div>
+                <label for="observacoes">Observações:</label>
+                <textarea id="observacoes" name="observacoes" rows="4">{{ form_data['observacoes'] if form_data else aso.Observacoes }}</textarea>
+            </div>
+            <div>
+                <button type="submit">Salvar Alterações</button>
+                <a href="{{ url_for('asos_module') }}" class="cancel-link">Cancelar</a>
+            </div>
+        </form>
+        <div class="back-link">
+            <p><a href="{{ url_for('asos_module') }}">Voltar para a Lista de ASOs</a></p>
+        </div>
+    </div>
+</body>
+</html>

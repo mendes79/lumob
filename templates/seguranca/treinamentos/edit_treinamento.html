@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Treinamento - LUMOB</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        h1 { text-align: center; color: #333; }
+        form div { margin-bottom: 10px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], input[type="number"], textarea, select {
+            width: calc(100% - 22px); padding: 10px; border: 1px solid #ddd; border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px;
+            cursor: pointer; font-size: 16px; margin-right: 10px;
+        }
+        button:hover { background-color: #0056b3; }
+        .flash { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
+        .flash.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .flash.danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6fb; }
+        .cancel-link {
+            padding: 10px 15px; background-color: #6c757d; color: white; border: none; border-radius: 4px;
+            cursor: pointer; font-size: 16px; text-decoration: none; display: inline-block; vertical-align: middle;
+        }
+        .cancel-link:hover { background-color: #5a6268; }
+        .back-link { display: block; text-align: center; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Editar Treinamento: {{ treinamento.Nome_Treinamento }}</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('edit_treinamento', treinamento_id=treinamento.ID_Treinamento) }}" method="POST">
+            <div>
+                <label for="treinamento_id">ID do Treinamento:</label>
+                <input type="text" id="treinamento_id" name="treinamento_id" value="{{ treinamento.ID_Treinamento }}" readonly>
+            </div>
+            <div>
+                <label for="nome_treinamento">Nome do Treinamento:</label>
+                <input type="text" id="nome_treinamento" name="nome_treinamento" value="{{ form_data['nome_treinamento'] if form_data else treinamento.Nome_Treinamento }}" required>
+            </div>
+            <div>
+                <label for="descricao">Descrição:</label>
+                <textarea id="descricao" name="descricao" rows="4">{{ form_data['descricao'] if form_data else treinamento.Descricao }}</textarea>
+            </div>
+            <div>
+                <label for="carga_horaria_horas">Carga Horária (horas):</label>
+                <input type="number" step="0.01" id="carga_horaria_horas" name="carga_horaria_horas" value="{{ form_data['carga_horaria_horas'] if form_data else '%.2f'|format(treinamento.Carga_Horaria_Horas) }}" required>
+            </div>
+            <div>
+                <label for="tipo_treinamento">Tipo de Treinamento:</label>
+                <select id="tipo_treinamento" name="tipo_treinamento" required>
+                    <option value="">Selecione o Tipo</option>
+                    {% for tipo in tipo_treinamento_options %}
+                        <option value="{{ tipo }}" {% if (form_data and form_data['tipo_treinamento']|default('') == tipo) or (not form_data and treinamento.Tipo_Treinamento == tipo) %}selected{% endif %}>{{ tipo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="validade_dias">Validade (dias, opcional):</label>
+                <input type="number" id="validade_dias" name="validade_dias" value="{{ form_data['validade_dias'] if form_data else treinamento.Validade_Dias }}">
+            </div>
+            <div>
+                <label for="instrutor_responsavel">Instrutor Responsável:</label>
+                <input type="text" id="instrutor_responsavel" name="instrutor_responsavel" value="{{ form_data['instrutor_responsavel'] if form_data else treinamento.Instrutor_Responsavel }}">
+            </div>
+            <div>
+                <button type="submit">Salvar Alterações</button>
+                <a href="{{ url_for('treinamentos_module') }}" class="cancel-link">Cancelar</a>
+            </div>
+        </form>
+        <div class="back-link">
+            <p><a href="{{ url_for('treinamentos_module') }}">Voltar para o Catálogo de Treinamentos</a></p>
+        </div>
+    </div>
+</body>
+</html>
