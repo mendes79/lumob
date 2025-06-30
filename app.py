@@ -2473,6 +2473,413 @@ def export_dependentes_excel():
         print(f"Erro ao exportar Dependentes Excel: {e}")
         return redirect(url_for('dependentes_module'))
 
+#---------------------------------------------------------------------------------------------------
+# ROTAS PARA O MÓDULO SEGURANÇA                                                                    |
+#---------------------------------------------------------------------------------------------------
+# --- ROTAS DO MÓDULO SEGURANÇA, SAÚDE E MEIO AMBIENTE (SSMA): INCIDENTES E ACIDENTES ---
+
+@app.route('/seguranca/incidentes_acidentes')
+@login_required
+def incidentes_acidentes_module():
+    if not current_user.can_access_module('Segurança'): # Ou permissão específica para SSMA
+        flash('Acesso negado. Você não tem permissão para acessar a Gestão de Incidentes e Acidentes.', 'warning')
+        return redirect(url_for('welcome'))
+
+    search_tipo = request.args.get('tipo_registro')
+    search_status = request.args.get('status_registro')
+    search_obra_id = request.args.get('obra_id')
+    search_responsavel_matricula = request.args.get('responsavel_matricula')
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            seguranca_manager = SegurancaManager(db_base)
+            
+            incidentes = seguranca_manager.get_all_incidentes_acidentes(
+                search_tipo=search_tipo,
+                search_status=search_status,
+                search_obra_id=int(search_obra_id) if search_obra_id else None,
+                search_responsavel_matricula=search_responsavel_matricula
+            )
+            
+            # Obter listas para dropdowns de filtro
+            # Assumindo que ObrasManager ou PessoalManager podem fornecer essas listas
+            obras_manager = ObrasManager(db_base) # Precisa instanciar para pegar obras
+            pessoal_manager = PessoalManager(db_base) # Precisa instanciar para pegar funcionários
+
+            all_obras = obras_manager.get_all_obras_for_dropdown()
+            all_funcionarios = pessoal_manager.get_all_funcionarios() # Retorna todos os funcionários
+            
+            tipo_registro_options = ['Incidente', 'Acidente']
+            status_registro_options = ['Aberto', 'Em Investigação', 'Concluído', 'Fechado']
+
+        return render_template(
+            'seguranca/incidentes_acidentes/incidentes_acidentes_module.html',
+            user=current_user,
+            incidentes=incidentes,
+            all_obras=all_obras,
+            all_funcionarios=all_funcionarios,
+            tipo_registro_options=tipo_registro_options,
+            status_registro_options=status_registro_options,
+            selected_tipo=search_tipo,
+            selected_status=search_status,
+            selected_obra_id=int(search_obra_id) if search_obra_id else None,
+            selected_responsavel_matricula=search_responsavel_matricula
+        )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados ao carregar Incidentes/Acidentes: {e}", 'danger')
+        print(f"Erro de banco de dados em incidentes_acidentes_module: {e}")
+        return redirect(url_for('seguranca_module')) # Volta para o hub de segurança
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado ao carregar Incidentes/Acidentes: {e}", 'danger')
+        print(f"Erro inesperado em incidentes_acidentes_module: {e}")
+        return redirect(url_for('seguranca_module')) # Volta para o hub de segurança
+
+
+@app.route('/seguranca/incidentes_acidentes/add', methods=['GET', 'POST'])
+@login_required
+def add_incidente_acidente():
+    if not current_user.can_access_module('Segurança'):
+        flash('Acesso negado. Você não tem permissão para adicionar Incidentes/Acidentes.', 'warning')
+        return redirect(url_for('welcome'))
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            seguranca_manager = SegurancaManager(db_base)
+            obras_manager = ObrasManager(db_base)
+            pessoal_manager = PessoalManager(db_base)
+            
+            # Carrega opções para os dropdowns
+            all_obras = obras_manager.get_all_obras_for_dropdown()
+            all_funcionarios = pessoal_manager.get_all_funcionarios() # Para responsável
+            tipo_registro_options = ['Incidente', 'Acidente']
+            status_registro_options = ['Aberto', 'Em Investigação', 'Concluído', 'Fechado']
+
+            form_data_to_template = {}
+
+            if request.method == 'POST':
+                form_data_received = request.form.to_dict()
+
+                tipo_registro = form_data_received.get('tipo_registro', '').strip()
+                data_hora_ocorrencia_str = form_data_received.get('data_hora_ocorrencia', '').strip()
+                local_ocorrencia = form_data_received.get('local_ocorrencia', '').strip()
+                id_obras = form_data_received.get('id_obras')
+                descricao_resumida = form_data_received.get('descricao_resumida', '').strip()
+                causas_identificadas = form_data_received.get('causas_identificadas', '').strip()
+                acoes_corretivas_tomadas = form_data_received.get('acoes_corretivas_tomadas', '').strip()
+                acoes_preventivas_recomendadas = form_data_received.get('acoes_preventivas_recomendadas', '').strip()
+                status_registro = form_data_received.get('status_registro', '').strip()
+                responsavel_matricula = form_data_received.get('responsavel_matricula', '').strip()
+                data_fechamento_str = form_data_received.get('data_fechamento', '').strip()
+                observacoes = form_data_received.get('observacoes', '').strip()
+
+                data_hora_ocorrencia = None
+                data_fechamento = None
+                is_valid = True
+
+                if not all([tipo_registro, data_hora_ocorrencia_str, descricao_resumida, status_registro]):
+                    flash('Campos obrigatórios (Tipo, Data/Hora, Descrição, Status) não podem ser vazios.', 'danger')
+                    is_valid = False
+                
+                try:
+                    data_hora_ocorrencia = datetime.strptime(data_hora_ocorrencia_str, '%Y-%m-%dT%H:%M') # Para input type="datetime-local"
+                except ValueError:
+                    flash('Formato de Data/Hora de Ocorrência inválido. Use AAAA-MM-DDTHH:MM.', 'danger')
+                    is_valid = False
+                
+                if data_fechamento_str:
+                    try:
+                        data_fechamento = datetime.strptime(data_fechamento_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        flash('Formato de Data de Fechamento inválido. Use AAAA-MM-DD.', 'danger')
+                        is_valid = False
+
+                # Recarrega os dados do formulário para o dicionário que será passado para o template em caso de falha
+                form_data_to_template = form_data_received
+                form_data_to_template['data_hora_ocorrencia'] = data_hora_ocorrencia_str # Mantém string para input
+                form_data_to_template['data_fechamento'] = data_fechamento_str # Mantém string para input
+
+                if is_valid:
+                    success = seguranca_manager.add_incidente_acidente(
+                        tipo_registro, data_hora_ocorrencia, local_ocorrencia, 
+                        int(id_obras) if id_obras else None, descricao_resumida, 
+                        causas_identificadas, acoes_corretivas_tomadas, acoes_preventivas_recomendadas, 
+                        status_registro, responsavel_matricula if responsavel_matricula else None, 
+                        data_fechamento, observacoes
+                    )
+                    if success:
+                        flash('Registro de Incidente/Acidente adicionado com sucesso!', 'success')
+                        return redirect(url_for('incidentes_acidentes_module'))
+                    else:
+                        flash('Erro ao adicionar registro de Incidente/Acidente. Verifique os dados e tente novamente.', 'danger')
+            
+            # GET request ou POST com falha de validação
+            return render_template(
+                'seguranca/incidentes_acidentes/add_incidente_acidente.html',
+                user=current_user,
+                all_obras=all_obras,
+                all_funcionarios=all_funcionarios,
+                tipo_registro_options=tipo_registro_options,
+                status_registro_options=status_registro_options,
+                form_data=form_data_to_template
+            )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados: {e}", 'danger')
+        print(f"Erro de banco de dados em add_incidente_acidente: {e}")
+        return redirect(url_for('incidentes_acidentes_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+        print(f"Erro inesperado em add_incidente_acidente: {e}")
+        return redirect(url_for('incidentes_acidentes_module'))
+
+
+@app.route('/seguranca/incidentes_acidentes/edit/<int:incidente_id>', methods=['GET', 'POST'])
+@login_required
+def edit_incidente_acidente(incidente_id):
+    if not current_user.can_access_module('Segurança'):
+        flash('Acesso negado. Você não tem permissão para editar Incidentes/Acidentes.', 'warning')
+        return redirect(url_for('welcome'))
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            seguranca_manager = SegurancaManager(db_base)
+            obras_manager = ObrasManager(db_base)
+            pessoal_manager = PessoalManager(db_base)
+
+            # Sempre busca o registro para o GET inicial ou para re-exibir em caso de POST com erro
+            incidente_from_db = seguranca_manager.get_incidente_acidente_by_id(incidente_id)
+            if not incidente_from_db:
+                flash('Registro de Incidente/Acidente não encontrado.', 'danger')
+                return redirect(url_for('incidentes_acidentes_module'))
+
+            # Carrega opções para os dropdowns
+            all_obras = obras_manager.get_all_obras_for_dropdown()
+            all_funcionarios = pessoal_manager.get_all_funcionarios()
+            tipo_registro_options = ['Incidente', 'Acidente']
+            status_registro_options = ['Aberto', 'Em Investigação', 'Concluído', 'Fechado']
+
+            form_data_to_template = {} # Inicializa para o GET ou falha do POST
+
+            if request.method == 'POST':
+                form_data_received = request.form.to_dict()
+
+                tipo_registro = form_data_received.get('tipo_registro', '').strip()
+                data_hora_ocorrencia_str = form_data_received.get('data_hora_ocorrencia', '').strip()
+                local_ocorrencia = form_data_received.get('local_ocorrencia', '').strip()
+                id_obras = form_data_received.get('id_obras')
+                descricao_resumida = form_data_received.get('descricao_resumida', '').strip()
+                causas_identificadas = form_data_received.get('causas_identificadas', '').strip()
+                acoes_corretivas_tomadas = form_data_received.get('acoes_corretivas_tomadas', '').strip()
+                acoes_preventivas_recomendadas = form_data_received.get('acoes_preventivas_recomendadas', '').strip()
+                status_registro = form_data_received.get('status_registro', '').strip()
+                responsavel_matricula = form_data_received.get('responsavel_matricula', '').strip()
+                data_fechamento_str = form_data_received.get('data_fechamento', '').strip()
+                observacoes = form_data_received.get('observacoes', '').strip()
+
+                data_hora_ocorrencia = None
+                data_fechamento = None
+                is_valid = True
+
+                if not all([tipo_registro, data_hora_ocorrencia_str, descricao_resumida, status_registro]):
+                    flash('Campos obrigatórios (Tipo, Data/Hora, Descrição, Status) não podem ser vazios.', 'danger')
+                    is_valid = False
+                
+                try:
+                    data_hora_ocorrencia = datetime.strptime(data_hora_ocorrencia_str, '%Y-%m-%dT%H:%M')
+                except ValueError:
+                    flash('Formato de Data/Hora de Ocorrência inválido. Use AAAA-MM-DDTHH:MM.', 'danger')
+                    is_valid = False
+                
+                if data_fechamento_str:
+                    try:
+                        data_fechamento = datetime.strptime(data_fechamento_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        flash('Formato de Data de Fechamento inválido. Use AAAA-MM-DD.', 'danger')
+                        is_valid = False
+
+                # Recarrega os dados do formulário para o dicionário que será passado para o template em caso de falha
+                form_data_to_template = form_data_received
+                form_data_to_template['data_hora_ocorrencia'] = data_hora_ocorrencia_str # Mantém string para input
+                form_data_to_template['data_fechamento'] = data_fechamento_str # Mantém string para input
+
+                if is_valid:
+                    success = seguranca_manager.update_incidente_acidente(
+                        incidente_id, tipo_registro, data_hora_ocorrencia, local_ocorrencia,
+                        int(id_obras) if id_obras else None, descricao_resumida,
+                        causas_identificadas, acoes_corretivas_tomadas,
+                        acoes_preventivas_recomendadas, # <--- CORRIGIDO AQUI: 'recomenadas' para 'recomendadas'
+                        status_registro, responsavel_matricula if responsavel_matricula else None,
+                        data_fechamento, observacoes
+                    )
+                    if success:
+                        flash('Registro de Incidente/Acidente atualizado com sucesso!', 'success')
+                        return redirect(url_for('incidentes_acidentes_module'))
+                    else:
+                        flash('Erro ao atualizar registro de Incidente/Acidente. Verifique os dados e tente novamente.', 'danger')
+            
+            else: # GET request
+                # Prepara os dados do DB para exibição inicial no formulário GET
+                form_data_to_template = incidente_from_db.copy()
+                # Formatar datetime para o input type="datetime-local"
+                form_data_to_template['Data_Hora_Ocorrencia'] = form_data_to_template['Data_Hora_Ocorrencia'].strftime('%Y-%m-%dT%H:%M') if form_data_to_template['Data_Hora_Ocorrencia'] else ''
+                # Formatar data para o input type="date"
+                form_data_to_template['Data_Fechamento'] = form_data_to_template['Data_Fechamento'].strftime('%Y-%m-%d') if form_data_to_template['Data_Fechamento'] else ''
+                # Converter ID_Obras para string para o select
+                form_data_to_template['ID_Obras'] = str(form_data_to_template['ID_Obras']) if form_data_to_template['ID_Obras'] else ''
+
+
+            return render_template(
+                'seguranca/incidentes_acidentes/edit_incidente_acidente.html',
+                user=current_user,
+                incidente=form_data_to_template,
+                all_obras=all_obras,
+                all_funcionarios=all_funcionarios,
+                tipo_registro_options=tipo_registro_options,
+                status_registro_options=status_registro_options
+            )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados: {e}", 'danger')
+        print(f"Erro de banco de dados em edit_incidente_acidente: {e}")
+        return redirect(url_for('incidentes_acidentes_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+        print(f"Erro inesperado em edit_incidente_acidente: {e}")
+        return redirect(url_for('incidentes_acidentes_module'))
+
+
+@app.route('/seguranca/incidentes_acidentes/delete/<int:incidente_id>', methods=['POST'])
+@login_required
+def delete_incidente_acidente(incidente_id):
+    if not current_user.can_access_module('Segurança'):
+        flash('Acesso negado. Você não tem permissão para excluir Incidentes/Acidentes.', 'warning')
+        return redirect(url_for('welcome'))
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            seguranca_manager = SegurancaManager(db_base)
+            success = seguranca_manager.delete_incidente_acidente(incidente_id)
+            if success:
+                flash('Registro de Incidente/Acidente excluído com sucesso!', 'success')
+            else:
+                flash('Erro ao excluir registro de Incidente/Acidente. Verifique se ele existe.', 'danger')
+        return redirect(url_for('incidentes_acidentes_module'))
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados: {e}", 'danger')
+        print(f"Erro de banco de dados em delete_incidente_acidente: {e}")
+        return redirect(url_for('incidentes_acidentes_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+        print(f"Erro inesperado em delete_incidente_acidente: {e}")
+        return redirect(url_for('incidentes_acidentes_module'))
+
+
+@app.route('/seguranca/incidentes_acidentes/details/<int:incidente_id>')
+@login_required
+def incidente_acidente_details(incidente_id):
+    if not current_user.can_access_module('Segurança'):
+        flash('Acesso negado. Você não tem permissão para ver detalhes de Incidentes/Acidentes.', 'warning')
+        return redirect(url_for('welcome'))
+    
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            seguranca_manager = SegurancaManager(db_base)
+            incidente = seguranca_manager.get_incidente_acidente_by_id(incidente_id)
+
+            if not incidente:
+                flash('Registro de Incidente/Acidente não encontrado.', 'danger')
+                return redirect(url_for('incidentes_acidentes_module'))
+
+        return render_template(
+            'seguranca/incidentes_acidentes/incidente_acidente_details.html',
+            user=current_user,
+            incidente=incidente
+        )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados: {e}", 'danger')
+        print(f"Erro de banco de dados em incidente_acidente_details: {e}")
+        return redirect(url_for('incidentes_acidentes_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+        print(f"Erro inesperado em incidente_acidente_details: {e}")
+        return redirect(url_for('incidentes_acidentes_module'))
+
+
+@app.route('/seguranca/incidentes_acidentes/export/excel')
+@login_required
+def export_incidentes_acidentes_excel():
+    if not current_user.can_access_module('Segurança'):
+        flash('Acesso negado. Você não tem permissão para exportar dados de Incidentes/Acidentes.', 'warning')
+        return redirect(url_for('welcome'))
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            seguranca_manager = SegurancaManager(db_base)
+            
+            search_tipo = request.args.get('tipo_registro')
+            search_status = request.args.get('status_registro')
+            search_obra_id = request.args.get('obra_id')
+            search_responsavel_matricula = request.args.get('responsavel_matricula')
+
+            incidentes_data = seguranca_manager.get_all_incidentes_acidentes(
+                search_tipo=search_tipo,
+                search_status=search_status,
+                search_obra_id=int(search_obra_id) if search_obra_id else None,
+                search_responsavel_matricula=search_responsavel_matricula
+            )
+
+            if not incidentes_data:
+                flash('Nenhum registro de Incidente/Acidente encontrado para exportar.', 'info')
+                return redirect(url_for('incidentes_acidentes_module'))
+
+            df = pd.DataFrame(incidentes_data)
+
+            # Renomeie colunas para serem mais amigáveis no Excel
+            df = df.rename(columns={
+                'ID_Incidente_Acidente': 'ID Registro',
+                'Tipo_Registro': 'Tipo de Registro',
+                'Data_Hora_Ocorrencia': 'Data/Hora Ocorrência',
+                'Local_Ocorrencia': 'Local',
+                'ID_Obras': 'ID Obra',
+                'Descricao_Resumida': 'Descrição Resumida',
+                'Causas_Identificadas': 'Causas',
+                'Acoes_Corretivas_Tomadas': 'Ações Corretivas',
+                'Acoes_Preventivas_Recomendadas': 'Ações Preventivas',
+                'Status_Registro': 'Status',
+                'Responsavel_Investigacao_Funcionario_Matricula': 'Matrícula Responsável',
+                'Nome_Responsavel_Investigacao': 'Nome Responsável',
+                'Data_Fechamento': 'Data de Fechamento',
+                'Observacoes': 'Observações',
+                'Numero_Obra': 'Número da Obra',
+                'Nome_Obra': 'Nome da Obra',
+                'Data_Criacao': 'Data de Criação',
+                'Data_Modificacao': 'Última Modificação'
+            })
+            
+            # Ordenar colunas para melhor visualização no Excel (opcional)
+            ordered_columns = [
+                'ID Registro', 'Tipo de Registro', 'Data/Hora Ocorrência', 'Local',
+                'Número da Obra', 'Nome da Obra', 'Descrição Resumida', 'Status',
+                'Matrícula Responsável', 'Nome Responsável', 'Data de Fechamento',
+                'Causas', 'Ações Corretivas', 'Ações Preventivas', 'Observações',
+                'Data de Criação', 'Última Modificação'
+            ]
+            df = df[[col for col in ordered_columns if col in df.columns]]
+
+            excel_buffer = BytesIO()
+            df.to_excel(excel_buffer, index=False, engine='openpyxl')
+            excel_buffer.seek(0)
+
+            return send_file(
+                excel_buffer,
+                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                as_attachment=True,
+                download_name='relatorio_incidentes_acidentes.xlsx'
+            )
+
+    except Exception as e:
+        flash(f"Ocorreu um erro ao exportar Incidentes/Acidentes para Excel: {e}", 'danger')
+        print(f"Erro ao exportar Incidentes/Acidentes Excel: {e}")
+        return redirect(url_for('incidentes_acidentes_module'))
+
 
 #---------------------------------------------------------------------------------------------------
 # ROTAS PARA O MÓDULO OBRAS                                                                        |

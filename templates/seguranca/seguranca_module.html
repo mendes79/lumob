@@ -16,7 +16,7 @@
         margin: 20px;
       }
       .container {
-        max-width: 800px;
+        max-width: 900px;
         margin: 50px auto;
         padding: 20px;
         background-color: #fff;
@@ -26,16 +26,77 @@
       h1 {
         text-align: center;
         color: #0056b3;
+        margin-bottom: 30px;
       }
+      .module-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 25px;
+        justify-content: center;
+        padding: 20px 0;
+      }
+      .module-card {
+        background-color: #f9f9f9;
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 25px;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .module-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+      }
+      .module-card a {
+        font-size: 1.4em;
+        color: #007bff;
+        text-decoration: none;
+        font-weight: bold;
+        margin-bottom: 10px;
+        display: block;
+      }
+      .module-card a:hover {
+        text-decoration: underline;
+        color: #0056b3;
+      }
+      .module-card p {
+        color: #555;
+        font-size: 0.95em;
+        line-height: 1.5;
+        flex-grow: 1;
+      }
+      .back-button {
+        display: inline-block;
+        margin-top: 30px;
+        padding: 10px 20px;
+        background-color: #6c757d;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        transition: background-color 0.2s ease;
+      }
+      .back-button:hover {
+        background-color: #5a6268;
+      }
+
+      /* Estilos para mensagens flash */
       .flash-messages {
         list-style: none;
         padding: 0;
-        margin-bottom: 20px;
+        margin: 20px 0;
+        text-align: center;
       }
       .flash-messages li {
-        padding: 10px;
+        padding: 12px 20px;
         margin-bottom: 10px;
-        border-radius: 5px;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 1em;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
       }
       .flash-messages li.success {
         background-color: #d4edda;
@@ -52,26 +113,75 @@
         color: #0c5460;
         border: 1px solid #bee5eb;
       }
-      .back-link {
-        display: block;
-        margin-top: 30px;
-        text-align: center;
-      }
-      .back-link a {
-        color: #007bff;
-        text-decoration: none;
-      }
     </style>
   </head>
   <body>
     <div class="container">
-      <h1>Módulo de Segurança</h1>
-      <p>
-        Bem-vindo ao Módulo de Segurança! Este módulo está em desenvolvimento.
-      </p>
-      <div class="back-link">
-        <a href="{{ url_for('welcome') }}">Voltar para a Página Principal</a>
+      <h1>Módulo de Segurança, Saúde e Meio Ambiente</h1>
+
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %}
+      <ul class="flash-messages">
+        {% for category, message in messages %}
+        <li class="{{ category }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %} {% endwith %}
+
+      <div class="module-grid">
+        <div class="module-card">
+          <a href="{{ url_for('incidentes_acidentes_module') }}"
+            >Gestão de Incidentes e Acidentes</a
+          >
+          <p>
+            Registre e investigue incidentes, acidentes de trabalho e
+            quase-acidentes.
+          </p>
+        </div>
+        <div class="module-card">
+          <a href="#">Saúde Ocupacional (Em Breve)</a>
+          <p>
+            Controle de ASOs, exames médicos e histórico de saúde dos
+            funcionários.
+          </p>
+        </div>
+        <div class="module-card">
+          <a href="#">Treinamentos SSMA (Em Breve)</a>
+          <p>Gerencie treinamentos, convocações e controle de validade.</p>
+        </div>
+        {# Você pode adicionar mais cards aqui para outras funcionalidades
+        futuras: #} {#
+        <div class="module-card">
+          <a href="#">Gestão de Riscos</a>
+          <p>
+            Identificação e controle de riscos e perigos no ambiente de
+            trabalho.
+          </p>
+        </div>
+        #} {#
+        <div class="module-card">
+          <a href="#">Gestão de EPIs</a>
+          <p>
+            Controle de entrega, uso e validade dos Equipamentos de Proteção
+            Individual.
+          </p>
+        </div>
+        #} {#
+        <div class="module-card">
+          <a href="#">Conformidade Legal e Auditorias</a>
+          <p>Monitoramento de requisitos legais e auditorias de SSMA.</p>
+        </div>
+        #} {#
+        <div class="module-card">
+          <a href="#">Gestão Ambiental</a>
+          <p>Controle de licenças, resíduos e indicadores ambientais.</p>
+        </div>
+        #}
       </div>
+
+      <a href="{{ url_for('welcome') }}" class="back-button"
+        >Voltar para o Início</a
+      >
     </div>
   </body>
 </html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Detalhes do Incidente/Acidente - LUMOB</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+      p {
+        margin-bottom: 8px;
+      }
+      strong {
+        display: inline-block;
+        width: 220px;
+      }
+      .actions {
+        text-align: center;
+        margin-top: 20px;
+      }
+      .actions button,
+      .actions a {
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 0 5px;
+        text-decoration: none;
+        display: inline-block;
+      }
+      .actions button.delete {
+        background-color: #dc3545;
+      }
+      .actions button:hover {
+        background-color: #0056b3;
+      }
+      .actions button.delete:hover {
+        background-color: #c82333;
+      }
+      .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Detalhes do Registro (ID: {{ incidente.ID_Incidente_Acidente }})</h1>
+
+      <div>
+        <p><strong>Tipo de Registro:</strong> {{ incidente.Tipo_Registro }}</p>
+        <p>
+          <strong>Data e Hora da Ocorrência:</strong> {{
+          incidente.Data_Hora_Ocorrencia.strftime('%d/%m/%Y %H:%M') if
+          incidente.Data_Hora_Ocorrencia else 'N/A' }}
+        </p>
+        <p>
+          <strong>Local da Ocorrência:</strong> {{ incidente.Local_Ocorrencia if
+          incidente.Local_Ocorrencia else 'N/A' }}
+        </p>
+        <p>
+          <strong>Obra Associada:</strong> {{ incidente.Numero_Obra if
+          incidente.Numero_Obra else 'N/A' }} - {{ incidente.Nome_Obra if
+          incidente.Nome_Obra else 'N/A' }}
+        </p>
+        <p>
+          <strong>Descrição Resumida:</strong> {{ incidente.Descricao_Resumida
+          }}
+        </p>
+        <p>
+          <strong>Causas Identificadas:</strong> {{
+          incidente.Causas_Identificadas if incidente.Causas_Identificadas else
+          'N/A' }}
+        </p>
+        <p>
+          <strong>Ações Corretivas Tomadas:</strong> {{
+          incidente.Acoes_Corretivas_Tomadas if
+          incidente.Acoes_Corretivas_Tomadas else 'N/A' }}
+        </p>
+        <p>
+          <strong>Ações Preventivas Recomendadas:</strong> {{
+          incidente.Acoes_Preventivas_Recomendadas if
+          incidente.Acoes_Preventivas_Recomendadas else 'N/A' }}
+        </p>
+        <p>
+          <strong>Status do Registro:</strong> {{ incidente.Status_Registro }}
+        </p>
+        <p>
+          <strong>Responsável pela Investigação:</strong> {{
+          incidente.Nome_Responsavel_Investigacao if
+          incidente.Nome_Responsavel_Investigacao else 'N/A' }} ({{
+          incidente.Responsavel_Investigacao_Funcionario_Matricula if
+          incidente.Responsavel_Investigacao_Funcionario_Matricula else 'N/A'
+          }})
+        </p>
+        <p>
+          <strong>Data de Fechamento:</strong> {{
+          incidente.Data_Fechamento.strftime('%d/%m/%Y') if
+          incidente.Data_Fechamento else 'N/A' }}
+        </p>
+        <p>
+          <strong>Observações Gerais:</strong> {{ incidente.Observacoes if
+          incidente.Observacoes else 'N/A' }}
+        </p>
+        <p>
+          <strong>Data de Criação:</strong> {{
+          incidente.Data_Criacao.strftime('%d/%m/%Y %H:%M:%S') if
+          incidente.Data_Criacao else 'N/A' }}
+        </p>
+        <p>
+          <strong>Última Modificação:</strong> {{
+          incidente.Data_Modificacao.strftime('%d/%m/%Y %H:%M:%S') if
+          incidente.Data_Modificacao else 'N/A' }}
+        </p>
+      </div>
+
+      <div class="actions">
+        <a
+          href="{{ url_for('edit_incidente_acidente', incidente_id=incidente.ID_Incidente_Acidente) }}"
+          >Editar</a
+        >
+        <form
+          action="{{ url_for('delete_incidente_acidente', incidente_id=incidente.ID_Incidente_Acidente) }}"
+          method="POST"
+          style="display: inline"
+          onsubmit="return confirm('Tem certeza que deseja excluir este registro? Esta ação é irreversível.');"
+        >
+          <button type="submit" class="delete">Excluir</button>
+        </form>
+      </div>
+
+      <div class="back-link">
+        <p>
+          <a href="{{ url_for('incidentes_acidentes_module') }}"
+            >Voltar para a Lista de Registros</a
+          >
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

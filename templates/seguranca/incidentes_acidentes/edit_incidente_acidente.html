@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Incidente/Acidente - LUMOB</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        h1 { text-align: center; color: #333; }
+        form div { margin-bottom: 10px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], input[type="datetime-local"], input[type="date"], select, textarea {
+            width: calc(100% - 22px); padding: 10px; border: 1px solid #ddd; border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px;
+            cursor: pointer; font-size: 16px; margin-right: 10px;
+        }
+        button:hover { background-color: #0056b3; }
+        .flash { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
+        .flash.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .flash.danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6fb; }
+        .cancel-link {
+            padding: 10px 15px; background-color: #6c757d; color: white; border: none; border-radius: 4px;
+            cursor: pointer; font-size: 16px; text-decoration: none; display: inline-block; vertical-align: middle;
+        }
+        .cancel-link:hover { background-color: #5a6268; }
+        .back-link { display: block; text-align: center; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Editar Registro (ID: {{ incidente.ID_Incidente_Acidente }})</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('edit_incidente_acidente', incidente_id=incidente.ID_Incidente_Acidente) }}" method="POST">
+            <div>
+                <label for="incidente_id">ID do Registro:</label>
+                <input type="text" id="incidente_id" name="incidente_id" value="{{ incidente.ID_Incidente_Acidente }}" readonly>
+            </div>
+            <div>
+                <label for="tipo_registro">Tipo de Registro:</label>
+                <select id="tipo_registro" name="tipo_registro" required>
+                    <option value="">Selecione o Tipo</option>
+                    {% for tipo in tipo_registro_options %}
+                        <option value="{{ tipo }}" {% if (form_data and form_data['tipo_registro']|default('') == tipo) or (not form_data and incidente.Tipo_Registro == tipo) %}selected{% endif %}>{{ tipo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="data_hora_ocorrencia">Data e Hora da Ocorrência:</label>
+                <input type="datetime-local" id="data_hora_ocorrencia" name="data_hora_ocorrencia" value="{{ form_data['data_hora_ocorrencia'] if form_data else incidente.Data_Hora_Ocorrencia }}" required>
+            </div>
+            <div>
+                <label for="local_ocorrencia">Local da Ocorrência:</label>
+                <input type="text" id="local_ocorrencia" name="local_ocorrencia" value="{{ form_data['local_ocorrencia'] if form_data else incidente.Local_Ocorrencia }}">
+            </div>
+            <div>
+                <label for="id_obras">Obra Associada (Opcional):</label>
+                <select id="id_obras" name="id_obras">
+                    <option value="">Selecione uma Obra</option>
+                    {% for obra in all_obras %}
+                        <option value="{{ obra.ID_Obras }}" {% if (form_data and form_data['id_obras']|default('')|int == obra.ID_Obras) or (not form_data and incidente.ID_Obras == obra.ID_Obras) %}selected{% endif %}>
+                            {{ obra.Numero_Obra }} - {{ obra.Nome_Obra }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="descricao_resumida">Descrição Resumida (Obrigatório):</label>
+                <textarea id="descricao_resumida" name="descricao_resumida" rows="3" required>{{ form_data['descricao_resumida'] if form_data else incidente.Descricao_Resumida }}</textarea>
+            </div>
+            <div>
+                <label for="causas_identificadas">Causas Identificadas:</label>
+                <textarea id="causas_identificadas" name="causas_identificadas" rows="3">{{ form_data['causas_identificadas'] if form_data else incidente.Causas_Identificadas }}</textarea>
+            </div>
+            <div>
+                <label for="acoes_corretivas_tomadas">Ações Corretivas Tomadas:</label>
+                <textarea id="acoes_corretivas_tomadas" name="acoes_corretivas_tomadas" rows="3">{{ form_data['acoes_corretivas_tomadas'] if form_data else incidente.Acoes_Corretivas_Tomadas }}</textarea>
+            </div>
+            <div>
+                <label for="acoes_preventivas_recomendadas">Ações Preventivas Recomendadas:</label>
+                <textarea id="acoes_preventivas_recomendadas" name="acoes_preventivas_recomendadas" rows="3">{{ form_data['acoes_preventivas_recomendadas'] if form_data else incidente.Acoes_Preventivas_Recomendadas }}</textarea>
+            </div>
+            <div>
+                <label for="status_registro">Status do Registro:</label>
+                <select id="status_registro" name="status_registro" required>
+                    <option value="">Selecione o Status</option>
+                    {% for status in status_registro_options %}
+                        <option value="{{ status }}" {% if (form_data and form_data['status_registro']|default('') == status) or (not form_data and incidente.Status_Registro == status) %}selected{% endif %}>{{ status }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="responsavel_matricula">Responsável pela Investigação (Opcional):</label>
+                <select id="responsavel_matricula" name="responsavel_matricula">
+                    <option value="">Selecione um Funcionário</option>
+                    {% for func in all_funcionarios %}
+                        <option value="{{ func.Matricula }}" {% if (form_data and form_data['responsavel_matricula']|default('') == func.Matricula) or (not form_data and incidente.Responsavel_Investigacao_Funcionario_Matricula == func.Matricula) %}selected{% endif %}>
+                            {{ func.Matricula }} - {{ func.Nome_Completo }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="data_fechamento">Data de Fechamento (Opcional):</label>
+                <input type="date" id="data_fechamento" name="data_fechamento" value="{{ form_data['data_fechamento'] if form_data else incidente.Data_Fechamento }}">
+            </div>
+            <div>
+                <label for="observacoes">Observações Gerais:</label>
+                <textarea id="observacoes" name="observacoes" rows="3">{{ form_data['observacoes'] if form_data else incidente.Observacoes }}</textarea>
+            </div>
+            <div>
+                <button type="submit">Salvar Alterações</button>
+                <a href="{{ url_for('incidentes_acidentes_module') }}" class="cancel-link">Cancelar</a>
+            </div>
+        </form>
+        <div class="back-link">
+            <p><a href="{{ url_for('incidentes_acidentes_module') }}">Voltar para a Lista de Registros</a></p>
+        </div>
+    </div>
+</body>
+</html>
