@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aniversariantes de {{ mes_referencia }} - LUMOB</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/form.css') }}"
+    />
+  </head>
+  <body>
+    <header>
+      <h1>Aniversariantes de {{ mes_referencia }}</h1>
+      <nav>
+        <a href="{{ url_for('welcome') }}">Início</a> |
+        <a href="{{ url_for('pessoal_module') }}">Módulo Pessoal</a> |
+        <a href="{{ url_for('pessoal_dashboard') }}">Dashboard de Pessoal</a> |
+        <a href="{{ url_for('logout') }}">Sair</a>
+      </nav>
+    </header>
+
+    <main>
+      <h2>Lista de Aniversariantes</h2>
+
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %}
+      <div class="flash-messages">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+      {% endif %} {% endwith %} {% if aniversariantes %}
+      <table>
+        <thead>
+          <tr>
+            <th>Dia</th>
+            <th>Matrícula</th>
+            <th>Nome Completo</th>
+            <th>Cargo</th>
+            <th>Idade (aprox.)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for func in aniversariantes %}
+          <tr>
+            <td>{{ func.Data_Nascimento.day }}</td>
+            <td>{{ func.Matricula }}</td>
+            <td>{{ func.Nome_Completo }}</td>
+            <td>{{ func.Nome_Cargo if func.Nome_Cargo else 'N/A' }}</td>
+            <td>
+              {% if func.Data_Nascimento %} {{ (today().year -
+              func.Data_Nascimento.year) }} anos {% else %} N/A {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p>
+        Não há funcionários ativos fazendo aniversário em {{ mes_referencia }}.
+      </p>
+      {% endif %}
+    </main>
+
+    <footer>
+      <p>&copy; 2025 LUMOB - Sistema de Gestão Interna</p>
+    </footer>
+  </body>
+</html>

@@ -91,13 +91,71 @@
 
             <div class="section-title">Dados Pessoais e Documentos</div>
             <div>
-                <label for="rg">RG:</label>
-                <input type="text" id="rg" name="rg" value="{{ form_data['rg']|default('') }}">
+                <label for="rg_numero">RG Número:</label>
+                <input type="text" id="rg_numero" name="rg_numero" value="{{ form_data['rg_numero']|default('') }}">
             </div>
             <div>
-                <label for="cpf">CPF:</label>
-                <input type="text" id="cpf" name="cpf" value="{{ form_data['cpf']|default('') }}">
+                <label for="rg_orgao_emissor">RG Órgão Emissor:</label>
+                <input type="text" id="rg_orgao_emissor" name="rg_orgao_emissor" value="{{ form_data['rg_orgao_emissor']|default('') }}">
             </div>
+            <div>
+                <label for="rg_uf_emissor">RG UF Emissor:</label>
+                <input type="text" id="rg_uf_emissor" name="rg_uf_emissor" value="{{ form_data['rg_uf_emissor']|default('') }}">
+            </div>
+            <div>
+                <label for="rg_data_emissao">RG Data Emissão:</label>
+                <input type="date" id="rg_data_emissao" name="rg_data_emissao" value="{{ form_data['rg_data_emissao']|default('') }}">
+            </div>
+
+            <div>
+                <label for="cpf_numero">CPF:</label>
+                <input type="text" id="cpf_numero" name="cpf_numero" value="{{ form_data['cpf_numero']|default('') }}">
+            </div>
+
+            <div>
+                <label for="ctps_numero">CTPS Número:</label>
+                <input type="text" id="ctps_numero" name="ctps_numero" value="{{ form_data['ctps_numero']|default('') }}">
+            </div>
+            <div>
+                <label for="ctps_serie">CTPS Série:</label>
+                <input type="text" id="ctps_serie" name="ctps_serie" value="{{ form_data['ctps_serie']|default('') }}">
+            </div>
+
+            <div>
+                <label for="pispasep">PIS/PASEP:</label>
+                <input type="text" id="pispasep" name="pispasep" value="{{ form_data['pispasep']|default('') }}">
+            </div>
+
+            <div>
+                <label for="cnh_numero">CNH Número:</label>
+                <input type="text" id="cnh_numero" name="cnh_numero" value="{{ form_data['cnh_numero']|default('') }}">
+            </div>
+            <div>
+                <label for="cnh_categoria">CNH Categoria:</label>
+                <input type="text" id="cnh_categoria" name="cnh_categoria" value="{{ form_data['cnh_categoria']|default('') }}">
+            </div>
+            <div>
+                <label for="cnh_data_validade">CNH Data Validade:</label>
+                <input type="date" id="cnh_data_validade" name="cnh_data_validade" value="{{ form_data['cnh_data_validade']|default('') }}">
+            </div>
+            <div>
+                <label for="cnh_orgao_emissor">CNH Órgão Emissor:</label>
+                <input type="text" id="cnh_orgao_emissor" name="cnh_orgao_emissor" value="{{ form_data['cnh_orgao_emissor']|default('') }}">
+            </div>
+
+            <div>
+                <label for="titeleitor_numero">Título Eleitor Número:</label>
+                <input type="text" id="titeleitor_numero" name="titeleitor_numero" value="{{ form_data['titeleitor_numero']|default('') }}">
+            </div>
+            <div>
+                <label for="titeleitor_zona">Título Eleitor Zona:</label>
+                <input type="text" id="titeleitor_zona" name="titeleitor_zona" value="{{ form_data['titeleitor_zona']|default('') }}">
+            </div>
+            <div>
+                <label for="titeleitor_secao">Título Eleitor Seção:</label>
+                <input type="text" id="titeleitor_secao" name="titeleitor_secao" value="{{ form_data['titeleitor_secao']|default('') }}">
+            </div>
+
             <div>
                 <label for="data_nascimento">Data de Nascimento:</label>
                 <input type="date" id="data_nascimento" name="data_nascimento" value="{{ form_data['data_nascimento']|default('') }}">
@@ -113,50 +171,30 @@
             </div>
             <div>
                 <label for="nacionalidade">Nacionalidade:</label>
-                <input type="text" id="nacionalidade" name="nacionalidade" value="{{ form_data['nacionalidade']|default('Brasileira') }}">
+                <input type="text" id="nacionalidade" name="nacionalidade" value="{{ form_data['nacionalidade']|default('') }}">
+            </div>
+            <div>
+                <label for="naturalidade">Naturalidade:</label>
+                <input type="text" id="naturalidade" name="naturalidade" value="{{ form_data['naturalidade']|default('') }}">
             </div>
             <div>
                 <label for="genero">Gênero:</label>
                 <select id="genero" name="genero">
                     <option value="">Selecione</option>
-                    {% for gen in genero_options %}
-                        <option value="{{ gen }}" {% if form_data['genero']|default('') == gen %}selected{% endif %}>{{ gen }}</option>
+                    {% for g in genero_options %}
+                        <option value="{{ g }}" {% if form_data['genero']|default('') == g %}selected{% endif %}>{{ g }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div>
-                <label for="ctps_numero">CTPS Número:</label>
-                <input type="text" id="ctps_numero" name="ctps_numero" value="{{ form_data['ctps_numero']|default('') }}">
+                <label for="observacoes_doc">Observações Documentos:</label>
+                <textarea id="observacoes_doc" name="observacoes_doc">{{ form_data['observacoes_doc']|default('') }}</textarea>
             </div>
             <div>
-                <label for="ctps_serie">CTPS Série:</label>
-                <input type="text" id="ctps_serie" name="ctps_serie" value="{{ form_data['ctps_serie']|default('') }}">
+                <label for="link_foto">Link da Foto:</label>
+                <input type="text" id="link_foto" name="link_foto" value="{{ form_data['link_foto']|default('') }}">
             </div>
-            <div>
-                <label for="pis_pasep">PIS/PASEP:</label>
-                <input type="text" id="pis_pasep" name="pis_pasep" value="{{ form_data['pis_pasep']|default('') }}">
-            </div>
-            <div>
-                <label for="cnh_numero">CNH Número:</label>
-                <input type="text" id="cnh_numero" name="cnh_numero" value="{{ form_data['cnh_numero']|default('') }}">
-            </div>
-            <div>
-                <label for="cnh_categoria">CNH Categoria:</label>
-                <input type="text" id="cnh_categoria" name="cnh_categoria" value="{{ form_data['cnh_categoria']|default('') }}">
-            </div>
-            <div>
-                <label for="titulo_eleitor_numero">Título de Eleitor Número:</label>
-                <input type="text" id="titulo_eleitor_numero" name="titulo_eleitor_numero" value="{{ form_data['titulo_eleitor_numero']|default('') }}">
-            </div>
-            <div>
-                <label for="titulo_eleitor_zona">Título de Eleitor Zona:</label>
-                <input type="text" id="titulo_eleitor_zona" name="titulo_eleitor_zona" value="{{ form_data['titulo_eleitor_zona']|default('') }}">
-            </div>
-            <div>
-                <label for="titulo_eleitor_secao">Título de Eleitor Seção:</label>
-                <input type="text" id="titulo_eleitor_secao" name="titulo_eleitor_secao" value="{{ form_data['titulo_eleitor_secao']|default('') }}">
-            </div>
-
+            
             <div class="section-title">Endereço Residencial</div>
             <div>
                 <label for="logradouro">Logradouro:</label>

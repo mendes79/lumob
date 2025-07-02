@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard de Pessoal - LUMOB</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/form.css') }}"
+    />
+  </head>
+  <body>
+    <header>
+      <h1>Dashboard de Pessoal</h1>
+      <nav>
+        <a href="{{ url_for('welcome') }}">Início</a> |
+        <a href="{{ url_for('pessoal_module') }}">Módulo Pessoal</a> |
+        <a href="{{ url_for('logout') }}">Sair</a>
+      </nav>
+    </header>
+
+    <main>
+      <h2>Visão Geral do Pessoal</h2>
+
+      <div class="dashboard-section">
+        <h3>Status dos Funcionários</h3>
+        <div class="kpis-container">
+          <div class="kpi-card">
+            <h4>Total Ativos</h4>
+            <p>{{ status_counts.get('Ativo', 0) }}</p>
+          </div>
+          <div class="kpi-card">
+            <h4>Em Férias</h4>
+            <p>{{ status_counts.get('Ferias', 0) }}</p>
+          </div>
+          <div class="kpi-card">
+            <h4>Afastados</h4>
+            <p>{{ status_counts.get('Afastado', 0) }}</p>
+          </div>
+          <div class="kpi-card">
+            <h4>Inativos</h4>
+            <p>{{ status_counts.get('Inativo', 0) }}</p>
+          </div>
+          <div class="kpi-card">
+            <h4>Total Geral</h4>
+            <p>
+              {{ status_counts.get('Ativo', 0) + status_counts.get('Ferias', 0)
+              + status_counts.get('Afastado', 0) + status_counts.get('Inativo',
+              0) }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-section">
+        <h3>Funcionários por Cargo</h3>
+        {% if funcionarios_por_cargo %}
+        <table>
+          <thead>
+            <tr>
+              <th>Cargo</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in funcionarios_por_cargo %}
+            <tr>
+              <td>{{ item.Nome_Cargo }}</td>
+              <td>{{ item.Total }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p>Nenhum dado de funcionário por cargo encontrado.</p>
+        {% endif %}
+      </div>
+
+      <div class="dashboard-section">
+        <h3>Funcionários por Nível</h3>
+        {% if funcionarios_por_nivel %}
+        <table>
+          <thead>
+            <tr>
+              <th>Nível</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in funcionarios_por_nivel %}
+            <tr>
+              <td>{{ item.Nome_Nivel }}</td>
+              <td>{{ item.Total }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p>Nenhum dado de funcionário por nível encontrado.</p>
+        {% endif %}
+      </div>
+
+      <div class="dashboard-section">
+        <h3>Próximas Férias (Próximos 60 Dias)</h3>
+        {% if proximas_ferias %}
+        <table>
+          <thead>
+            <tr>
+              <th>Matrícula</th>
+              <th>Nome Completo</th>
+              <th>Início Gozo</th>
+              <th>Fim Gozo</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ferias in proximas_ferias %}
+            <tr>
+              <td>{{ ferias.Matricula }}</td>
+              <td>{{ ferias.Nome_Completo }}</td>
+              <td>
+                {{ ferias.Data_Inicio_Gozo.strftime('%d/%m/%Y') if
+                ferias.Data_Inicio_Gozo else 'N/A' }}
+              </td>
+              <td>
+                {{ ferias.Data_Fim_Gozo.strftime('%d/%m/%Y') if
+                ferias.Data_Fim_Gozo else 'N/A' }}
+              </td>
+              <td>{{ ferias.Status_Ferias }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p>Não há férias programadas para os próximos 60 dias.</p>
+        {% endif %}
+      </div>
+    </main>
+
+    <footer>
+      <p>&copy; 2025 LUMOB - Sistema de Gestão Interna</p>
+    </footer>
+
+    <style>
+      /* Estes estilos são temporários ou podem ser mesclados com seu style.css */
+      .kpis-container {
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+      .kpi-card {
+        background-color: #f0f0f0;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        flex: 1;
+        min-width: 180px;
+        box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+      }
+      .kpi-card h4 {
+        margin-top: 0;
+        color: #555;
+        font-size: 1em;
+      }
+      .kpi-card p {
+        font-size: 2.2em;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 0;
+      }
+      .dashboard-section {
+        background-color: #fff;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+      }
+      .dashboard-section h3 {
+        color: #333;
+        margin-top: 0;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 15px;
+        margin-bottom: 20px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+      }
+      table th,
+      table td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: left;
+      }
+      table th {
+        background-color: #f8f8f8;
+        font-weight: bold;
+      }
+    </style>
+  </body>
+</html>

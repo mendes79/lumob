@@ -95,62 +95,138 @@
         <p><strong>Matrícula:</strong> {{ funcionario.Matricula }}</p>
         <p><strong>Nome Completo:</strong> {{ funcionario.Nome_Completo }}</p>
         <p>
-          <strong>Data de Admissão:</strong> {{
-          funcionario.Data_Admissao.strftime('%d/%m/%Y') if
+          <strong>Data de Admissão:</strong>
+          {{ funcionario.Data_Admissao.strftime('%d/%m/%Y') if
           funcionario.Data_Admissao else 'N/A' }}
         </p>
         <p><strong>Cargo:</strong> {{ funcionario.Nome_Cargo }}</p>
         <p><strong>Nível:</strong> {{ funcionario.Nome_Nivel }}</p>
         <p><strong>Status:</strong> {{ funcionario.Status }}</p>
         <p>
-          <strong>Data de Criação:</strong> {{
-          funcionario.Data_Criacao.strftime('%d/%m/%Y %H:%M:%S') if
+          <strong>Data de Criação:</strong>
+          {{ funcionario.Data_Criacao.strftime('%d/%m/%Y %H:%M:%S') if
           funcionario.Data_Criacao else 'N/A' }}
         </p>
         <p>
-          <strong>Última Modificação:</strong> {{
-          funcionario.Data_Modificacao.strftime('%d/%m/%Y %H:%M:%S') if
+          <strong>Última Modificação:</strong>
+          {{ funcionario.Data_Modificacao.strftime('%d/%m/%Y %H:%M:%S') if
           funcionario.Data_Modificacao else 'N/A' }}
         </p>
       </div>
 
       <div class="section-title">Dados Pessoais e Documentos</div>
-      {% if funcionario_docs %} {% for doc in funcionario_docs %}
+      {# Verificar se qualquer um dos campos da tabela funcionarios_documentos
+      existe para decidir se exibe a seção #} {% if funcionario.Data_Nascimento
+      or funcionario.Estado_Civil or funcionario.Nacionalidade or
+      funcionario.Naturalidade or funcionario.Genero or funcionario.Rg_Numero or
+      funcionario.Cpf_Numero or funcionario.Ctps_Numero or funcionario.Pispasep
+      or funcionario.Cnh_Numero or funcionario.TitEleitor_Numero or
+      funcionario.Observacoes or funcionario.Link_Foto %}
+
       <div>
-        <p><strong>Tipo Documento:</strong> {{ doc.Tipo_Documento }}</p>
-        <p><strong>Número Documento:</strong> {{ doc.Numero_Documento }}</p>
-        {% if doc.Data_Emissao %}
-        <p>
-          <strong>Data de Emissão:</strong> {{
-          doc.Data_Emissao.strftime('%d/%m/%Y') }}
-        </p>
-        {% endif %} {% if doc.Orgao_Emissor %}
-        <p><strong>Órgão Emissor:</strong> {{ doc.Orgao_Emissor }}</p>
-        {% endif %} {% if doc.Uf_Emissor %}
-        <p><strong>UF Emissor:</strong> {{ doc.Uf_Emissor }}</p>
-        {% endif %} {% if doc.Data_Vencimento %}
-        <p>
-          <strong>Data de Vencimento:</strong> {{
-          doc.Data_Vencimento.strftime('%d/%m/%Y') }}
-        </p>
-        {% endif %} {% if doc.Observacoes %}
-        <p><strong>Observações:</strong> {{ doc.Observacoes }}</p>
-        {% endif %} {% if doc.Data_Nascimento %}
         <p>
           <strong>Data de Nascimento:</strong> {{
-          doc.Data_Nascimento.strftime('%d/%m/%Y') }}
+          funcionario.Data_Nascimento.strftime('%d/%m/%Y') if
+          funcionario.Data_Nascimento else 'N/A' }}
         </p>
-        {% endif %} {% if doc.Estado_Civil %}
-        <p><strong>Estado Civil:</strong> {{ doc.Estado_Civil }}</p>
-        {% endif %} {% if doc.Nacionalidade %}
-        <p><strong>Nacionalidade:</strong> {{ doc.Nacionalidade }}</p>
-        {% endif %} {% if doc.Genero %}
-        <p><strong>Gênero:</strong> {{ doc.Genero }}</p>
+        <p>
+          <strong>Estado Civil:</strong> {{ funcionario.Estado_Civil |
+          default('N/A', true) }}
+        </p>
+        <p>
+          <strong>Nacionalidade:</strong> {{ funcionario.Nacionalidade |
+          default('N/A', true) }}
+        </p>
+        <p>
+          <strong>Naturalidade:</strong> {{ funcionario.Naturalidade |
+          default('N/A', true) }}
+        </p>
+        <p>
+          <strong>Gênero:</strong> {{ funcionario.Genero | default('N/A', true)
+          }}
+        </p>
+
+        <h6
+          style="
+            margin-top: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+          "
+        >
+          Documentos:
+        </h6>
+        <p>
+          <strong>CPF:</strong> {{ funcionario.Cpf_Numero | default('N/A', true)
+          }}
+        </p>
+
+        <p>
+          <strong>RG:</strong> {{ funcionario.Rg_Numero | default('N/A', true)
+          }}
+        </p>
+        {% if funcionario.Rg_Numero %}
+        <p style="margin-left: 20px">
+          (Órgão: {{ funcionario.Rg_OrgaoEmissor | default('N/A', true) }}, UF:
+          {{ funcionario.Rg_UfEmissor | default('N/A', true) }}, Emissão: {{
+          funcionario.Rg_DataEmissao.strftime('%d/%m/%Y') if
+          funcionario.Rg_DataEmissao else 'N/A' }})
+        </p>
         {% endif %}
-        <hr style="border-top: 1px dashed #ccc; margin: 10px 0" />
+
+        <p>
+          <strong>CTPS:</strong> {{ funcionario.Ctps_Numero | default('N/A',
+          true) }}
+        </p>
+        {% if funcionario.Ctps_Numero %}
+        <p style="margin-left: 20px">
+          (Série: {{ funcionario.Ctps_Serie | default('N/A', true) }})
+        </p>
+        {% endif %}
+
+        <p>
+          <strong>PIS/PASEP:</strong> {{ funcionario.Pispasep | default('N/A',
+          true) }}
+        </p>
+
+        <p>
+          <strong>CNH:</strong> {{ funcionario.Cnh_Numero | default('N/A', true)
+          }}
+        </p>
+        {% if funcionario.Cnh_Numero %}
+        <p style="margin-left: 20px">
+          (Categoria: {{ funcionario.Cnh_Categoria | default('N/A', true) }},
+          Validade: {{ funcionario.Cnh_DataValidade.strftime('%d/%m/%Y') if
+          funcionario.Cnh_DataValidade else 'N/A' }}, Órgão: {{
+          funcionario.Cnh_OrgaoEmissor | default('N/A', true) }})
+        </p>
+        {% endif %}
+
+        <p>
+          <strong>Título de Eleitor:</strong> {{ funcionario.TitEleitor_Numero |
+          default('N/A', true) }}
+        </p>
+        {% if funcionario.TitEleitor_Numero %}
+        <p style="margin-left: 20px">
+          (Zona: {{ funcionario.TitEleitor_Zona | default('N/A', true) }},
+          Seção: {{ funcionario.TitEleitor_Secao | default('N/A', true) }})
+        </p>
+        {% endif %}
+
+        <p>
+          <strong>Observações Documentos:</strong> {{ funcionario.Observacoes |
+          default('N/A', true) }}
+        </p>
+        <p>
+          <strong>Link da Foto:</strong>
+          {% if funcionario.Link_Foto %}
+          <a href="{{ funcionario.Link_Foto }}" target="_blank"
+            >{{ funcionario.Link_Foto }}</a
+          >
+          {% else %} N/A {% endif %}
+        </p>
       </div>
-      {% endfor %} {% else %}
-      <p>Nenhum documento ou dado pessoal detalhado encontrado.</p>
+      {% else %}
+      <p>Nenhum documento ou dado personal detalhado encontrado.</p>
       {% endif %}
 
       <div class="section-title">Endereços</div>

@@ -1,11 +1,17 @@
 # database/db_pessoal_manager.py
 
 import mysql.connector
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
+import pandas as pd
+from database.db_base import DatabaseManager 
 
 class PessoalManager:
     def __init__(self, db_connection):
         self.db = db_connection
+
+    # ==================================================================================================================================
+    # === MÉTODOS AUXILIARES GERAIS ====================================================================================================
+    # ==================================================================================================================================
 
     def _format_date_fields(self, item):
         """
@@ -16,15 +22,18 @@ class PessoalManager:
             return None
         
         # Lista de campos de data/datetime que precisam de formatação para objeto date
-        # Inclua todos os campos de data de TODAS as tabelas gerenciadas por este manager
+        # INCLUA AQUI TODAS AS NOVAS COLUNAS DE DATA DA TABELA funcionarios_documentos
         date_fields_to_format = [
-            'Data_Criacao', 'Data_Modificacao', # Comuns em quase todas as tabelas
+            'Data_Criacao', 'Data_Modificacao', 
             'Data_Admissao', # Funcionarios
             'Data_Vigencia', # Salarios
-            'Data_Emissao', 'Data_Vencimento', # Funcionarios_Documentos
-            'Data_Nascimento', # Funcionarios_Documentos E Dependentes (NOVO!)
             'Periodo_Aquisitivo_Inicio', 'Periodo_Aquisitivo_Fim', # Ferias
-            'Data_Inicio_Gozo', 'Data_Fim_Gozo' # Ferias
+            'Data_Inicio_Gozo', 'Data_Fim_Gozo', # Ferias
+            'Data_Nascimento', # Funcionarios_Documentos e Dependentes
+            'Rg_DataEmissao', # Funcionarios_Documentos
+            'Cnh_DataValidade', # Funcionarios_Documentos
+            'Ctps_DataEmissao', # Se decidir adicionar, descomente aqui (agora removida por opção)
+            'Pispasep_DataCadastro' # Se decidir adicionar, descomente aqui (agora removida por opção)
         ]
         
         for key in date_fields_to_format:
@@ -40,34 +49,40 @@ class PessoalManager:
                         try:
                             item[key] = datetime.strptime(value, '%Y-%m-%d %H:%M:%S').date()
                         except ValueError:
-                            # Se ainda falhar, pode ser um formato inesperado, mantenha como None
                             print(f"AVISO: Não foi possível converter a string de data '{value}' para objeto date para o campo '{key}'. Definindo como None.")
                             item[key] = None
                 elif isinstance(value, datetime):
-                    item[key] = value.date() # Converte datetime para date
+                    item[key] = value.date()
                 elif value is None:
                     item[key] = None
 
         return item
 
-    # --- Métodos de Funcionários ---
+    # ==================================================================================================================================
+    # === MÉTODOS DO SUBMÓDULO: FUNCIONÁRIOS ==========================================================================================
+    # ==================================================================================================================================
+
+    # ----------------------------------------------------------------------------------------------------------------------------------
+    # --- GERADOR DE NÚMERO DE MATRÍCULA PADRÃO SEQUENCIAL PARA SUGERIR NA INCLUSÃO DE NOVO FUNCIONÁRIO ------------------------------
+    # ----------------------------------------------------------------------------------------------------------------------------------
     def generate_next_matricula(self):
         """Gera a próxima matrícula sequencial baseada na última matrícula existente."""
         try:
-            # Tenta encontrar a matrícula com o maior número
             query = "SELECT Matricula FROM funcionarios WHERE Matricula REGEXP '^MATR[0-9]+$' ORDER BY LENGTH(Matricula) DESC, Matricula DESC LIMIT 1"
             last_matricula_data = self.db.execute_query(query, fetch_results=True)
             
             if last_matricula_data and last_matricula_data[0]['Matricula']:
                 last_matricula = last_matricula_data[0]['Matricula']
-                # Extrai o número e incrementa
                 num = int(last_matricula[4:]) + 1
-                return f"MATR{num:03d}" # Formata para MATR001, MATR002, etc.
-            return "MATR001" # Matrícula inicial se não houver nenhuma
+                return f"MATR{num:03d}"
+            return "MATR001"
         except Exception as e:
             print(f"Erro ao gerar próxima matrícula: {e}")
-            return "MATR001" # Fallback em caso de erro
+            return "MATR001"
 
+    # ----------------------------------------------------------------------------------------------------------------------------------
+    # --- MÉTODOS CRUD PRINCIPAIS DE FUNCIONÁRIOS (TABELA 'funcionarios') --------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------------------------------------------
     def get_all_funcionarios(self, search_matricula=None, search_nome=None, search_status=None, search_cargo_id=None):
         """
         Retorna uma lista de todos os funcionários, opcionalmente filtrada,
@@ -115,124 +130,8 @@ class PessoalManager:
             return [self._format_date_fields(item) for item in results]
         return results
 
-    def get_all_funcionarios_completo(self, search_matricula=None, search_nome=None, search_status=None, search_cargo_id=None):
-        """
-        Retorna uma lista de todos os funcionários com todos os dados associados (documentos, endereços, contatos)
-        para fins de exportação ou relatórios detalhados.
-        """
-        # Esta é uma consulta complexa. Para simplicidade, vou buscar os dados principais
-        # e depois buscar os detalhes em separado e combiná-los no Python.
-        # Em um cenário de produção com muitos dados, seria mais eficiente com JOINs adequados ou Views no DB.
-        
-        main_funcionarios_query = """
-            SELECT
-                f.Matricula,
-                f.Nome_Completo,
-                f.Data_Admissao,
-                c.Nome_Cargo,
-                n.Nome_Nivel,
-                f.Status,
-                f.Data_Criacao,
-                f.Data_Modificacao
-            FROM
-                funcionarios f
-            LEFT JOIN cargos c ON f.ID_Cargos = c.ID_Cargos
-            LEFT JOIN niveis n ON f.ID_Niveis = n.ID_Niveis
-            WHERE 1=1
-        """
-        params = []
-        if search_matricula:
-            main_funcionarios_query += " AND f.Matricula LIKE %s"
-            params.append(f"%{search_matricula}%")
-        if search_nome:
-            main_funcionarios_query += " AND f.Nome_Completo LIKE %s"
-            params.append(f"%{search_nome}%")
-        if search_status:
-            main_funcionarios_query += " AND f.Status = %s"
-            params.append(search_status)
-        if search_cargo_id:
-            main_funcionarios_query += " AND f.ID_Cargos = %s"
-            params.append(search_cargo_id)
-        main_funcionarios_query += " ORDER BY f.Nome_Completo"
-
-        funcionarios_principais = self.db.execute_query(main_funcionarios_query, tuple(params), fetch_results=True)
-        
-        if not funcionarios_principais:
-            return []
-
-        # Converter datas para os principais
-        funcionarios_principais_formatados = [self._format_date_fields(item) for item in funcionarios_principais]
-
-        # Agora, buscar documentos, endereços e contatos para cada funcionário
-        # E combinar os dados
-        final_results = []
-        for func in funcionarios_principais_formatados:
-            matricula = func['Matricula']
-            
-            # Buscar documentos
-            docs = self.get_funcionario_documentos_by_matricula(matricula)
-            for doc in docs:
-                if doc.get('Tipo_Documento') == 'RG':
-                    func['Rg'] = doc.get('Numero_Documento')
-                    func['Data_Nascimento'] = doc.get('Data_Nascimento')
-                    func['Estado_Civil'] = doc.get('Estado_Civil')
-                    func['Nacionalidade'] = doc.get('Nacionalidade')
-                    func['Genero'] = doc.get('Genero')
-                elif doc.get('Tipo_Documento') == 'CPF':
-                    func['Cpf'] = doc.get('Numero_Documento')
-                elif doc.get('Tipo_Documento') == 'CTPS':
-                    func['Ctps_Numero'] = doc.get('Numero_Documento')
-                    func['Ctps_Serie'] = doc.get('Ctps_Serie') # Se ainda existe
-                elif doc.get('Tipo_Documento') == 'PIS/PASEP':
-                    func['Pis_Pasep'] = doc.get('Numero_Documento')
-                elif doc.get('Tipo_Documento') == 'CNH':
-                    func['Cnh_Numero'] = doc.get('Numero_Documento')
-                    func['Cnh_Categoria'] = doc.get('Cnh_Categoria') # Se ainda existe
-                elif doc.get('Tipo_Documento') == 'Título de Eleitor':
-                    func['Titulo_Eleitor_Numero'] = doc.get('Numero_Documento')
-                    func['Titulo_Eleitor_Zona'] = doc.get('Titulo_Eleitor_Zona') # Se ainda existe
-                    func['Titulo_Eleitor_Secao'] = doc.get('Titulo_Eleitor_Secao') # Se ainda existe
-
-            # Buscar endereços (assumindo um principal residencial para o relatório)
-            enderecos = self.get_funcionario_enderecos_by_matricula(matricula)
-            if enderecos:
-                res_endereco = next((end for end in enderecos if end.get('Tipo_Endereco') == 'Residencial'), None)
-                if res_endereco:
-                    func['Endereco_Residencial'] = f"{res_endereco.get('Logradouro')}, {res_endereco.get('Numero')}"
-                    func['Numero_Endereco'] = res_endereco.get('Numero')
-                    func['Complemento_Endereco'] = res_endereco.get('Complemento')
-                    func['Bairro_Endereco'] = res_endereco.get('Bairro')
-                    func['Cidade_Endereco'] = res_endereco.get('Cidade')
-                    func['Estado_Endereco'] = res_endereco.get('Estado')
-                    func['Cep_Endereco'] = res_endereco.get('Cep')
-                else: # Se não houver residencial, pegar o primeiro que encontrar
-                    first_endereco = enderecos[0]
-                    func['Endereco_Residencial'] = f"{first_endereco.get('Logradouro')}, {first_endereco.get('Numero')}"
-                    func['Numero_Endereco'] = first_endereco.get('Numero')
-                    func['Complemento_Endereco'] = first_endereco.get('Complemento')
-                    func['Bairro_Endereco'] = first_endereco.get('Bairro')
-                    func['Cidade_Endereco'] = first_endereco.get('Cidade')
-                    func['Estado_Endereco'] = first_endereco.get('Estado')
-                    func['Cep_Endereco'] = first_endereco.get('Cep')
-
-            # Buscar contatos (assumindo telefone principal e email pessoal para o relatório)
-            contatos = self.get_funcionario_contatos_by_matricula(matricula)
-            if contatos:
-                tel_principal = next((cont for cont in contatos if cont.get('Tipo_Contato') == 'Telefone Principal'), None)
-                if tel_principal:
-                    func['Telefone_Principal'] = tel_principal.get('Valor_Contato')
-                
-                email_pessoal = next((cont for cont in contatos if cont.get('Tipo_Contato') == 'Email Pessoal'), None)
-                if email_pessoal:
-                    func['Email_Pessoal'] = email_pessoal.get('Valor_Contato')
-            
-            final_results.append(func)
-        
-        return final_results
-
-
     def add_funcionario(self, matricula, nome_completo, data_admissao, id_cargos, id_niveis, status):
-        """Adiciona um novo funcionário."""
+        """Adiciona um novo funcionário à tabela 'funcionarios'."""
         query = """
             INSERT INTO funcionarios (Matricula, Nome_Completo, Data_Admissao, ID_Cargos, ID_Niveis, Status, Data_Criacao, Data_Modificacao)
             VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
@@ -241,25 +140,28 @@ class PessoalManager:
         return self.db.execute_query(query, params, fetch_results=False)
 
     def get_funcionario_by_matricula(self, matricula):
-        """Retorna os dados de um funcionário pela matrícula."""
+        """
+        Retorna os dados principais de um funcionário e seus dados pessoais/documentos
+        pela matrícula, usando JOIN com funcionarios_documentos.
+        """
         query = """
             SELECT
-                f.Matricula,
-                f.Nome_Completo,
-                f.Data_Admissao,
-                f.ID_Cargos,
-                f.ID_Niveis,
-                f.Status,
-                c.Nome_Cargo,
-                n.Nome_Nivel,
-                f.Data_Criacao,
-                f.Data_Modificacao
+                f.Matricula, f.Nome_Completo, f.Data_Admissao, f.ID_Cargos, f.ID_Niveis, f.Status,
+                c.Nome_Cargo, n.Nome_Nivel,
+                fd.Data_Nascimento, fd.Estado_Civil, fd.Nacionalidade, fd.Naturalidade, fd.Genero,
+                fd.Rg_Numero, fd.Rg_OrgaoEmissor, fd.Rg_UfEmissor, fd.Rg_DataEmissao,
+                fd.Cpf_Numero,
+                fd.Ctps_Numero, fd.Ctps_Serie,
+                fd.Pispasep,
+                fd.Cnh_Numero, fd.Cnh_Categoria, fd.Cnh_DataValidade, fd.Cnh_OrgaoEmissor,
+                fd.TitEleitor_Numero, fd.TitEleitor_Zona, fd.TitEleitor_Secao,
+                fd.Observacoes, fd.Link_Foto,
+                f.Data_Criacao, f.Data_Modificacao
             FROM
                 funcionarios f
-            LEFT JOIN
-                cargos c ON f.ID_Cargos = c.ID_Cargos
-            LEFT JOIN
-                niveis n ON f.ID_Niveis = n.ID_Niveis
+            LEFT JOIN cargos c ON f.ID_Cargos = c.ID_Cargos
+            LEFT JOIN niveis n ON f.ID_Niveis = n.ID_Niveis
+            LEFT JOIN funcionarios_documentos fd ON f.Matricula = fd.Matricula_Funcionario
             WHERE f.Matricula = %s
         """
         result = self.db.execute_query(query, (matricula,), fetch_results=True)
@@ -268,7 +170,7 @@ class PessoalManager:
         return None
 
     def update_funcionario(self, old_matricula, new_matricula, nome_completo, data_admissao, id_cargos, id_niveis, status):
-        """Atualiza os dados de um funcionário."""
+        """Atualiza os dados principais de um funcionário."""
         query = """
             UPDATE funcionarios
             SET
@@ -289,163 +191,153 @@ class PessoalManager:
         query = "DELETE FROM funcionarios WHERE Matricula = %s"
         return self.db.execute_query(query, (matricula,), fetch_results=False)
 
-    # --- Métodos de Documentos de Funcionários (NOVO) ---
-    def add_funcionario_documentos(self, matricula, rg, cpf, data_nascimento, ctps_numero, ctps_serie, pis_pasep, cnh_numero, cnh_categoria, titulo_eleitor_numero, titulo_eleitor_zona, titulo_eleitor_secao, estado_civil, nacionalidade, genero):
-        """Adiciona ou atualiza múltiplos documentos e dados pessoais para um funcionário."""
-        # Esta função agrupa a inserção/atualização de vários tipos de documentos
-        # e dados pessoais que na nova estrutura são tratados como documentos.
-        # A lógica aqui será para criar ou atualizar se já existir.
-        
-        # RG
-        if rg:
-            self.update_or_insert_documento(matricula, 'RG', rg, None, None, None, None, estado_civil, nacionalidade, genero, data_nascimento) # data_nascimento é um campo de funcionario_documentos agora
-        
-        # CPF
-        if cpf:
-            self.update_or_insert_documento(matricula, 'CPF', cpf)
-            
-        # CTPS
-        if ctps_numero:
-            # Nota: ctps_serie não é um campo direto na nova tabela funcionarios_documentos para CTPS.
-            # Se for crucial, pode ser concatenado com Numero_Documento ou ir para Observacoes.
-            # Por enquanto, vou passá-lo como None.
-            self.update_or_insert_documento(matricula, 'CTPS', ctps_numero, None, None, None, None, None, None, None)
-
-        # PIS/PASEP
-        if pis_pasep:
-            self.update_or_insert_documento(matricula, 'PIS/PASEP', pis_pasep)
-
-        # CNH
-        if cnh_numero:
-            # Nota: cnh_categoria não é um campo direto na nova tabela funcionarios_documentos para CNH.
-            # Se for crucial, pode ser concatenado com Numero_Documento ou ir para Observacoes.
-            self.update_or_insert_documento(matricula, 'CNH', cnh_numero, None, None, None, None, None, None, None, cnh_categoria) # CNH Categoria como observação?
-
-        # Título de Eleitor
-        if titulo_eleitor_numero:
-            # Zona e Seção podem ir para observações ou em campos separados.
-            # Por enquanto, vou passá-los como None.
-            self.update_or_insert_documento(matricula, 'Título de Eleitor', titulo_eleitor_numero, None, None, None, None, None, None, None, None, titulo_eleitor_zona, titulo_eleitor_secao)
-        
-        # Data de Nascimento, Estado Civil, Nacionalidade, Gênero são específicos do RG (no contexto atual)
-        # Se eles estiverem ligados ao RG, já são tratados acima.
-        # Se forem campos independentes, você pode adicionar chamadas separadas.
-        # A nova estrutura de `funcionarios_documentos` permite flexibilidade.
-        # Para Estado Civil, Nacionalidade, Gênero, etc. que não são "documentos" de fato,
-        # poderíamos ter uma tabela `funcionarios_dados_pessoais` no futuro.
-        # Por enquanto, eles serão associados ao documento RG como tipo de dado pessoal.
-
-    def update_or_add_funcionario_documentos(self, matricula, rg, cpf, data_nascimento, ctps_numero, ctps_serie, pis_pasep, cnh_numero, cnh_categoria, titulo_eleitor_numero, titulo_eleitor_zona, titulo_eleitor_secao, estado_civil, nacionalidade, genero):
+    # ----------------------------------------------------------------------------------------------------------------------------------
+    # --- MÉTODOS PARA DADOS PESSOAIS E DOCUMENTOS (TABELA 'funcionarios_documentos') --------------------------------------------------
+    # ----------------------------------------------------------------------------------------------------------------------------------
+    def save_funcionario_dados_pessoais_documentos(self, matricula, data_nascimento, estado_civil, nacionalidade, naturalidade, genero,
+                                                    rg_numero, rg_orgao_emissor, rg_uf_emissor, rg_data_emissao,
+                                                    cpf_numero,
+                                                    ctps_numero, ctps_serie,
+                                                    pispasep,
+                                                    cnh_numero, cnh_categoria, cnh_data_validade, cnh_orgao_emissor,
+                                                    titeleitor_numero, titeleitor_zona, titeleitor_secao,
+                                                    observacoes, link_foto):
         """
-        Atualiza ou insere documentos e dados pessoais para um funcionário.
-        Esta é uma lógica simplificada para a edição via formulário principal.
+        Salva (insere ou atualiza) os dados pessoais e de documentos consolidados de um funcionário.
+        Existe apenas uma linha por funcionário nesta tabela.
         """
-        # RG - Data_Nascimento, Estado_Civil, Nacionalidade, Genero agora estão atrelados ao tipo 'RG'
-        self._update_or_insert_single_documento(matricula, 'RG', rg, Data_Nascimento=data_nascimento, Estado_Civil=estado_civil, Nacionalidade=nacionalidade, Genero=genero)
-        
-        # CPF
-        self._update_or_insert_single_documento(matricula, 'CPF', cpf)
-        
-        # CTPS (considerando serie na observacao por enquanto)
-        if ctps_numero:
-            self._update_or_insert_single_documento(matricula, 'CTPS', ctps_numero, Observacoes=f"Série: {ctps_serie}" if ctps_serie else None)
+        # Tenta encontrar um registro existente
+        existing_data = self.db.execute_query("SELECT Matricula_Funcionario FROM funcionarios_documentos WHERE Matricula_Funcionario = %s", (matricula,), fetch_results=True)
 
-        # PIS/PASEP
-        self._update_or_insert_single_documento(matricula, 'PIS/PASEP', pis_pasep)
+        params = [
+            data_nascimento, estado_civil, nacionalidade, naturalidade, genero,
+            rg_numero, rg_orgao_emissor, rg_uf_emissor, rg_data_emissao,
+            cpf_numero,
+            ctps_numero, ctps_serie,
+            pispasep,
+            cnh_numero, cnh_categoria, cnh_data_validade, cnh_orgao_emissor,
+            titeleitor_numero, titeleitor_zona, titeleitor_secao,
+            observacoes, link_foto
+        ]
 
-        # CNH (considerando categoria na observacao por enquanto)
-        if cnh_numero:
-            self._update_or_insert_single_documento(matricula, 'CNH', cnh_numero, Observacoes=f"Categoria: {cnh_categoria}" if cnh_categoria else None)
-
-        # Título de Eleitor (considerando zona e secao na observacao por enquanto)
-        if titulo_eleitor_numero:
-            obs = []
-            if titulo_eleitor_zona: obs.append(f"Zona: {titulo_eleitor_zona}")
-            if titulo_eleitor_secao: obs.append(f"Seção: {titulo_eleitor_secao}")
-            self._update_or_insert_single_documento(matricula, 'Título de Eleitor', titulo_eleitor_numero, Observacoes=", ".join(obs) if obs else None)
-
-
-    def _update_or_insert_single_documento(self, matricula, tipo_documento, numero_documento, Data_Emissao=None, Orgao_Emissor=None, Uf_Emissor=None, Data_Vencimento=None, Estado_Civil=None, Nacionalidade=None, Genero=None, Data_Nascimento=None, Observacoes=None):
-        """
-        Função interna auxiliar para atualizar ou inserir um único tipo de documento.
-        Isso é necessário devido à estrutura de `funcionarios_documentos`.
-        Ainda simplificado, apenas para os campos básicos do formulário de edição principal.
-        """
-        if not numero_documento: # Se o número do documento estiver vazio, remove o registro (se existir)
-            existing_doc = self.db.execute_query("SELECT ID_Funcionario_Documento FROM funcionarios_documentos WHERE Matricula_Funcionario = %s AND Tipo_Documento = %s", (matricula, tipo_documento), fetch_results=True)
-            if existing_doc:
-                self.db.execute_query("DELETE FROM funcionarios_documentos WHERE ID_Funcionario_Documento = %s", (existing_doc[0]['ID_Funcionario_Documento'],), fetch_results=False)
-            return
-
-        # Tenta encontrar um documento existente do mesmo tipo para o funcionário
-        existing_doc = self.db.execute_query("SELECT ID_Funcionario_Documento FROM funcionarios_documentos WHERE Matricula_Funcionario = %s AND Tipo_Documento = %s", (matricula, tipo_documento), fetch_results=True)
-
-        # Campos adicionais para o tipo RG
-        rg_extra_fields = ""
-        rg_extra_params = []
-        if tipo_documento == 'RG':
-            rg_extra_fields += ", Data_Nascimento = %s, Estado_Civil = %s, Nacionalidade = %s, Genero = %s"
-            rg_extra_params.extend([Data_Nascimento, Estado_Civil, Nacionalidade, Genero])
-
-
-        if existing_doc:
-            # Atualiza
-            query = f"""
+        if existing_data:
+            # Atualiza o registro existente
+            query = """
                 UPDATE funcionarios_documentos
                 SET
-                    Numero_Documento = %s,
-                    Data_Emissao = %s,
-                    Orgao_Emissor = %s,
-                    Uf_Emissor = %s,
-                    Data_Vencimento = %s,
-                    Observacoes = %s,
+                    Data_Nascimento = %s, Estado_Civil = %s, Nacionalidade = %s, Naturalidade = %s, Genero = %s,
+                    Rg_Numero = %s, Rg_OrgaoEmissor = %s, Rg_UfEmissor = %s, Rg_DataEmissao = %s,
+                    Cpf_Numero = %s,
+                    Ctps_Numero = %s, Ctps_Serie = %s,
+                    Pispasep = %s,
+                    Cnh_Numero = %s, Cnh_Categoria = %s, Cnh_DataValidade = %s, Cnh_OrgaoEmissor = %s,
+                    TitEleitor_Numero = %s, TitEleitor_Zona = %s, TitEleitor_Secao = %s,
+                    Observacoes = %s, Link_Foto = %s,
                     Data_Modificacao = NOW()
-                    {rg_extra_fields}
-                WHERE ID_Funcionario_Documento = %s
+                WHERE Matricula_Funcionario = %s
             """
-            params = [numero_documento, Data_Emissao, Orgao_Emissor, Uf_Emissor, Data_Vencimento, Observacoes]
-            params.extend(rg_extra_params)
-            params.append(existing_doc[0]['ID_Funcionario_Documento'])
-            self.db.execute_query(query, tuple(params), fetch_results=False)
+            params.append(matricula) # Adiciona a matrícula para a cláusula WHERE
+            return self.db.execute_query(query, tuple(params), fetch_results=False)
         else:
-            # Insere
-            query = f"""
-                INSERT INTO funcionarios_documentos (Matricula_Funcionario, Tipo_Documento, Numero_Documento, Data_Emissao, Orgao_Emissor, Uf_Emissor, Data_Vencimento, Observacoes, Data_Criacao, Data_Modificacao {', Data_Nascimento, Estado_Civil, Nacionalidade, Genero' if tipo_documento == 'RG' else ''})
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW() {', %s, %s, %s, %s' if tipo_documento == 'RG' else ''})
+            # Insere um novo registro
+            query = """
+                INSERT INTO funcionarios_documentos (
+                    Matricula_Funcionario, Data_Nascimento, Estado_Civil, Nacionalidade, Naturalidade, Genero,
+                    Rg_Numero, Rg_OrgaoEmissor, Rg_UfEmissor, Rg_DataEmissao,
+                    Cpf_Numero, Ctps_Numero, Ctps_Serie, Pispasep, Cnh_Numero, Cnh_Categoria, Cnh_DataValidade, Cnh_OrgaoEmissor,
+                    TitEleitor_Numero, TitEleitor_Zona, TitEleitor_Secao, Observacoes, Link_Foto,
+                    Data_Criacao, Data_Modificacao
+                )
+                VALUES (
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW()
+                )
             """
-            params = [matricula, tipo_documento, numero_documento, Data_Emissao, Orgao_Emissor, Uf_Emissor, Data_Vencimento, Observacoes]
-            params.extend(rg_extra_params)
-            self.db.execute_query(query, tuple(params), fetch_results=False)
+            # Adiciona a matrícula no início dos parâmetros para o INSERT
+            insert_params = [matricula] + params 
+            return self.db.execute_query(query, tuple(insert_params), fetch_results=False)
 
-
-    def get_funcionario_documentos_by_matricula(self, matricula):
-        """Retorna todos os documentos de um funcionário."""
+    def get_funcionario_dados_pessoais_documentos_by_matricula(self, matricula):
+        """
+        Retorna os dados pessoais e de documentos de um funcionário
+        diretamente da tabela 'funcionarios_documentos'.
+        """
         query = """
             SELECT
-                ID_Funcionario_Documento,
-                Matricula_Funcionario,
-                Tipo_Documento,
-                Numero_Documento,
-                Data_Emissao,
-                Orgao_Emissor,
-                Uf_Emissor,
-                Data_Vencimento,
-                Observacoes,
-                Data_Criacao,
-                Data_Modificacao,
-                Data_Nascimento,
-                Estado_Civil,
-                Nacionalidade,
-                Genero
+                Matricula_Funcionario, Data_Nascimento, Estado_Civil, Nacionalidade, Naturalidade, Genero,
+                Rg_Numero, Rg_OrgaoEmissor, Rg_UfEmissor, Rg_DataEmissao,
+                Cpf_Numero,
+                Ctps_Numero, Ctps_Serie,
+                Pispasep,
+                Cnh_Numero, Cnh_Categoria, Cnh_DataValidade, Cnh_OrgaoEmissor,
+                TitEleitor_Numero, TitEleitor_Zona, TitEleitor_Secao,
+                Observacoes, Link_Foto,
+                Data_Criacao, Data_Modificacao
             FROM funcionarios_documentos
             WHERE Matricula_Funcionario = %s
         """
-        results = self.db.execute_query(query, (matricula,), fetch_results=True)
+        result = self.db.execute_query(query, (matricula,), fetch_results=True)
+        if result:
+            return self._format_date_fields(result[0])
+        return None
+
+    # ----------------------------------------------------------------------------------------------------------------------------------
+    # --- MÉTODO PARA EXPORTAÇÃO COMPLETA DE FUNCIONÁRIOS (AGORA MAIS EFICIENTE) ------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------------------------------------------
+    def get_all_funcionarios_completo(self, search_matricula=None, search_nome=None, search_status=None, search_cargo_id=None):
+        """
+        Retorna uma lista de todos os funcionários com todos os dados associados (pessoais, documentos, endereços, contatos)
+        para fins de exportação ou relatórios detalhados, utilizando JOINs.
+        """
+        query = """
+            SELECT
+                f.Matricula, f.Nome_Completo, f.Data_Admissao, f.Status, f.Data_Criacao, f.Data_Modificacao,
+                c.Nome_Cargo, n.Nome_Nivel,
+                fd.Data_Nascimento, fd.Estado_Civil, fd.Nacionalidade, fd.Naturalidade, fd.Genero,
+                fd.Rg_Numero, fd.Rg_OrgaoEmissor, fd.Rg_UfEmissor, fd.Rg_DataEmissao,
+                fd.Cpf_Numero,
+                fd.Ctps_Numero, fd.Ctps_Serie,
+                fd.Pispasep,
+                fd.Cnh_Numero, fd.Cnh_Categoria, fd.Cnh_DataValidade, fd.Cnh_OrgaoEmissor,
+                fd.TitEleitor_Numero, fd.TitEleitor_Zona, fd.TitEleitor_Secao,
+                fd.Observacoes AS Doc_Observacoes, fd.Link_Foto, -- Renomeado para evitar conflito com 'Observacoes' de outras tabelas
+                fe.Logradouro AS End_Logradouro, fe.Numero AS End_Numero, fe.Complemento AS End_Complemento,
+                fe.Bairro AS End_Bairro, fe.Cidade AS End_Cidade, fe.Estado AS End_Estado, fe.Cep AS End_Cep,
+                fc.Valor_Contato AS Tel_Principal, fc2.Valor_Contato AS Email_Pessoal
+            FROM
+                funcionarios f
+            LEFT JOIN cargos c ON f.ID_Cargos = c.ID_Cargos
+            LEFT JOIN niveis n ON f.ID_Niveis = n.ID_Niveis
+            LEFT JOIN funcionarios_documentos fd ON f.Matricula = fd.Matricula_Funcionario
+            LEFT JOIN funcionarios_enderecos fe ON f.Matricula = fe.Matricula_Funcionario AND fe.Tipo_Endereco = 'Residencial'
+            LEFT JOIN funcionarios_contatos fc ON f.Matricula = fc.Matricula_Funcionario AND fc.Tipo_Contato = 'Telefone Principal'
+            LEFT JOIN funcionarios_contatos fc2 ON f.Matricula = fc2.Matricula_Funcionario AND fc2.Tipo_Contato = 'Email Pessoal'
+            WHERE 1=1
+        """
+        params = []
+        if search_matricula:
+            query += " AND f.Matricula LIKE %s"
+            params.append(f"%{search_matricula}%")
+        if search_nome:
+            query += " AND f.Nome_Completo LIKE %s"
+            params.append(f"%{search_nome}%")
+        if search_status:
+            query += " AND f.Status = %s"
+            params.append(search_status)
+        if search_cargo_id:
+            query += " AND f.ID_Cargos = %s"
+            params.append(search_cargo_id)
+        
+        query += " ORDER BY f.Nome_Completo"
+
+        results = self.db.execute_query(query, tuple(params), fetch_results=True)
         if results:
             return [self._format_date_fields(item) for item in results]
-        return []
+        return results
 
-    # --- Métodos de Endereços de Funcionários (NOVO) ---
+    # ==================================================================================================================================
+    # === MÉTODOS DO SUBMÓDULO: ENDEREÇOS DE FUNCIONÁRIOS ==============================================================================
+    # ==================================================================================================================================
+
     def add_funcionario_endereco(self, matricula, tipo_endereco, logradouro, numero, complemento, bairro, cidade, estado, cep):
         """Adiciona um endereço para um funcionário."""
         query = """
@@ -460,7 +352,7 @@ class PessoalManager:
         Atualiza um endereço existente de um tipo específico ou o insere se não existir.
         Simplificado para um único endereço por tipo (ex: apenas um residencial).
         """
-        if not all([logradouro, numero, bairro, cidade, estado, cep]): # Se dados essenciais faltam, remove ou não insere
+        if not all([logradouro, numero, bairro, cidade, estado, cep]): 
             existing_end = self.db.execute_query("SELECT ID_Funcionario_Endereco FROM funcionarios_enderecos WHERE Matricula_Funcionario = %s AND Tipo_Endereco = %s", (matricula, tipo_endereco), fetch_results=True)
             if existing_end:
                 self.db.execute_query("DELETE FROM funcionarios_enderecos WHERE ID_Funcionario_Endereco = %s", (existing_end[0]['ID_Funcionario_Endereco'],), fetch_results=False)
@@ -491,18 +383,8 @@ class PessoalManager:
         """Retorna todos os endereços de um funcionário."""
         query = """
             SELECT
-                ID_Funcionario_Endereco,
-                Matricula_Funcionario,
-                Tipo_Endereco,
-                Logradouro,
-                Numero,
-                Complemento,
-                Bairro,
-                Cidade,
-                Estado,
-                Cep,
-                Data_Criacao,
-                Data_Modificacao
+                ID_Funcionario_Endereco, Matricula_Funcionario, Tipo_Endereco, Logradouro, Numero,
+                Complemento, Bairro, Cidade, Estado, Cep, Data_Criacao, Data_Modificacao
             FROM funcionarios_enderecos
             WHERE Matricula_Funcionario = %s
         """
@@ -511,7 +393,10 @@ class PessoalManager:
             return [self._format_date_fields(item) for item in results]
         return []
 
-    # --- Métodos de Contatos de Funcionários (NOVO) ---
+    # ==================================================================================================================================
+    # === MÉTODOS DO SUBMÓDULO: CONTATOS DE FUNCIONÁRIOS ===============================================================================
+    # ==================================================================================================================================
+
     def add_funcionario_contato(self, matricula, tipo_contato, valor_contato, observacoes=None):
         """Adiciona um contato para um funcionário."""
         query = """
@@ -526,7 +411,7 @@ class PessoalManager:
         Atualiza um contato existente de um tipo específico ou o insere se não existir.
         Simplificado para um único contato por tipo (ex: apenas um telefone principal).
         """
-        if not valor_contato: # Se o valor do contato estiver vazio, remove o registro (se existir)
+        if not valor_contato:
             existing_contato = self.db.execute_query("SELECT ID_Funcionario_Contato FROM funcionarios_contatos WHERE Matricula_Funcionario = %s AND Tipo_Contato = %s", (matricula, tipo_contato), fetch_results=True)
             if existing_contato:
                 self.db.execute_query("DELETE FROM funcionarios_contatos WHERE ID_Funcionario_Contato = %s", (existing_contato[0]['ID_Funcionario_Contato'],), fetch_results=False)
@@ -552,13 +437,8 @@ class PessoalManager:
         """Retorna todos os contatos de um funcionário."""
         query = """
             SELECT
-                ID_Funcionario_Contato,
-                Matricula_Funcionario,
-                Tipo_Contato,
-                Valor_Contato,
-                Observacoes,
-                Data_Criacao,
-                Data_Modificacao
+                ID_Funcionario_Contato, Matricula_Funcionario, Tipo_Contato, Valor_Contato,
+                Observacoes, Data_Criacao, Data_Modificacao
             FROM funcionarios_contatos
             WHERE Matricula_Funcionario = %s
         """
@@ -567,37 +447,21 @@ class PessoalManager:
             return [self._format_date_fields(item) for item in results]
         return []
 
-# Verificar se preciso desses 2 métodos "dropdown" <<<<<
+    # ==================================================================================================================================
+    # === MÉTODOS DO SUBMÓDULO: CARGOS =================================================================================================
+    # ==================================================================================================================================
 
-    # --- Métodos de Cargos (Dropdown) ---
     def get_all_cargos_for_dropdown(self):
         """Retorna uma lista de cargos para preencher dropdowns."""
         query = "SELECT ID_Cargos, Nome_Cargo FROM cargos ORDER BY Nome_Cargo"
         return self.db.execute_query(query, fetch_results=True)
 
-    # --- Métodos de Níveis (Dropdown) ---
-    def get_all_niveis_for_dropdown(self):
-        """Retorna uma lista de níveis para preencher dropdowns."""
-        query = "SELECT ID_Niveis, Nome_Nivel FROM niveis ORDER BY Nome_Nivel"
-        return self.db.execute_query(query, fetch_results=True)
-
-# database/db_pessoal_manager.py (Adicione estes métodos dentro da classe PessoalManager, após os métodos de Funcionários)
-
-    # --- Métodos de Cargos ---
     def get_all_cargos(self, search_nome=None):
-        """
-        Retorna uma lista de todos os cargos, opcionalmente filtrada.
-        """
+        """Retorna uma lista de todos os cargos, opcionalmente filtrada."""
         query = """
             SELECT
-                ID_Cargos,
-                Nome_Cargo,
-                Descricao_Cargo,
-                Cbo,
-                Data_Criacao,
-                Data_Modificacao
-            FROM
-                cargos
+                ID_Cargos, Nome_Cargo, Descricao_Cargo, Cbo, Data_Criacao, Data_Modificacao
+            FROM cargos
             WHERE 1=1
         """
         params = []
@@ -613,9 +477,7 @@ class PessoalManager:
         return results
 
     def add_cargo(self, nome_cargo, descricao_cargo, cbo):
-        """
-        Adiciona um novo cargo ao banco de dados.
-        """
+        """Adiciona um novo cargo ao banco de dados."""
         query = """
             INSERT INTO cargos (Nome_Cargo, Descricao_Cargo, Cbo, Data_Criacao, Data_Modificacao)
             VALUES (%s, %s, %s, NOW(), NOW())
@@ -624,19 +486,11 @@ class PessoalManager:
         return self.db.execute_query(query, params, fetch_results=False)
 
     def get_cargo_by_id(self, cargo_id):
-        """
-        Retorna os dados de um cargo pelo ID.
-        """
+        """Retorna os dados de um cargo pelo ID."""
         query = """
             SELECT
-                ID_Cargos,
-                Nome_Cargo,
-                Descricao_Cargo,
-                Cbo,
-                Data_Criacao,
-                Data_Modificacao
-            FROM
-                cargos
+                ID_Cargos, Nome_Cargo, Descricao_Cargo, Cbo, Data_Criacao, Data_Modificacao
+            FROM cargos
             WHERE ID_Cargos = %s
         """
         result = self.db.execute_query(query, (cargo_id,), fetch_results=True)
@@ -645,16 +499,11 @@ class PessoalManager:
         return None
 
     def update_cargo(self, cargo_id, nome_cargo, descricao_cargo, cbo):
-        """
-        Atualiza os dados de um cargo existente.
-        """
+        """Atualiza os dados de um cargo existente."""
         query = """
             UPDATE cargos
             SET
-                Nome_Cargo = %s,
-                Descricao_Cargo = %s,
-                Cbo = %s,
-                Data_Modificacao = NOW()
+                Nome_Cargo = %s, Descricao_Cargo = %s, Cbo = %s, Data_Modificacao = NOW()
             WHERE ID_Cargos = %s
         """
         params = (nome_cargo, descricao_cargo, cbo, cargo_id)
@@ -665,39 +514,35 @@ class PessoalManager:
         Exclui um cargo do banco de dados.
         Retorna False se houver funcionários associados.
         """
-        # Verificar se há funcionários associados a este cargo
         check_query = "SELECT COUNT(*) AS count FROM funcionarios WHERE ID_Cargos = %s"
         result = self.db.execute_query(check_query, (cargo_id,), fetch_results=True)
         if result and result[0]['count'] > 0:
             print(f"Não é possível excluir o cargo ID {cargo_id}: Existem funcionários associados.")
-            return False # Não permite exclusão se houver funcionários
-
+            return False
         query = "DELETE FROM cargos WHERE ID_Cargos = %s"
         return self.db.execute_query(query, (cargo_id,), fetch_results=False)
 
     def get_cargo_by_nome(self, nome_cargo):
-        """
-        Verifica se um cargo com o dado nome já existe.
-        """
+        """Verifica se um cargo com o dado nome já existe."""
         query = "SELECT ID_Cargos FROM cargos WHERE Nome_Cargo = %s"
         result = self.db.execute_query(query, (nome_cargo,), fetch_results=True)
         return result[0] if result else None
 
+    # ==================================================================================================================================
+    # === MÉTODOS DO SUBMÓDULO: NÍVEIS =================================================================================================
+    # ==================================================================================================================================
 
-    # --- Métodos de Níveis ---
+    def get_all_niveis_for_dropdown(self):
+        """Retorna uma lista de níveis para preencher dropdowns."""
+        query = "SELECT ID_Niveis, Nome_Nivel FROM niveis ORDER BY Nome_Nivel"
+        return self.db.execute_query(query, fetch_results=True)
+
     def get_all_niveis(self, search_nome=None):
-        """
-        Retorna uma lista de todos os níveis, opcionalmente filtrada.
-        """
+        """Retorna uma lista de todos os níveis, opcionalmente filtrada."""
         query = """
             SELECT
-                ID_Niveis,
-                Nome_Nivel,
-                Descricao,
-                Data_Criacao,
-                Data_Modificacao
-            FROM
-                niveis
+                ID_Niveis, Nome_Nivel, Descricao, Data_Criacao, Data_Modificacao
+            FROM niveis
             WHERE 1=1
         """
         params = []
@@ -713,9 +558,7 @@ class PessoalManager:
         return results
 
     def add_nivel(self, nome_nivel, descricao):
-        """
-        Adiciona um novo nível ao banco de dados.
-        """
+        """Adiciona um novo nível ao banco de dados."""
         query = """
             INSERT INTO niveis (Nome_Nivel, Descricao, Data_Criacao, Data_Modificacao)
             VALUES (%s, %s, NOW(), NOW())
@@ -724,18 +567,11 @@ class PessoalManager:
         return self.db.execute_query(query, params, fetch_results=False)
 
     def get_nivel_by_id(self, nivel_id):
-        """
-        Retorna os dados de um nível pelo ID.
-        """
+        """Retorna os dados de um nível pelo ID."""
         query = """
             SELECT
-                ID_Niveis,
-                Nome_Nivel,
-                Descricao,
-                Data_Criacao,
-                Data_Modificacao
-            FROM
-                niveis
+                ID_Niveis, Nome_Nivel, Descricao, Data_Criacao, Data_Modificacao
+            FROM niveis
             WHERE ID_Niveis = %s
         """
         result = self.db.execute_query(query, (nivel_id,), fetch_results=True)
@@ -744,15 +580,11 @@ class PessoalManager:
         return None
 
     def update_nivel(self, nivel_id, nome_nivel, descricao):
-        """
-        Atualiza os dados de um nível existente.
-        """
+        """Atualiza os dados de um nível existente."""
         query = """
             UPDATE niveis
             SET
-                Nome_Nivel = %s,
-                Descricao = %s,
-                Data_Modificacao = NOW()
+                Nome_Nivel = %s, Descricao = %s, Data_Modificacao = NOW()
             WHERE ID_Niveis = %s
         """
         params = (nome_nivel, descricao, nivel_id)
@@ -763,25 +595,24 @@ class PessoalManager:
         Exclui um nível do banco de dados.
         Retorna False se houver funcionários associados.
         """
-        # Verificar se há funcionários associados a este nível
         check_query = "SELECT COUNT(*) AS count FROM funcionarios WHERE ID_Niveis = %s"
         result = self.db.execute_query(check_query, (nivel_id,), fetch_results=True)
         if result and result[0]['count'] > 0:
             print(f"Não é possível excluir o nível ID {nivel_id}: Existem funcionários associados.")
-            return False # Não permite exclusão se houver funcionários
-
+            return False
         query = "DELETE FROM niveis WHERE ID_Niveis = %s"
         return self.db.execute_query(query, (nivel_id,), fetch_results=False)
 
     def get_nivel_by_nome(self, nome_nivel):
-        """
-        Verifica se um nível com o dado nome já existe.
-        """
+        """Verifica se um nível com o dado nome já existe."""
         query = "SELECT ID_Niveis FROM niveis WHERE Nome_Nivel = %s"
         result = self.db.execute_query(query, (nome_nivel,), fetch_results=True)
         return result[0] if result else None
-    
-     # --- Métodos de Salários e Benefícios ---
+
+    # ==================================================================================================================================
+    # === MÉTODOS DO SUBMÓDULO: SALÁRIOS E BENEFÍCIOS ==================================================================================
+    # ==================================================================================================================================
+
     def get_all_salarios(self, search_cargo_id=None, search_nivel_id=None):
         """
         Retorna uma lista de todos os pacotes salariais, opcionalmente filtrada,
@@ -789,28 +620,13 @@ class PessoalManager:
         """
         query = """
             SELECT
-                s.ID_Salarios,
-                s.ID_Cargos,
-                s.ID_Niveis,
-                s.Salario_Base,
-                s.Periculosidade,
-                s.Insalubridade,
-                s.Ajuda_De_Custo,
-                s.Vale_Refeicao,
-                s.Gratificacao,
-                s.Cesta_Basica,
-                s.Outros_Beneficios,
-                s.Data_Vigencia,
-                c.Nome_Cargo,
-                n.Nome_Nivel,
-                s.Data_Criacao,
-                s.Data_Modificacao
-            FROM
-                salarios s
-            LEFT JOIN
-                cargos c ON s.ID_Cargos = c.ID_Cargos
-            LEFT JOIN
-                niveis n ON s.ID_Niveis = n.ID_Niveis
+                s.ID_Salarios, s.ID_Cargos, s.ID_Niveis, s.Salario_Base, s.Periculosidade,
+                s.Insalubridade, s.Ajuda_De_Custo, s.Vale_Refeicao, s.Gratificacao, s.Cesta_Basica,
+                s.Outros_Beneficios, s.Data_Vigencia, c.Nome_Cargo, n.Nome_Nivel,
+                s.Data_Criacao, s.Data_Modificacao
+            FROM salarios s
+            LEFT JOIN cargos c ON s.ID_Cargos = c.ID_Cargos
+            LEFT JOIN niveis n ON s.ID_Niveis = n.ID_Niveis
             WHERE 1=1
         """
         params = []
@@ -830,9 +646,7 @@ class PessoalManager:
         return results
 
     def add_salario(self, id_cargos, id_niveis, salario_base, periculosidade, insalubridade, ajuda_de_custo, vale_refeicao, gratificacao, cesta_basica, outros_beneficios, data_vigencia):
-        """
-        Adiciona um novo pacote salarial ao banco de dados.
-        """
+        """Adiciona um novo pacote salarial ao banco de dados."""
         query = """
             INSERT INTO salarios (ID_Cargos, ID_Niveis, Salario_Base, Periculosidade, Insalubridade, Ajuda_De_Custo, Vale_Refeicao, Gratificacao, Cesta_Basica, Outros_Beneficios, Data_Vigencia, Data_Criacao, Data_Modificacao)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
@@ -841,33 +655,16 @@ class PessoalManager:
         return self.db.execute_query(query, params, fetch_results=False)
 
     def get_salario_by_id(self, salario_id):
-        """
-        Retorna os dados de um pacote salarial pelo ID.
-        """
+        """Retorna os dados de um pacote salarial pelo ID."""
         query = """
             SELECT
-                s.ID_Salarios,
-                s.ID_Cargos,
-                s.ID_Niveis,
-                s.Salario_Base,
-                s.Periculosidade,
-                s.Insalubridade,
-                s.Ajuda_De_Custo,
-                s.Vale_Refeicao,
-                s.Gratificacao,
-                s.Cesta_Basica,
-                s.Outros_Beneficios,
-                s.Data_Vigencia,
-                c.Nome_Cargo,
-                n.Nome_Nivel,
-                s.Data_Criacao,
-                s.Data_Modificacao
-            FROM
-                salarios s
-            LEFT JOIN
-                cargos c ON s.ID_Cargos = c.ID_Cargos
-            LEFT JOIN
-                niveis n ON s.ID_Niveis = n.ID_Niveis
+                s.ID_Salarios, s.ID_Cargos, s.ID_Niveis, s.Salario_Base, s.Periculosidade,
+                s.Insalubridade, s.Ajuda_De_Custo, s.Vale_Refeicao, s.Gratificacao, s.Cesta_Basica,
+                s.Outros_Beneficios, s.Data_Vigencia, c.Nome_Cargo, n.Nome_Nivel,
+                s.Data_Criacao, s.Data_Modificacao
+            FROM salarios s
+            LEFT JOIN cargos c ON s.ID_Cargos = c.ID_Cargos
+            LEFT JOIN niveis n ON s.ID_Niveis = n.ID_Niveis
             WHERE s.ID_Salarios = %s
         """
         result = self.db.execute_query(query, (salario_id,), fetch_results=True)
@@ -876,48 +673,33 @@ class PessoalManager:
         return None
 
     def update_salario(self, salario_id, id_cargos, id_niveis, salario_base, periculosidade, insalubridade, ajuda_de_custo, vale_refeicao, gratificacao, cesta_basica, outros_beneficios, data_vigencia):
-        """
-        Atualiza os dados de um pacote salarial existente.
-        """
+        """Atualiza os dados de um pacote salarial existente."""
         query = """
             UPDATE salarios
             SET
-                ID_Cargos = %s,
-                ID_Niveis = %s,
-                Salario_Base = %s,
-                Periculosidade = %s,
-                Insalubridade = %s,
-                Ajuda_De_Custo = %s,
-                Vale_Refeicao = %s,
-                Gratificacao = %s,
-                Cesta_Basica = %s,
-                Outros_Beneficios = %s,
-                Data_Vigencia = %s,
-                Data_Modificacao = NOW()
+                ID_Cargos = %s, ID_Niveis = %s, Salario_Base = %s, Periculosidade = %s, Insalubridade = %s,
+                Ajuda_De_Custo = %s, Vale_Refeicao = %s, Gratificacao = %s, Cesta_Basica = %s,
+                Outros_Beneficios = %s, Data_Vigencia = %s, Data_Modificacao = NOW()
             WHERE ID_Salarios = %s
         """
         params = (id_cargos, id_niveis, salario_base, periculosidade, insalubridade, ajuda_de_custo, vale_refeicao, gratificacao, cesta_basica, outros_beneficios, data_vigencia, salario_id)
         return self.db.execute_query(query, params, fetch_results=False)
 
     def delete_salario(self, salario_id):
-        """
-        Exclui um pacote salarial do banco de dados.
-        """
-        # Nota: Não há FK direta de funcionarios para salarios,
-        # então a exclusão é mais simples.
+        """Exclui um pacote salarial do banco de dados."""
         query = "DELETE FROM salarios WHERE ID_Salarios = %s"
         return self.db.execute_query(query, (salario_id,), fetch_results=False)
 
     def get_salario_by_cargo_nivel_vigencia(self, id_cargos, id_niveis, data_vigencia):
-        """
-        Verifica se já existe um pacote salarial para a mesma combinação de cargo, nível e data de vigência.
-        """
+        """Verifica se já existe um pacote salarial para a mesma combinação de cargo, nível e data de vigência."""
         query = "SELECT ID_Salarios FROM salarios WHERE ID_Cargos = %s AND ID_Niveis = %s AND Data_Vigencia = %s"
         result = self.db.execute_query(query, (id_cargos, id_niveis, data_vigencia), fetch_results=True)
         return result[0] if result else None
 
+    # ==================================================================================================================================
+    # === MÉTODOS DO SUBMÓDULO: FÉRIAS =================================================================================================
+    # ==================================================================================================================================
 
-    # --- NOVOS MÉTODOS DE FÉRIAS ---
     def get_all_ferias(self, search_matricula=None, search_status=None, search_periodo_inicio=None, search_periodo_fim=None):
         """
         Retorna uma lista de todos os registros de férias, opcionalmente filtrada,
@@ -925,22 +707,11 @@ class PessoalManager:
         """
         query = """
             SELECT
-                f.ID_Ferias,
-                f.Matricula_Funcionario,
-                f.Periodo_Aquisitivo_Inicio,
-                f.Periodo_Aquisitivo_Fim,
-                f.Data_Inicio_Gozo,
-                f.Data_Fim_Gozo,
-                f.Dias_Gozo,
-                f.Status_Ferias,
-                f.Observacoes,
-                func.Nome_Completo AS Nome_Funcionario,
-                f.Data_Criacao,
-                f.Data_Modificacao
-            FROM
-                ferias f
-            LEFT JOIN
-                funcionarios func ON f.Matricula_Funcionario = func.Matricula
+                f.ID_Ferias, f.Matricula_Funcionario, f.Periodo_Aquisitivo_Inicio, f.Periodo_Aquisitivo_Fim,
+                f.Data_Inicio_Gozo, f.Data_Fim_Gozo, f.Dias_Gozo, f.Status_Ferias, f.Observacoes,
+                func.Nome_Completo AS Nome_Funcionario, f.Data_Criacao, f.Data_Modificacao
+            FROM ferias f
+            LEFT JOIN funcionarios func ON f.Matricula_Funcionario = func.Matricula
             WHERE 1=1
         """
         params = []
@@ -966,9 +737,7 @@ class PessoalManager:
         return results
 
     def add_ferias(self, matricula_funcionario, periodo_aquisitivo_inicio, periodo_aquisitivo_fim, data_inicio_gozo, data_fim_gozo, dias_gozo, status_ferias, observacoes):
-        """
-        Adiciona um novo registro de férias ao banco de dados.
-        """
+        """Adiciona um novo registro de férias ao banco de dados."""
         query = """
             INSERT INTO ferias (Matricula_Funcionario, Periodo_Aquisitivo_Inicio, Periodo_Aquisitivo_Fim, Data_Inicio_Gozo, Data_Fim_Gozo, Dias_Gozo, Status_Ferias, Observacoes, Data_Criacao, Data_Modificacao)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
@@ -977,27 +746,14 @@ class PessoalManager:
         return self.db.execute_query(query, params, fetch_results=False)
 
     def get_ferias_by_id(self, ferias_id):
-        """
-        Retorna os dados de um registro de férias pelo ID.
-        """
+        """Retorna os dados de um registro de férias pelo ID."""
         query = """
             SELECT
-                f.ID_Ferias,
-                f.Matricula_Funcionario,
-                f.Periodo_Aquisitivo_Inicio,
-                f.Periodo_Aquisitivo_Fim,
-                f.Data_Inicio_Gozo,
-                f.Data_Fim_Gozo,
-                f.Dias_Gozo,
-                f.Status_Ferias,
-                f.Observacoes,
-                func.Nome_Completo AS Nome_Funcionario,
-                f.Data_Criacao,
-                f.Data_Modificacao
-            FROM
-                ferias f
-            LEFT JOIN
-                funcionarios func ON f.Matricula_Funcionario = func.Matricula
+                f.ID_Ferias, f.Matricula_Funcionario, f.Periodo_Aquisitivo_Inicio, f.Periodo_Aquisitivo_Fim,
+                f.Data_Inicio_Gozo, f.Data_Fim_Gozo, f.Dias_Gozo, f.Status_Ferias, f.Observacoes,
+                func.Nome_Completo AS Nome_Funcionario, f.Data_Criacao, f.Data_Modificacao
+            FROM ferias f
+            LEFT JOIN funcionarios func ON f.Matricula_Funcionario = func.Matricula
             WHERE f.ID_Ferias = %s
         """
         result = self.db.execute_query(query, (ferias_id,), fetch_results=True)
@@ -1006,34 +762,27 @@ class PessoalManager:
         return None
 
     def update_ferias(self, ferias_id, matricula_funcionario, periodo_aquisitivo_inicio, periodo_aquisitivo_fim, data_inicio_gozo, data_fim_gozo, dias_gozo, status_ferias, observacoes):
-        """
-        Atualiza os dados de um registro de férias existente.
-        """
+        """Atualiza os dados de um registro de férias existente."""
         query = """
             UPDATE ferias
             SET
-                Matricula_Funcionario = %s,
-                Periodo_Aquisitivo_Inicio = %s,
-                Periodo_Aquisitivo_Fim = %s,
-                Data_Inicio_Gozo = %s,
-                Data_Fim_Gozo = %s,
-                Dias_Gozo = %s,
-                Status_Ferias = %s,
-                Observacoes = %s,
-                Data_Modificacao = NOW()
+                Matricula_Funcionario = %s, Periodo_Aquisitivo_Inicio = %s, Periodo_Aquisitivo_Fim = %s,
+                Data_Inicio_Gozo = %s, Data_Fim_Gozo = %s, Dias_Gozo = %s, Status_Ferias = %s,
+                Observacoes = %s, Data_Modificacao = NOW()
             WHERE ID_Ferias = %s
         """
         params = (matricula_funcionario, periodo_aquisitivo_inicio, periodo_aquisitivo_fim, data_inicio_gozo, data_fim_gozo, dias_gozo, status_ferias, observacoes, ferias_id)
         return self.db.execute_query(query, params, fetch_results=False)
 
     def delete_ferias(self, ferias_id):
-        """
-        Exclui um registro de férias do banco de dados.
-        """
+        """Exclui um registro de férias do banco de dados."""
         query = "DELETE FROM ferias WHERE ID_Ferias = %s"
         return self.db.execute_query(query, (ferias_id,), fetch_results=False)
     
-     # --- NOVOS MÉTODOS DE DEPENDENTES ---
+    # ==================================================================================================================================
+    # === MÉTODOS DO SUBMÓDULO: DEPENDENTES ============================================================================================
+    # ==================================================================================================================================
+
     def get_all_dependentes(self, search_matricula=None, search_nome=None, search_parentesco=None):
         """
         Retorna uma lista de todos os dependentes, opcionalmente filtrada,
@@ -1041,22 +790,11 @@ class PessoalManager:
         """
         query = """
             SELECT
-                d.ID_Dependente,
-                d.Matricula_Funcionario,
-                d.Nome_Completo,
-                d.Parentesco,
-                d.Data_Nascimento,
-                d.Cpf,
-                d.Contato_Emergencia,
-                d.Telefone_Emergencia,
-                d.Observacoes,
-                func.Nome_Completo AS Nome_Funcionario,
-                d.Data_Criacao,
-                d.Data_Modificacao
-            FROM
-                dependentes d
-            LEFT JOIN
-                funcionarios func ON d.Matricula_Funcionario = func.Matricula
+                d.ID_Dependente, d.Matricula_Funcionario, d.Nome_Completo, d.Parentesco, d.Data_Nascimento,
+                d.Cpf, d.Contato_Emergencia, d.Telefone_Emergencia, d.Observacoes,
+                func.Nome_Completo AS Nome_Funcionario, d.Data_Criacao, d.Data_Modificacao
+            FROM dependentes d
+            LEFT JOIN funcionarios func ON d.Matricula_Funcionario = func.Matricula
             WHERE 1=1
         """
         params = []
@@ -1079,9 +817,7 @@ class PessoalManager:
         return results
 
     def add_dependente(self, matricula_funcionario, nome_completo, parentesco, data_nascimento, cpf, contato_emergencia, telefone_emergencia, observacoes):
-        """
-        Adiciona um novo dependente ao banco de dados.
-        """
+        """Adiciona um novo dependente ao banco de dados."""
         query = """
             INSERT INTO dependentes (Matricula_Funcionario, Nome_Completo, Parentesco, Data_Nascimento, Cpf, Contato_Emergencia, Telefone_Emergencia, Observacoes, Data_Criacao, Data_Modificacao)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
@@ -1090,27 +826,14 @@ class PessoalManager:
         return self.db.execute_query(query, params, fetch_results=False)
 
     def get_dependente_by_id(self, dependente_id):
-        """
-        Retorna os dados de um dependente pelo ID.
-        """
+        """Retorna os dados de um dependente pelo ID."""
         query = """
             SELECT
-                d.ID_Dependente,
-                d.Matricula_Funcionario,
-                d.Nome_Completo,
-                d.Parentesco,
-                d.Data_Nascimento,
-                d.Cpf,
-                d.Contato_Emergencia,
-                d.Telefone_Emergencia,
-                d.Observacoes,
-                func.Nome_Completo AS Nome_Funcionario,
-                d.Data_Criacao,
-                d.Data_Modificacao
-            FROM
-                dependentes d
-            LEFT JOIN
-                funcionarios func ON d.Matricula_Funcionario = func.Matricula
+                d.ID_Dependente, d.Matricula_Funcionario, d.Nome_Completo, d.Parentesco, d.Data_Nascimento,
+                d.Cpf, d.Contato_Emergencia, d.Telefone_Emergencia, d.Observacoes,
+                func.Nome_Completo AS Nome_Funcionario, d.Data_Criacao, d.Data_Modificacao
+            FROM dependentes d
+            LEFT JOIN funcionarios func ON d.Matricula_Funcionario = func.Matricula
             WHERE d.ID_Dependente = %s
         """
         result = self.db.execute_query(query, (dependente_id,), fetch_results=True)
@@ -1119,20 +842,12 @@ class PessoalManager:
         return None
 
     def update_dependente(self, dependente_id, matricula_funcionario, nome_completo, parentesco, data_nascimento, cpf, contato_emergencia, telefone_emergencia, observacoes):
-        """
-        Atualiza os dados de um dependente existente.
-        """
+        """Atualiza os dados de um dependente existente."""
         query = """
             UPDATE dependentes
             SET
-                Matricula_Funcionario = %s,
-                Nome_Completo = %s,
-                Parentesco = %s,
-                Data_Nascimento = %s,
-                Cpf = %s,
-                Contato_Emergencia = %s,
-                Telefone_Emergencia = %s,
-                Observacoes = %s,
+                Matricula_Funcionario = %s, Nome_Completo = %s, Parentesco = %s, Data_Nascimento = %s,
+                Cpf = %s, Contato_Emergencia = %s, Telefone_Emergencia = %s, Observacoes = %s,
                 Data_Modificacao = NOW()
             WHERE ID_Dependente = %s
         """
@@ -1140,16 +855,12 @@ class PessoalManager:
         return self.db.execute_query(query, params, fetch_results=False)
 
     def delete_dependente(self, dependente_id):
-        """
-        Exclui um dependente do banco de dados.
-        """
+        """Exclui um dependente do banco de dados."""
         query = "DELETE FROM dependentes WHERE ID_Dependente = %s"
         return self.db.execute_query(query, (dependente_id,), fetch_results=False)
 
     def get_dependente_by_cpf(self, cpf, exclude_id=None):
-        """
-        Verifica se um dependente com o dado CPF já existe (para CPF único).
-        """
+        """Verifica se um dependente com o dado CPF já existe (para CPF único)."""
         query = "SELECT ID_Dependente FROM dependentes WHERE Cpf = %s"
         params = [cpf]
         if exclude_id:
@@ -1157,3 +868,88 @@ class PessoalManager:
             params.append(exclude_id)
         result = self.db.execute_query(query, tuple(params), fetch_results=True)
         return result[0] if result else None
+
+    # ==================================================================================================================================
+    # === MÉTODOS PARA DASHBOARD E RELATÓRIOS (MÓDULO PESSOAL) =========================================================================
+    # ==================================================================================================================================
+
+    def get_funcionario_status_counts(self):
+        """Retorna a contagem de funcionários por status."""
+        query = "SELECT Status, COUNT(*) AS Total FROM funcionarios GROUP BY Status"
+        results = self.db.execute_query(query, fetch_results=True)
+        return {item['Status']: item['Total'] for item in results} if results else {}
+
+    def get_funcionarios_by_cargo(self):
+        """Retorna a contagem de funcionários por cargo."""
+        query = """
+            SELECT c.Nome_Cargo, COUNT(f.Matricula) AS Total
+            FROM funcionarios f
+            JOIN cargos c ON f.ID_Cargos = c.ID_Cargos
+            GROUP BY c.Nome_Cargo
+            ORDER BY Total DESC
+        """
+        results = self.db.execute_query(query, fetch_results=True)
+        return results if results else []
+
+    def get_funcionarios_by_nivel(self):
+        """Retorna a contagem de funcionários por nível."""
+        query = """
+            SELECT n.Nome_Nivel, COUNT(f.Matricula) AS Total
+            FROM funcionarios f
+            JOIN niveis n ON f.ID_Niveis = n.ID_Niveis
+            GROUP BY n.Nome_Nivel
+            ORDER BY Total DESC
+        """
+        results = self.db.execute_query(query, fetch_results=True)
+        return results if results else []
+
+    def get_proximas_ferias(self, dias_antecedencia=60):
+        """Retorna uma lista de funcionários com férias programadas para os próximos dias_antecedencia."""
+        hoje = date.today()
+        data_limite = hoje + timedelta(days=dias_antecedencia)
+        query = """
+            SELECT
+                f.Matricula, f.Nome_Completo,
+                fe.Data_Inicio_Gozo, fe.Data_Fim_Gozo, fe.Dias_Gozo, fe.Status_Ferias
+            FROM ferias fe
+            JOIN funcionarios f ON fe.Matricula_Funcionario = f.Matricula
+            WHERE fe.Data_Inicio_Gozo BETWEEN %s AND %s
+            ORDER BY fe.Data_Inicio_Gozo ASC
+        """
+        params = (hoje, data_limite)
+        results = self.db.execute_query(query, params=params, fetch_results=True)
+        return results if results else []
+    
+    def get_aniversariantes_do_mes(self, mes=None):
+        """
+        Retorna uma lista de funcionários que fazem aniversário no mês especificado.
+        Se 'mes' for None, usa o mês atual.
+        """
+        if mes is None:
+            mes = date.today().month
+
+        query = """
+            SELECT
+                fd.Matricula_Funcionario AS Matricula,
+                f.Nome_Completo,
+                fd.Data_Nascimento,
+                c.Nome_Cargo,
+                fd.Naturalidade -- Adicionado naturalidade ao retorno
+            FROM
+                funcionarios_documentos fd
+            JOIN
+                funcionarios f ON fd.Matricula_Funcionario = f.Matricula
+            LEFT JOIN
+                cargos c ON f.ID_Cargos = c.ID_Cargos
+            WHERE
+                fd.Data_Nascimento IS NOT NULL AND -- Garante que a data de nascimento existe
+                MONTH(fd.Data_Nascimento) = %s AND
+                f.Status = 'Ativo'
+            ORDER BY
+                DAY(fd.Data_Nascimento), f.Nome_Completo
+        """
+        results = self.db.execute_query(query, (mes,), fetch_results=True)
+        
+        if results:
+            return [self._format_date_fields(item) for item in results]
+        return []
