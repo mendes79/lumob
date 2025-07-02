@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Períodos de Experiência à Vencer - LUMOB</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/form.css') }}"
+    />
+    <style>
+      /* Estilos básicos para a tabela. Você pode movê-los para um arquivo CSS externo */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+      .alert-info {
+        background-color: #d1ecf1;
+        color: #0c5460;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+      }
+      /* Estilos para mensagens flash, se não estiverem em style.css */
+      .flash-messages {
+        list-style: none;
+        padding: 0;
+        margin-bottom: 20px;
+      }
+      .flash-messages li {
+        padding: 10px 15px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        font-weight: bold;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+      .flash-messages .success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .flash-messages .danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .flash-messages .warning {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeeba;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Períodos de Experiência à Vencer</h1>
+      <nav>
+        <a href="{{ url_for('welcome') }}">Início</a> |
+        <a href="{{ url_for('pessoal_module') }}">Módulo Pessoal</a> |
+        <a href="{{ url_for('pessoal_dashboard') }}">Dashboard de Pessoal</a> |
+        <a href="{{ url_for('pessoal_aniversariantes') }}">Aniversariantes</a> |
+        <a href="{{ url_for('logout') }}">Sair</a>
+      </nav>
+    </header>
+
+    <main>
+      <h2>Alertas de Período de Experiência</h2>
+
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %}
+      <ul class="flash-messages">
+        {% for category, message in messages %}
+        <li class="{{ category }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %} {% endwith %} {% if periodos_a_vencer %}
+      <div class="alert-info">
+        Funcionários com período de experiência próximo do vencimento (últimos
+        15 dias para o 1º período e últimos 30 dias para o 2º período).
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Matrícula</th>
+            <th>Nome Completo</th>
+            <th>Cargo</th>
+            <th>Data Admissão</th>
+            <th>Tipo Vencimento</th>
+            <th>Data Vencimento</th>
+            <th>Dias Restantes</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for alerta in periodos_a_vencer %}
+          <tr>
+            <td>{{ alerta.Matricula }}</td>
+            <td>{{ alerta.Nome_Completo }}</td>
+            <td>{{ alerta.Nome_Cargo | default('N/A', true) }}</td>
+            <td>
+              {{ alerta.Data_Admissao.strftime('%d/%m/%Y') if
+              alerta.Data_Admissao else 'N/A' }}
+            </td>
+            <td>{{ alerta.Tipo_Vencimento }}</td>
+            <td>
+              {{ alerta.Data_Vencimento.strftime('%d/%m/%Y') if
+              alerta.Data_Vencimento else 'N/A' }}
+            </td>
+            <td>
+              {% if alerta.Dias_Restantes is not none %} {% if
+              alerta.Dias_Restantes >= 0 %} {{ alerta.Dias_Restantes }} dias {%
+              else %} Vencido há {{ alerta.Dias_Restantes | abs }} dias {% endif
+              %} {% else %} N/A {% endif %}
+            </td>
+            <td>{{ alerta.Status }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p>
+        Não há funcionários com período de experiência próximo do vencimento ou
+        vencido nos períodos de alerta definidos.
+      </p>
+      {% endif %}
+    </main>
+
+    <footer>
+      <p>&copy; 2025 LUMOB - Sistema de Gestão Interna</p>
+    </footer>
+  </body>
+</html>

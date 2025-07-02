@@ -778,7 +778,7 @@ class PessoalManager:
         """Exclui um registro de férias do banco de dados."""
         query = "DELETE FROM ferias WHERE ID_Ferias = %s"
         return self.db.execute_query(query, (ferias_id,), fetch_results=False)
-    
+          
     # ==================================================================================================================================
     # === MÉTODOS DO SUBMÓDULO: DEPENDENTES ============================================================================================
     # ==================================================================================================================================
@@ -953,3 +953,166 @@ class PessoalManager:
         if results:
             return [self._format_date_fields(item) for item in results]
         return []
+    
+    # ----------------------------------------------------------------------------------------------------------------------------------
+    # --- NOVO MÉTODO: Períodos de Experiência à Vencer -------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------------------------------------------
+    def get_periodos_experiencia_a_vencer(self):
+        """
+        Retorna funcionários com períodos de experiência (30 ou 90 dias) próximos do vencimento
+        (até 15 dias antes) ou recém-vencidos (até 7 dias depois).
+        Assume período de 90 dias total, com um primeiro vencimento opcional aos 30 dias.
+        """
+        hoje = date.today()
+        
+        # Definindo as janelas de alerta conforme sua solicitação
+        alerta_futuro_dias = 15
+        alerta_passado_dias = 7
+
+        query = """
+            SELECT
+                f.Matricula,
+                f.Nome_Completo,
+                f.Data_Admissao,
+                c.Nome_Cargo,
+                f.Status
+            FROM
+                funcionarios f
+            LEFT JOIN
+                cargos c ON f.ID_Cargos = c.ID_Cargos
+            WHERE
+                f.Status = 'Ativo' -- Apenas funcionários ativos
+            ORDER BY
+                f.Data_Admissao ASC
+        """
+        
+        funcionarios = self.db.execute_query(query, fetch_results=True)
+        
+        alertas = []
+        if funcionarios:
+            for func in funcionarios:
+                data_admissao = func['Data_Admissao']
+                
+                if data_admissao:
+                    # Calcula as datas de vencimento dos períodos
+                    vencimento_30_dias = data_admissao + timedelta(days=30)
+                    vencimento_90_dias = data_admissao + timedelta(days=90)
+
+                    # Lógica para o 1º Período (30 Dias)
+                    # Alerta se estiver nos próximos 15 dias OU se venceu nos últimos 7 dias
+                    if (vencimento_30_dias >= hoje and vencimento_30_dias <= hoje + timedelta(days=alerta_futuro_dias)) or \
+                       (vencimento_30_dias < hoje and hoje <= vencimento_30_dias + timedelta(days=alerta_passado_dias)):
+                        
+                        # Adiciona o alerta apenas se o 2º período ainda não venceu, para evitar alertas de 30 dias de funcionários já no período de 90
+                        if hoje < vencimento_90_dias: 
+                            alerta = func.copy()
+                            alerta['Tipo_Vencimento'] = '1º Período de Experiência (30 Dias)'
+                            alerta['Data_Vencimento'] = vencimento_30_dias
+                            alerta['Dias_Restantes'] = (vencimento_30_dias - hoje).days
+                            alertas.append(alerta)
+                    
+                    # Lógica para o 2º Período (90 Dias - Fim)
+                    # Alerta se estiver nos próximos 15 dias OU se venceu nos últimos 7 dias
+                    if (vencimento_90_dias >= hoje and vencimento_90_dias <= hoje + timedelta(days=alerta_futuro_dias)) or \
+                       (vencimento_90_dias < hoje and hoje <= vencimento_90_dias + timedelta(days=alerta_passado_dias)):
+                        
+                        # Evita duplicidade se o alerta de 30 e 90 dias caírem no mesmo "dias_alerta" para o mesmo funcionário
+                        # e garante que o alerta de 90 dias é o mais relevante se ambos se aplicarem
+                        # A lógica de desduplicação pode ser mais robusta se necessário, mas para este caso,
+                        # um simples 'if' para evitar o 30dias se o 90dias já está em alerta pode ser suficiente.
+                        # Ou podemos usar um set para garantir unicidade por (Matricula, Tipo_Vencimento)
+                        
+                        # Para evitar duplicatas e priorizar o alerta de 90 dias se ambos forem válidos
+                        # e caírem na mesma janela de alerta para o mesmo funcionário:
+                        # Se o alerta de 30 dias já foi adicionado para este funcionário, e o alerta de 90 dias é mais recente/relevante,
+                        # podemos substituir ou garantir que apenas um seja exibido.
+                        # Para simplicidade e seguindo a solicitação de "não poluir", vamos garantir que o alerta de 90 dias
+                        # seja o último a ser adicionado se ambos se aplicarem, e remover o de 30 dias se o de 90 dias for mais relevante.
+                        
+                        # Uma forma mais limpa de evitar duplicatas e priorizar o alerta de 90 dias:
+                        # Crie uma lista temporária para o funcionário atual e adicione o alerta de 90 dias.
+                        # Se o alerta de 30 dias já foi adicionado e o de 90 dias também se aplica,
+                        # o de 90 dias é geralmente mais crítico.
+                        
+                        # Para garantir que não haja alertas duplicados para o mesmo funcionário no mesmo tipo de vencimento
+                        # e que a prioridade seja o vencimento mais próximo ou o de 90 dias se ambos caírem na janela:
+                        
+                        # Verifica se já existe um alerta de 30 dias para este funcionário e se o alerta de 90 dias é mais iminente/relevante
+                        # (ex: se o de 90 dias está mais próximo de hoje do que o de 30 dias, ou se o de 30 dias já passou e o de 90 está na janela)
+                        
+                        # Uma abordagem mais simples para evitar poluição: se o 90 dias está na janela, apenas mostre ele.
+                        # Isso pode ser feito garantindo que o 30 dias só apareça se o 90 dias *não* estiver na janela de alerta.
+                        
+                        # Melhorando a lógica de exclusão/priorização:
+                        # Se o alerta de 90 dias está na janela, ele é o mais importante.
+                        # Remove qualquer alerta de 30 dias para o mesmo funcionário que possa ter sido adicionado antes.
+                        alertas = [a for a in alertas if not (a['Matricula'] == func['Matricula'] and a['Tipo_Vencimento'] == '1º Período de Experiência (30 Dias)')]
+
+                        alerta = func.copy()
+                        alerta['Tipo_Vencimento'] = '2º Período de Experiência (90 Dias - Fim)'
+                        alerta['Data_Vencimento'] = vencimento_90_dias
+                        alerta['Dias_Restantes'] = (vencimento_90_dias - hoje).days
+                        alertas.append(alerta)
+        
+        # Opcional: Ordenar por Data_Vencimento para melhor visualização
+        alertas.sort(key=lambda x: x['Data_Vencimento'])
+
+        # Formata as datas no retorno
+        return [self._format_date_fields(item) for item in alertas]
+
+    # ----------------------------------------------------------------------------------------------------------------------------------
+    # --- NOVO MÉTODO: Vencimento de Documentos e Contratos ---------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------------------------------------------
+    def get_documentos_contratos_a_vencer(self, dias_alerta_futuro=30, dias_alerta_passado=7):
+        """
+        Retorna funcionários com documentos ou contratos específicos próximos do vencimento
+        (nos próximos 'dias_alerta_futuro' dias) ou recém-vencidos (nos últimos 'dias_alerta_passado' dias).
+        Foco inicial em CNH.
+        """
+        hoje = date.today()
+        
+        query = """
+            SELECT
+                f.Matricula,
+                f.Nome_Completo,
+                f.Data_Admissao,
+                c.Nome_Cargo,
+                f.Status,
+                fd.Cnh_Numero,
+                fd.Cnh_DataValidade
+            FROM
+                funcionarios f
+            LEFT JOIN
+                cargos c ON f.ID_Cargos = c.ID_Cargos
+            LEFT JOIN
+                funcionarios_documentos fd ON f.Matricula = fd.Matricula_Funcionario
+            WHERE
+                f.Status = 'Ativo' AND -- Apenas funcionários ativos
+                fd.Cnh_DataValidade IS NOT NULL -- Apenas documentos com data de validade
+            ORDER BY
+                fd.Cnh_DataValidade ASC, f.Nome_Completo ASC
+        """
+        
+        documentos_cnh = self.db.execute_query(query, fetch_results=True)
+        
+        alertas = []
+        if documentos_cnh:
+            for doc in documentos_cnh:
+                data_validade = doc['Cnh_DataValidade']
+                
+                if data_validade:
+                    # Verifica se a CNH está próxima do vencimento ou recém-vencida
+                    if (data_validade >= hoje and data_validade <= hoje + timedelta(days=dias_alerta_futuro)) or \
+                       (data_validade < hoje and hoje <= data_validade + timedelta(days=dias_alerta_passado)):
+                        
+                        alerta = doc.copy()
+                        alerta['Tipo_Documento_Contrato'] = 'CNH'
+                        alerta['Numero_Documento_Contrato'] = doc['Cnh_Numero']
+                        alerta['Data_Vencimento_Contrato'] = data_validade
+                        alerta['Dias_Restantes'] = (data_validade - hoje).days
+                        alertas.append(alerta)
+        
+        # Futuramente, podemos adicionar lógica para outros tipos de documentos ou contratos aqui,
+        # consultando outras tabelas ou outras colunas de funcionarios_documentos.
+
+        return [self._format_date_fields(item) for item in alertas]

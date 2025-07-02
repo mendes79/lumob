@@ -250,6 +250,70 @@ def pessoal_aniversariantes():
         print(f"Erro inesperado em pessoal_aniversariantes: {e}")
         return redirect(url_for('pessoal_module'))
 
+# |-------------------------------------------------- DATAS DE EXPERIÊNCIA À VENCER ----------------------------------|
+
+@app.route('/pessoal/experiencia_a_vencer')
+@login_required
+def pessoal_experiencia_a_vencer():
+    if not current_user.can_access_module('Pessoal'):
+        flash('Acesso negado. Você não tem permissão para acessar o Relatório de Período de Experiência.', 'warning')
+        return redirect(url_for('welcome'))
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            
+            # CHAME O MÉTODO SEM PARÂMETROS
+            periodos_a_vencer = pessoal_manager.get_periodos_experiencia_a_vencer()
+
+            return render_template(
+                'pessoal/experiencia_a_vencer_module.html',
+                user=current_user,
+                periodos_a_vencer=periodos_a_vencer,
+                hoje=date.today()
+            )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados ao carregar períodos de experiência: {e}", 'danger')
+        print(f"Erro de banco de dados em pessoal_experiencia_a_vencer: {e}")
+        return redirect(url_for('pessoal_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado ao carregar períodos de experiência: {e}", 'danger')
+        print(f"Erro inesperado em pessoal_experiencia_a_vencer: {e}")
+        return redirect(url_for('pessoal_module'))
+
+# |--------------------------------------------- DOCUMENTOS À VENCER, COMO CNH PARA MOTORISTAS ------------------------------|
+@app.route('/pessoal/documentos_a_vencer')
+@login_required
+def pessoal_documentos_a_vencer():
+    if not current_user.can_access_module('Pessoal'):
+        flash('Acesso negado. Você não tem permissão para acessar o Relatório de Documentos e Contratos a Vencer.', 'warning')
+        return redirect(url_for('welcome'))
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            pessoal_manager = PessoalManager(db_base)
+            
+            # Chama o novo método para obter os alertas de documentos/contratos
+            documentos_a_vencer = pessoal_manager.get_documentos_contratos_a_vencer(
+                dias_alerta_futuro=30,  # Alerta para vencimentos nos próximos 30 dias
+                dias_alerta_passado=7   # Alerta para vencimentos que ocorreram nos últimos 7 dias
+            )
+
+            return render_template(
+                'pessoal/documentos_a_vencer_module.html', # Novo template que criaremos
+                user=current_user,
+                documentos_a_vencer=documentos_a_vencer,
+                hoje=date.today()
+            )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados ao carregar documentos e contratos a vencer: {e}", 'danger')
+        print(f"Erro de banco de dados em pessoal_documentos_a_vencer: {e}")
+        return redirect(url_for('pessoal_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado ao carregar documentos e contratos a vencer: {e}", 'danger')
+        print(f"Erro inesperado em pessoal_documentos_a_vencer: {e}")
+        return redirect(url_for('pessoal_module'))
+
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # $  MÓDULO PESSOAL - WELCOME  $
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -336,7 +400,7 @@ def add_funcionario():
                 data_nascimento_str = request.form.get('data_nascimento', '').strip()
                 estado_civil = request.form.get('estado_civil', '').strip()
                 nacionalidade = request.form.get('nacionalidade', '').strip()
-                naturalidade = request.form.get('naturalidade', '').strip() # NOVO: Naturalidade
+                naturalidade = request.form.get('naturalidade', '').strip()
                 genero = request.form.get('genero', '').strip()
 
                 rg_numero = request.form.get('rg_numero', '').strip()
@@ -360,8 +424,8 @@ def add_funcionario():
                 titeleitor_zona = request.form.get('titeleitor_zona', '').strip()
                 titeleitor_secao = request.form.get('titeleitor_secao', '').strip()
                 
-                observacoes_doc = request.form.get('observacoes_doc', '').strip() # NOVO: Observacoes gerais dos documentos
-                link_foto = request.form.get('link_foto', '').strip() # NOVO: Link para Foto
+                observacoes_doc = request.form.get('observacoes_doc', '').strip()
+                link_foto = request.form.get('link_foto', '').strip()
 
                 # --- Endereços e Contatos (Mantidos como estão, mas revisar os parâmetros) ---
                 logradouro = request.form.get('logradouro', '').strip()
@@ -374,6 +438,42 @@ def add_funcionario():
 
                 tel_principal = request.form.get('tel_principal', '').strip()
                 email_pessoal = request.form.get('email_pessoal', '').strip()
+
+                # --- NOVO: Padronização e Validação para campos ENUM (Estado Civil e Gênero) ---
+                valid_estado_civil_options = ['Solteiro(a)', 'Casado(a)', 'Divorciado(a)', 'Viuvo(a)', 'Uniao Estavel']
+                valid_genero_options = ['Masculino', 'Feminino', 'Outro', 'Prefiro nao informar']
+
+                # Valida Estado Civil
+                if estado_civil and estado_civil not in valid_estado_civil_options:
+                    flash('Valor inválido para Estado Civil. Selecione uma opção válida.', 'danger')
+                    return render_template(
+                        'pessoal/funcionarios/add_funcionario.html',
+                        user=current_user,
+                        all_cargos=pessoal_manager.get_all_cargos_for_dropdown(),
+                        all_niveis=pessoal_manager.get_all_niveis_for_dropdown(),
+                        status_options=['Ativo', 'Inativo', 'Ferias', 'Afastado'],
+                        estado_civil_options=valid_estado_civil_options, # Passa as opções válidas
+                        genero_options=valid_genero_options, # Passa as opções válidas
+                        form_data=request.form.to_dict()
+                    )
+                
+                # Valida Gênero
+                if genero and genero not in valid_genero_options:
+                    flash('Valor inválido para Gênero. Selecione uma opção válida.', 'danger')
+                    return render_template(
+                        'pessoal/funcionarios/add_funcionario.html',
+                        user=current_user,
+                        all_cargos=pessoal_manager.get_all_cargos_for_dropdown(),
+                        all_niveis=pessoal_manager.get_all_niveis_for_dropdown(),
+                        status_options=['Ativo', 'Inativo', 'Ferias', 'Afastado'],
+                        estado_civil_options=valid_estado_civil_options,
+                        genero_options=valid_genero_options,
+                        form_data=request.form.to_dict()
+                    )
+
+                # Converte strings vazias para None para campos ENUM (se a coluna no DB for NULLable)
+                estado_civil = estado_civil if estado_civil else None
+                genero = genero if genero else None
 
                 # --- Validação e Conversão de Datas ---
                 # A função _format_date_fields agora lida com strings para objetos date.
@@ -564,46 +664,42 @@ def edit_funcionario(matricula):
             pessoal_manager = PessoalManager(db_base)
             
             # Sempre obtenha os dados do funcionário principal e seus relacionamentos consolidados
-            # Este método agora já traz os dados da nova tabela 'funcionarios_documentos'
             funcionario = pessoal_manager.get_funcionario_by_matricula(matricula)
             
             if not funcionario:
                 flash('Funcionário não encontrado.', 'danger')
                 return redirect(url_for('funcionarios_module'))
 
-            # Carrega as opções para os dropdowns, independentemente do método (GET/POST)
+            # --- Mover as definições de opções para um escopo acessível por GET e POST ---
             all_cargos = pessoal_manager.get_all_cargos_for_dropdown()
             all_niveis = pessoal_manager.get_all_niveis_for_dropdown()
             status_options = ['Ativo', 'Inativo', 'Ferias', 'Afastado']
+            
+            # NOVO: Definir estas listas aqui para que sejam acessíveis no GET e no POST
             estado_civil_options = ['Solteiro(a)', 'Casado(a)', 'Divorciado(a)', 'Viuvo(a)', 'Uniao Estavel']
             genero_options = ['Masculino', 'Feminino', 'Outro', 'Prefiro nao informar']
 
             if request.method == 'POST':
-                # No POST, os dados vêm do formulário (request.form)
-                form_data_received = request.form.to_dict() # Coleta todos os dados do formulário
+                form_data_received = request.form.to_dict()
 
-                # --- Validações e Coleta de Dados para Update ---
                 new_matricula = form_data_received.get('matricula', '').strip()
                 nome_completo = form_data_received.get('nome_completo', '').strip()
                 data_admissao_str = form_data_received.get('data_admissao', '').strip()
                 
-                # Conversão de Data de Admissão
                 data_admissao = None
                 if data_admissao_str:
                     try:
                         data_admissao = datetime.strptime(data_admissao_str, '%Y-%m-%d').date()
                     except ValueError:
                         flash('Formato de Data de Admissão inválido. Use AAAA-MM-DD.', 'danger')
-                        # Retorna ao formulário com os dados preenchidos para correção
                         return render_template(
                             'pessoal/funcionarios/edit_funcionario.html',
-                            user=current_user, funcionario=form_data_received, # Passa o form_data para pré-preencher
+                            user=current_user, funcionario=form_data_received, 
                             all_cargos=all_cargos, all_niveis=all_niveis,
-                            status_options=status_options, estado_civil_options=estado_civil_options,
-                            genero_options=genero_options
+                            status_options=status_options, estado_civil_options=estado_civil_options, # AGORA DEFINIDAS
+                            genero_options=genero_options # AGORA DEFINIDAS
                         )
 
-                # Tratamento para ID_Cargos e ID_Niveis
                 try:
                     id_cargos = int(form_data_received.get('id_cargos', 0))
                 except ValueError:
@@ -615,7 +711,6 @@ def edit_funcionario(matricula):
 
                 status = form_data_received.get('status', '').strip()
 
-                # NOVO: Coleta de Dados Pessoais e Documentos (da nova estrutura)
                 data_nascimento_str = form_data_received.get('data_nascimento', '').strip()
                 estado_civil = form_data_received.get('estado_civil', '').strip()
                 nacionalidade = form_data_received.get('nacionalidade', '').strip()
@@ -646,7 +741,32 @@ def edit_funcionario(matricula):
                 observacoes_doc = form_data_received.get('observacoes_doc', '').strip()
                 link_foto = form_data_received.get('link_foto', '').strip()
 
-                # Conversão de Datas para Dados Pessoais/Documentos
+                # --- Validação para campos ENUM (Estado Civil e Gênero) ---
+                # A lista de opções válidas para validação deve ser a mesma que será passada para o template
+                # Use as variáveis que acabamos de definir fora do if/else
+                if estado_civil and estado_civil not in estado_civil_options: # Usar estado_civil_options
+                    flash('Valor inválido para Estado Civil. Selecione uma opção válida.', 'danger')
+                    return render_template(
+                        'pessoal/funcionarios/edit_funcionario.html',
+                        user=current_user, funcionario=form_data_received, 
+                        all_cargos=all_cargos, all_niveis=all_niveis,
+                        status_options=status_options, estado_civil_options=estado_civil_options,
+                        genero_options=genero_options
+                    )
+                
+                if genero and genero not in genero_options: # Usar genero_options
+                    flash('Valor inválido para Gênero. Selecione uma opção válida.', 'danger')
+                    return render_template(
+                        'pessoal/funcionarios/edit_funcionario.html',
+                        user=current_user, funcionario=form_data_received, 
+                        all_cargos=all_cargos, all_niveis=all_niveis,
+                        status_options=status_options, estado_civil_options=estado_civil_options,
+                        genero_options=genero_options
+                    )
+
+                estado_civil = estado_civil if estado_civil else None
+                genero = genero if genero else None
+
                 data_nascimento = None
                 if data_nascimento_str:
                     try:
@@ -689,26 +809,22 @@ def edit_funcionario(matricula):
                             genero_options=genero_options
                         )
 
-                # --- Validação de Campos Obrigatórios ---
                 is_valid = True
                 if not all([new_matricula, nome_completo, data_admissao, id_cargos, id_niveis, status]):
                     flash('Campos principais (Matrícula, Nome, Data de Admissão, Cargo, Nível, Status) são obrigatórios.', 'danger')
                     is_valid = False
                 
-                # Validação para CPF (como fizemos no add)
                 if not cpf_numero:
                     flash('O campo CPF é obrigatório e deve ser preenchido.', 'danger')
                     is_valid = False
 
-                # Verificar unicidade da matrícula (se a matrícula foi alterada)
-                if new_matricula != matricula: # Se a matrícula foi alterada
+                if new_matricula != matricula:
                     existing_funcionario_by_new_matricula = pessoal_manager.get_funcionario_by_matricula(new_matricula)
                     if existing_funcionario_by_new_matricula:
                         flash('Nova matrícula já existe. Por favor, use uma matrícula única.', 'danger')
                         is_valid = False
 
                 if not is_valid:
-                    # Se houver erros de validação, re-renderiza o formulário com as mensagens e dados
                     return render_template(
                         'pessoal/funcionarios/edit_funcionario.html',
                         user=current_user, funcionario=form_data_received, 
@@ -717,16 +833,13 @@ def edit_funcionario(matricula):
                         genero_options=genero_options
                     )
 
-                # --- SALVAR NO BANCO DE DADOS ---
-                # 1. Atualizar dados principais do funcionário
                 success_func = pessoal_manager.update_funcionario(
                     matricula, new_matricula, nome_completo, data_admissao, id_cargos, id_niveis, status
                 )
                 
                 if success_func:
-                    # 2. Salvar/Atualizar dados pessoais e de documentos (nova estrutura)
                     success_docs = pessoal_manager.save_funcionario_dados_pessoais_documentos(
-                        new_matricula, # Usa a nova matrícula para salvar/atualizar
+                        new_matricula,
                         data_nascimento, estado_civil, nacionalidade, naturalidade, genero,
                         rg_numero, rg_orgao_emissor, rg_uf_emissor, rg_data_emissao,
                         cpf_numero,
@@ -737,7 +850,6 @@ def edit_funcionario(matricula):
                         observacoes_doc, link_foto
                     )
 
-                    # 3. Atualizar dados de endereço (se eles forem modificados ou inseridos)
                     logradouro = form_data_received.get('logradouro', '').strip()
                     numero_end = form_data_received.get('numero_end', '').strip()
                     complemento = form_data_received.get('complemento', '').strip()
@@ -749,7 +861,6 @@ def edit_funcionario(matricula):
                         new_matricula, 'Residencial', logradouro, numero_end, complemento, bairro, cidade, estado_end, cep
                     )
 
-                    # 4. Atualizar dados de contato
                     tel_principal = form_data_received.get('tel_principal', '').strip()
                     email_pessoal = form_data_received.get('email_pessoal', '').strip()
                     pessoal_manager.update_or_add_funcionario_contato(
@@ -765,15 +876,12 @@ def edit_funcionario(matricula):
                     flash('Erro ao atualizar funcionário. Verifique os dados e tente novamente.', 'danger')
             
             else: # GET request
-                # Prepara os dados para exibição inicial no formulário GET
-                # O objeto 'funcionario' já contém todos os dados de funcionarios_documentos
                 data_to_pass_to_template = funcionario.copy() 
 
                 # Buscar endereços e contatos separadamente para pré-preenchimento
                 funcionario_enderecos = pessoal_manager.get_funcionario_enderecos_by_matricula(matricula)
                 funcionario_contatos = pessoal_manager.get_funcionario_contatos_by_matricula(matricula)
 
-                # Mapear e formatar dados de Endereços para o template
                 if funcionario_enderecos:
                     res_endereco = next((end for end in funcionario_enderecos if end.get('Tipo_Endereco') == 'Residencial'), None)
                     if not res_endereco and funcionario_enderecos:
@@ -787,7 +895,6 @@ def edit_funcionario(matricula):
                         data_to_pass_to_template['estado_end'] = res_endereco.get('Estado', '')
                         data_to_pass_to_template['cep'] = res_endereco.get('Cep', '')
 
-                # Mapear e formatar dados de Contatos para o template
                 if funcionario_contatos:
                     tel_principal = next((cont for cont in funcionario_contatos if cont.get('Tipo_Contato') == 'Telefone Principal'), None)
                     if tel_principal:
@@ -796,22 +903,20 @@ def edit_funcionario(matricula):
                     if email_pessoal:
                         data_to_pass_to_template['email_pessoal'] = email_pessoal.get('Valor_Contato', '')
                 
-                # Formatar datas para o input type="date" para o GET request
                 data_to_pass_to_template['Data_Admissao'] = data_to_pass_to_template['Data_Admissao'].strftime('%Y-%m-%d') if isinstance(data_to_pass_to_template.get('Data_Admissao'), date) else ''
                 data_to_pass_to_template['Data_Nascimento'] = data_to_pass_to_template['Data_Nascimento'].strftime('%Y-%m-%d') if isinstance(data_to_pass_to_template.get('Data_Nascimento'), date) else ''
                 data_to_pass_to_template['Rg_DataEmissao'] = data_to_pass_to_template['Rg_DataEmissao'].strftime('%Y-%m-%d') if isinstance(data_to_pass_to_template.get('Rg_DataEmissao'), date) else ''
                 data_to_pass_to_template['Cnh_DataValidade'] = data_to_pass_to_template['Cnh_DataValidade'].strftime('%Y-%m-%d') if isinstance(data_to_pass_to_template.get('Cnh_DataValidade'), date) else ''
                 
-                # Renderizar o template de edição com os dados
                 return render_template(
                     'pessoal/funcionarios/edit_funcionario.html',
                     user=current_user,
-                    funcionario=data_to_pass_to_template, # Passa todos os dados para o template
+                    funcionario=data_to_pass_to_template,
                     all_cargos=all_cargos,
                     all_niveis=all_niveis,
                     status_options=status_options,
-                    estado_civil_options=estado_civil_options,
-                    genero_options=genero_options
+                    estado_civil_options=estado_civil_options, # Usar a variável definida no início da rota
+                    genero_options=genero_options # Usar a variável definida no início da rota
                 )
     except mysql.connector.Error as e:
         flash(f"Erro de banco de dados: {e}", 'danger')
