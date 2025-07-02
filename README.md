@@ -1,7 +1,7 @@
 # 🏢 LUMOB – Sistema de Gestão Interna Modular
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/mendes79/lumob/main/static/img/banner-lumob.png" width="70%" alt="Preview do LUMOB">
+  <img src="https://raw.githubusercontent.com/mendes79/lumob/main/static/img/banner.png" width="70%" alt="Preview do LUMOB">
 </p>
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://python.org)
