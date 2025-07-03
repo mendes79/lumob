@@ -1,3 +1,6 @@
+#gitignore
+.env
+venv/
 # Ignorar arquivos Python de cache
 __pycache__/
 *.pyc

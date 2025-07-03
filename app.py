@@ -2,6 +2,10 @@
 # rev01 - integração do campo email da tabela usuarios no app.py
 
 # Importações necessárias
+
+import os # necessária para carregar credenciais e senhas do .env
+from dotenv import load_dotenv # Idem
+
 from flask import Flask, render_template, redirect, url_for, request, flash, session, get_flashed_messages, jsonify
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 import mysql.connector # Para a classe Error do MySQL
@@ -24,16 +28,17 @@ from database.db_pessoal_manager import PessoalManager
 app = Flask(__name__)
 
 # --- Configurações do Flask ---
-# **IMPORTANTE: TROQUE ESTA CHAVE POR UMA STRING LONGA E ALEATÓRIA PARA PRODUÇÃO**
-app.config['SECRET_KEY'] = '0ca1a44e0ae3dbb65bd073ccdc37d90d285064c4abec94e9'
-# Exemplo de como gerar uma: import os; os.urandom(24).hex()
+# **IMPORTANTE: AGORA A CHAVE SECRETA É LIDA DE VARIÁVEL DE AMBIENTE**
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback_secret_key_dev_only')
+# Use uma chave de fallback diferente para ambiente de desenvolvimento local se a variável não for encontrada
 
 # Configurações do Banco de Dados
+# As credenciais são carregadas das variáveis de ambiente
 db_config = {
-    "host": "localhost",
-    "database": "lumob",
-    "user": "mendes",
-    "password": "Galo13BH79&*" # Sua senha real
+    "host": os.getenv('DB_HOST'),
+    "database": os.getenv('DB_DATABASE'),
+    "user": os.getenv('DB_USER'),
+    "password": os.getenv('DB_PASSWORD')
 }
 
 # NOVO: Disponibilizar date.today() como 'today' no ambiente Jinja2 para aniversariantes do mês
