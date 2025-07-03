@@ -4525,69 +4525,80 @@ def export_treinamentos_participantes_excel():
 # ROTAS PARA O MÓDULO OBRAS                                                                        |
 #---------------------------------------------------------------------------------------------------
 
-# $$$$$$$$$$$$$$$$$$$$$$$$$$$$
-# $  MÓDULO OBRAS - WELCOME  $
-# $$$$$$$$$$$$$$$$$$$$$$$$$$$$
+# ==================================================================================================================================
+# === ROTAS PARA O MÓDULO OBRAS ====================================================================================================
+# ==================================================================================================================================
 
+# ROTA HUB PRINCIPAL DO MÓDULO OBRAS
 @app.route('/obras')
 @login_required
 def obras_module():
-    # Verificação de permissão para o módulo Obras
+    """
+    Rota principal do módulo Obras.
+    Serve como hub de navegação para os submódulos.
+    """
     if not current_user.can_access_module('Obras'):
-        flash('Acesso negado. Você não tem permissão para acessar o módulo de Obras.', 'warning')
+        flash('Acesso negado. Você não tem permissão para acessar o Módulo Obras.', 'warning')
         return redirect(url_for('welcome'))
+    
+    return render_template('obras/obras_welcome.html', user=current_user)
 
-    search_numero = request.args.get('numero_obra')
-    search_nome = request.args.get('nome_obra')
-    search_status = request.args.get('status_obra')
-    search_cliente_id = request.args.get('cliente_id') # Adicione o ID do cliente se quiser filtrar por cliente
+# ROTA PARA O DASHBOARD DE OBRAS
+@app.route('/obras/dashboard')
+@login_required
+def obras_dashboard():
+    """
+    Rota para o Dashboard de Obras, exibindo KPIs e resumos.
+    """
+    if not current_user.can_access_module('Obras'):
+        flash('Acesso negado. Você não tem permissão para acessar o Dashboard de Obras.', 'warning')
+        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**db_config) as db_base:
-            obras_manager = ObrasManager(db_base)
+            obras_manager = ObrasManager(db_base) 
+
+            status_counts_list = obras_manager.get_obra_status_counts()
+            # Converte a lista de dicionários para um único dicionário para fácil acesso no template
+            status_counts = {item['Status_Obra']: item['Count'] for item in status_counts_list}
+
+            total_contratos_ativos = obras_manager.get_total_contratos_ativos_valor()
+            total_medicoes_realizadas = obras_manager.get_total_medicoes_realizadas_valor()
+            avg_avanco_fisico = obras_manager.get_avg_avanco_fisico_obras_ativas()
             
-            # Obter todas as obras com filtros (se houver)
-            obras = obras_manager.get_all_obras(
-                search_numero=search_numero,
-                search_nome=search_nome,
-                search_status=search_status,
-                search_cliente_id=search_cliente_id
+            # Formatar valores monetários e percentuais para exibição
+            total_contratos_ativos_formatado = f"R$ {total_contratos_ativos:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if total_contratos_ativos is not None else "R$ 0,00"
+            total_medicoes_realizadas_formatado = f"R$ {total_medicoes_realizadas:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if total_medicoes_realizadas is not None else "R$ 0,00"
+            avg_avanco_fisico_formatado = f"{avg_avanco_fisico:.2f}%" if avg_avanco_fisico is not None else "0.00%"
+
+
+            return render_template(
+                'obras/obras_dashboard.html', # Template para o dashboard
+                user=current_user,
+                status_counts=status_counts,
+                total_contratos_ativos=total_contratos_ativos_formatado,
+                total_medicoes_realizadas=total_medicoes_realizadas_formatado,
+                avg_avanco_fisico=avg_avanco_fisico_formatado
             )
-            
-            # Obter lista de clientes para o filtro (opcional)
-            clientes = obras_manager.db.execute_query("SELECT ID_Clientes, Nome_Cliente FROM clientes ORDER BY Nome_Cliente", fetch_results=True)
-            
-            # Status de obra fixos para o filtro (pode vir do banco se tiver tabela de domínios)
-            status_options = ['Planejamento', 'Em Andamento', 'Concluída', 'Pausada', 'Cancelada']
-
-        return render_template(
-            'obras/obras_welcome.html', # Novo Template ao invés do obras_module.html
-            user=current_user,
-            obras=obras,
-            clientes=clientes,
-            status_options=status_options,
-            # Passar os filtros selecionados de volta para o template para manter o estado do formulário
-            selected_numero=search_numero,
-            selected_nome=search_nome,
-            selected_status=search_status,
-            selected_cliente_id=int(search_cliente_id) if search_cliente_id else None
-        )
-
     except mysql.connector.Error as e:
-        flash(f"Erro de banco de dados ao carregar obras: {e}", 'danger')
-        print(f"Erro de banco de dados em obras_module: {e}")
-        return redirect(url_for('welcome'))
+        flash(f"Erro de banco de dados ao carregar dashboard de obras: {e}", 'danger')
+        print(f"Erro de banco de dados em obras_dashboard: {e}")
+        return redirect(url_for('obras_module'))
     except Exception as e:
-        flash(f"Ocorreu um erro inesperado ao carregar obras: {e}", 'danger')
-        print(f"Erro inesperado em obras_module: {e}")
-        return redirect(url_for('welcome'))
+        flash(f"Ocorreu um erro inesperado ao carregar dashboard de obras: {e}", 'danger')
+        print(f"Erro inesperado em obras_dashboard: {e}")
+        return redirect(url_for('obras_module'))
 
-# NOVA ROTA PARA A LISTAGEM/GERENCIAMENTO DE OBRAS ESPECÍFICAS
-@app.route('/obras/gerenciar') # NOVO CAMINHO: /obras/gerenciar
+# ROTA PARA A LISTAGEM/GERENCIAMENTO DE OBRAS ESPECÍFICAS
+@app.route('/obras/gerenciar')
 @login_required
-def gerenciar_obras_lista(): # NOVO ENDPOINT: 'gerenciar_obras_lista'
+def gerenciar_obras_lista():
+    """
+    Rota para a listagem e filtragem de obras.
+    Anteriormente parte da 'obras_module', agora separada para clareza.
+    """
     if not current_user.can_access_module('Obras'):
-        flash('Acesso negado. Você não tem permissão para acessar o módulo de Obras.', 'warning')
+        flash('Acesso negado. Você não tem permissão para acessar a gestão de Obras.', 'warning')
         return redirect(url_for('welcome'))
 
     search_numero = request.args.get('numero_obra')
@@ -4606,11 +4617,13 @@ def gerenciar_obras_lista(): # NOVO ENDPOINT: 'gerenciar_obras_lista'
                 search_cliente_id=search_cliente_id
             )
             
-            clientes = obras_manager.db.execute_query("SELECT ID_Clientes, Nome_Cliente FROM clientes ORDER BY Nome_Cliente", fetch_results=True)
+            # Assumindo que get_all_clientes está em ObrasManager e retorna todos os clientes
+            clientes = obras_manager.get_all_clientes() 
+            
             status_options = ['Planejamento', 'Em Andamento', 'Concluída', 'Pausada', 'Cancelada']
 
         return render_template(
-            'obras/obras_module.html', # CONTINUA USANDO ESTE TEMPLATE PARA A LISTA
+            'obras/obras_module.html', # Template para a lista de obras
             user=current_user,
             obras=obras,
             clientes=clientes,
@@ -4624,11 +4637,11 @@ def gerenciar_obras_lista(): # NOVO ENDPOINT: 'gerenciar_obras_lista'
     except mysql.connector.Error as e:
         flash(f"Erro de banco de dados ao carregar obras: {e}", 'danger')
         print(f"Erro de banco de dados em gerenciar_obras_lista: {e}")
-        return redirect(url_for('welcome'))
+        return redirect(url_for('obras_module'))
     except Exception as e:
         flash(f"Ocorreu um erro inesperado ao carregar obras: {e}", 'danger')
         print(f"Erro inesperado em gerenciar_obras_lista: {e}")
-        return redirect(url_for('welcome'))
+        return redirect(url_for('obras_module'))
 
 @app.route('/obras/add', methods=['GET', 'POST'])
 @login_required
@@ -4647,16 +4660,14 @@ def add_obra():
                 nome_obra = request.form['nome_obra'].strip()
                 endereco_obra = request.form['endereco_obra'].strip()
                 escopo_obra = request.form['escopo_obra'].strip()
-                valor_obra = float(request.form['valor_obra'].replace(',', '.')) # Converte para float, ajusta vírgula
+                valor_obra = float(request.form['valor_obra'].replace(',', '.')) 
                 valor_aditivo_total = float(request.form.get('valor_aditivo_total', '0').replace(',', '.'))
                 status_obra = request.form['status_obra'].strip()
                 data_inicio_prevista_str = request.form['data_inicio_prevista'].strip()
                 data_fim_prevista_str = request.form['data_fim_prevista'].strip()
 
-                # Validação básica
                 if not all([id_contratos, numero_obra, nome_obra, status_obra, data_inicio_prevista_str, data_fim_prevista_str]):
                     flash('Campos obrigatórios (Contrato, Número, Nome, Status, Datas de Início/Fim) não podem ser vazios.', 'danger')
-                    # Recarregar contratos e status para o formulário
                     all_contratos = obras_manager.get_all_contratos_for_dropdown()
                     status_options = ['Planejamento', 'Em Andamento', 'Concluída', 'Pausada', 'Cancelada']
                     return render_template(
@@ -4664,16 +4675,14 @@ def add_obra():
                         user=current_user,
                         all_contratos=all_contratos,
                         status_options=status_options,
-                        form_data=request.form # Passa os dados do form para manter os campos preenchidos
+                        form_data=request.form 
                     )
 
-                # Converter datas
                 try:
                     data_inicio_prevista = datetime.strptime(data_inicio_prevista_str, '%Y-%m-%d').date()
                     data_fim_prevista = datetime.strptime(data_fim_prevista_str, '%Y-%m-%d').date()
                 except ValueError:
                     flash('Formato de data inválido. Use AAAA-MM-DD.', 'danger')
-                    # Recarregar contratos e status para o formulário
                     all_contratos = obras_manager.get_all_contratos_for_dropdown()
                     status_options = ['Planejamento', 'Em Andamento', 'Concluída', 'Pausada', 'Cancelada']
                     return render_template(
@@ -4684,7 +4693,6 @@ def add_obra():
                         form_data=request.form
                     )
                 
-                # Opcional: Verificar unicidade do número da obra
                 if obras_manager.get_obra_by_numero(numero_obra):
                     flash('Número da obra já existe. Por favor, use um número único.', 'danger')
                     all_contratos = obras_manager.get_all_contratos_for_dropdown()
@@ -4708,7 +4716,7 @@ def add_obra():
             
             # GET request: Carregar dados para o formulário
             all_contratos = obras_manager.get_all_contratos_for_dropdown()
-            status_options = ['Planejamento', 'Em Andamento', 'Concluída', 'Pausada', 'Cancelada'] # Opções de status fixas
+            status_options = ['Planejamento', 'Em Andamento', 'Concluída', 'Pausada', 'Cancelada'] 
                 
             return render_template(
                 'obras/add_obra.html',
@@ -4754,7 +4762,6 @@ def edit_obra(obra_id):
                 data_inicio_prevista_str = request.form['data_inicio_prevista'].strip()
                 data_fim_prevista_str = request.form['data_fim_prevista'].strip()
 
-                # Validação básica
                 if not all([id_contratos, numero_obra, nome_obra, status_obra, data_inicio_prevista_str, data_fim_prevista_str]):
                     flash('Campos obrigatórios (Contrato, Número, Nome, Status, Datas de Início/Fim) não podem ser vazios.', 'danger')
                     all_contratos = obras_manager.get_all_contratos_for_dropdown()
@@ -4762,13 +4769,12 @@ def edit_obra(obra_id):
                     return render_template(
                         'obras/edit_obra.html',
                         user=current_user,
-                        obra=obra, # Passa a obra original
+                        obra=obra, 
                         all_contratos=all_contratos,
                         status_options=status_options,
-                        form_data=request.form # Tenta manter os dados digitados
+                        form_data=request.form 
                     )
 
-                # Converter datas
                 try:
                     data_inicio_prevista = datetime.strptime(data_inicio_prevista_str, '%Y-%m-%d').date()
                     data_fim_prevista = datetime.strptime(data_fim_prevista_str, '%Y-%m-%d').date()
@@ -4779,13 +4785,12 @@ def edit_obra(obra_id):
                     return render_template(
                         'obras/edit_obra.html',
                         user=current_user,
-                        obra=obra, # Passa a obra original
+                        obra=obra, 
                         all_contratos=all_contratos,
                         status_options=status_options,
                         form_data=request.form
                     )
                 
-                # Opcional: Verificar unicidade do número da obra, exceto para a obra atual
                 existing_obra = obras_manager.get_obra_by_numero(numero_obra)
                 if existing_obra and existing_obra['ID_Obras'] != obra_id:
                     flash('Número da obra já existe. Por favor, use um número único.', 'danger')
@@ -4794,7 +4799,7 @@ def edit_obra(obra_id):
                     return render_template(
                         'obras/edit_obra.html',
                         user=current_user,
-                        obra=obra, # Passa a obra original
+                        obra=obra, 
                         all_contratos=all_contratos,
                         status_options=status_options,
                         form_data=request.form
@@ -4809,22 +4814,20 @@ def edit_obra(obra_id):
                 else:
                     flash('Erro ao atualizar obra.', 'danger')
             
-            # GET request: Carregar dados para o formulário
-            all_contratos = obras_manager.get_all_contratos_for_dropdown()
-            status_options = ['Planejamento', 'Em Andamento', 'Concluída', 'Pausada', 'Cancelada']
-            
-            # Formata as datas para o formato 'YYYY-MM-DD' para o input type="date"
-            obra['Data_Inicio_Prevista'] = obra['Data_Inicio_Prevista'].strftime('%Y-%m-%d') if obra['Data_Inicio_Prevista'] else ''
-            obra['Data_Fim_Prevista'] = obra['Data_Fim_Prevista'].strftime('%Y-%m-%d') if obra['Data_Fim_Prevista'] else ''
+            else: # GET request
+                all_contratos = obras_manager.get_all_contratos_for_dropdown()
+                status_options = ['Planejamento', 'Em Andamento', 'Concluída', 'Pausada', 'Cancelada']
+                
+                obra['Data_Inicio_Prevista'] = obra['Data_Inicio_Prevista'].strftime('%Y-%m-%d') if obra['Data_Inicio_Prevista'] else ''
+                obra['Data_Fim_Prevista'] = obra['Data_Fim_Prevista'].strftime('%Y-%m-%d') if obra['Data_Fim_Prevista'] else ''
 
-
-            return render_template(
-                'obras/edit_obra.html',
-                user=current_user,
-                obra=obra,
-                all_contratos=all_contratos,
-                status_options=status_options
-            )
+                return render_template(
+                    'obras/edit_obra.html',
+                    user=current_user,
+                    obra=obra,
+                    all_contratos=all_contratos,
+                    status_options=status_options
+                )
     except mysql.connector.Error as e:
         flash(f"Erro de banco de dados: {e}", 'danger')
         print(f"Erro de banco de dados em edit_obra: {e}")
@@ -4853,7 +4856,6 @@ def delete_obra(obra_id):
     except mysql.connector.Error as e:
         flash(f"Erro de banco de dados: {e}", 'danger')
         print(f"Erro de banco de dados em delete_obra: {e}")
-        # Se o erro for por causa de FOREIGN KEY constraint, dar uma mensagem mais específica
         if "foreign key constraint fails" in str(e).lower():
             flash("Não foi possível excluir a obra pois existem registros relacionados (ARTs, Medições, etc.). Remova-os primeiro.", 'danger')
         return redirect(url_for('gerenciar_obras_lista'))
@@ -4862,7 +4864,6 @@ def delete_obra(obra_id):
         print(f"Erro inesperado em delete_obra: {e}")
         return redirect(url_for('gerenciar_obras_lista'))
 
-# Opcional: Rota para detalhes da obra (se quiser uma página separada)
 @app.route('/obras/details/<int:obra_id>')
 @login_required
 def obra_details(obra_id):
@@ -4877,7 +4878,7 @@ def obra_details(obra_id):
 
             if not obra:
                 flash('Obra não encontrada.', 'danger')
-                return redirect(url_for('ogerenciar_obras_lista'))
+                return redirect(url_for('gerenciar_obras_lista'))
 
         return render_template(
             'obras/obra_details.html',
@@ -4904,7 +4905,6 @@ def export_obras_excel():
         with DatabaseManager(**db_config) as db_base:
             obras_manager = ObrasManager(db_base)
             
-            # Use os mesmos filtros da página de listagem, se quiser exportar apenas o que está filtrado
             search_numero = request.args.get('numero_obra')
             search_nome = request.args.get('nome_obra')
             search_status = request.args.get('status_obra')
@@ -4923,7 +4923,6 @@ def export_obras_excel():
 
             df = pd.DataFrame(obras_data)
 
-            # Renomeie colunas para serem mais amigáveis no Excel
             df = df.rename(columns={
                 'ID_Obras': 'ID Obra',
                 'Numero_Obra': 'Número da Obra',
@@ -4941,7 +4940,6 @@ def export_obras_excel():
                 'Data_Modificacao': 'Última Modificação'
             })
             
-            # Ordenar colunas para melhor visualização no Excel (opcional)
             ordered_columns = [
                 'ID Obra', 'Número da Obra', 'Nome da Obra', 'Cliente', 'Número do Contrato',
                 'Endereço', 'Status', 'Início Previsto', 'Fim Previsto',
@@ -4966,16 +4964,14 @@ def export_obras_excel():
         print(f"Erro ao exportar obras Excel: {e}")
         return redirect(url_for('gerenciar_obras_lista'))
 
-# *************************************
-# *        submódulo clientes         *      
-# *************************************
-
-# --- ROTAS DO MÓDULO OBRAS: CLIENTES (DESCOMENTAR ESTE BLOCO) ---
+# ===================================================================================================
+# === SUBMÓDULO: CLIENTES (OBRAS) ===================================================================
+# ===================================================================================================
 
 @app.route('/obras/clientes')
 @login_required
-def clientes_module(): # ESTE É O ENDPOINT 'clientes_module' que estava faltando
-    if not current_user.can_access_module('Obras'): # Ou uma permissão específica para Clientes
+def clientes_module(): 
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para acessar o módulo de Clientes.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -4984,7 +4980,7 @@ def clientes_module(): # ESTE É O ENDPOINT 'clientes_module' que estava faltand
 
     try:
         with DatabaseManager(**db_config) as db_base:
-            obras_manager = ObrasManager(db_base) # Reutilizamos o ObrasManager
+            obras_manager = ObrasManager(db_base) 
             clientes = obras_manager.get_all_clientes(
                 search_nome=search_nome,
                 search_cnpj=search_cnpj
@@ -5001,17 +4997,17 @@ def clientes_module(): # ESTE É O ENDPOINT 'clientes_module' que estava faltand
     except mysql.connector.Error as e:
         flash(f"Erro de banco de dados ao carregar clientes: {e}", 'danger')
         print(f"Erro de banco de dados em clientes_module: {e}")
-        return redirect(url_for('obras_module')) # Volta para o hub de obras
+        return redirect(url_for('obras_module')) 
     except Exception as e:
         flash(f"Ocorreu um erro inesperado ao carregar clientes: {e}", 'danger')
         print(f"Erro inesperado em clientes_module: {e}")
-        return redirect(url_for('obras_module')) # Volta para o hub de obras
+        return redirect(url_for('obras_module')) 
 
 
 @app.route('/obras/clientes/add', methods=['GET', 'POST'])
 @login_required
 def add_cliente():
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para adicionar clientes.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -5028,16 +5024,14 @@ def add_cliente():
                 email_cliente = request.form['email_cliente'].strip()
                 contato_principal_nome = request.form['contato_principal_nome'].strip()
 
-                # Validação básica
                 if not all([nome_cliente, cnpj_cliente]):
                     flash('Nome e CNPJ do cliente são obrigatórios.', 'danger')
                     return render_template(
                         'obras/clientes/add_cliente.html',
                         user=current_user,
-                        form_data=request.form # Mantém dados preenchidos
+                        form_data=request.form 
                     )
                 
-                # Verificar unicidade do CNPJ
                 if obras_manager.get_cliente_by_cnpj(cnpj_cliente):
                     flash('CNPJ já existe. Por favor, use um CNPJ único.', 'danger')
                     return render_template(
@@ -5055,11 +5049,10 @@ def add_cliente():
                 else:
                     flash('Erro ao adicionar cliente. Verifique os dados e tente novamente.', 'danger')
             
-            # GET request
             return render_template(
                 'obras/clientes/add_cliente.html',
                 user=current_user,
-                form_data={} # Garante que form_data esteja definido no GET
+                form_data={} 
             )
     except mysql.connector.Error as e:
         flash(f"Erro de banco de dados: {e}", 'danger')
@@ -5074,7 +5067,7 @@ def add_cliente():
 @app.route('/obras/clientes/edit/<int:cliente_id>', methods=['GET', 'POST'])
 @login_required
 def edit_cliente(cliente_id):
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para editar clientes.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -5096,24 +5089,22 @@ def edit_cliente(cliente_id):
                 email_cliente = request.form['email_cliente'].strip()
                 contato_principal_nome = request.form['contato_principal_nome'].strip()
 
-                # Validação básica
                 if not all([nome_cliente, cnpj_cliente]):
                     flash('Nome e CNPJ do cliente são obrigatórios.', 'danger')
                     return render_template(
                         'obras/clientes/edit_cliente.html',
                         user=current_user,
-                        cliente=cliente, # Passa o cliente original
-                        form_data=request.form # Tenta manter os dados digitados
+                        cliente=cliente, 
+                        form_data=request.form 
                     )
                 
-                # Verificar unicidade do CNPJ, exceto para o cliente atual
                 existing_cliente = obras_manager.get_cliente_by_cnpj(cnpj_cliente)
                 if existing_cliente and existing_cliente['ID_Clientes'] != cliente_id:
                     flash('CNPJ já existe. Por favor, use um CNPJ único.', 'danger')
                     return render_template(
                         'obras/clientes/edit_cliente.html',
                         user=current_user,
-                        cliente=cliente, # Passa o cliente original
+                        cliente=cliente, 
                         form_data=request.form
                     )
 
@@ -5126,7 +5117,6 @@ def edit_cliente(cliente_id):
                 else:
                     flash('Erro ao atualizar cliente.', 'danger')
             
-            # GET request
             return render_template(
                 'obras/clientes/edit_cliente.html',
                 user=current_user,
@@ -5145,7 +5135,7 @@ def edit_cliente(cliente_id):
 @app.route('/obras/clientes/delete/<int:cliente_id>', methods=['POST'])
 @login_required
 def delete_cliente(cliente_id):
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para excluir clientes.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -5173,7 +5163,7 @@ def delete_cliente(cliente_id):
 @app.route('/obras/clientes/details/<int:cliente_id>')
 @login_required
 def cliente_details(cliente_id):
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para ver detalhes de clientes.', 'warning')
         return redirect(url_for('welcome'))
     
@@ -5204,7 +5194,7 @@ def cliente_details(cliente_id):
 @app.route('/obras/clientes/export/excel')
 @login_required
 def export_clientes_excel():
-    if not current_user.can_access_module('Obras'): # Você pode criar uma permissão específica para exportação
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para exportar dados de clientes.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -5226,7 +5216,6 @@ def export_clientes_excel():
 
             df = pd.DataFrame(clientes_data)
 
-            # Renomeie colunas para serem mais amigáveis no Excel
             df = df.rename(columns={
                 'ID_Clientes': 'ID Cliente',
                 'Nome_Cliente': 'Nome do Cliente',
@@ -5240,7 +5229,6 @@ def export_clientes_excel():
                 'Data_Modificacao': 'Última Modificação'
             })
             
-            # Ordenar colunas para melhor visualização no Excel (opcional)
             ordered_columns = [
                 'ID Cliente', 'Nome do Cliente', 'CNPJ', 'Razão Social', 'Endereço',
                 'Telefone', 'Email', 'Contato Principal', 'Data de Criação', 'Última Modificação'
@@ -5263,16 +5251,14 @@ def export_clientes_excel():
         print(f"Erro ao exportar clientes Excel: {e}")
         return redirect(url_for('clientes_module'))
 
-# *******************************
-# * submódulo CONTRATOS (OBRAS) *
-# *******************************
-
-# --- ROTAS DO MÓDULO OBRAS: CONTRATOS --- 2025-06-24 MENDES / GEMINI
+# ===================================================================================================
+# === SUBMÓDULO: CONTRATOS (OBRAS) ==================================================================
+# ===================================================================================================
 
 @app.route('/obras/contratos')
 @login_required
-def contratos_module(): # Este é o ENDPOINT 'contratos_module'
-    if not current_user.can_access_module('Obras'): # Ou uma permissão específica para Contratos
+def contratos_module(): 
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para acessar o módulo de Contratos.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -5290,10 +5276,8 @@ def contratos_module(): # Este é o ENDPOINT 'contratos_module'
                 search_status=search_status
             )
             
-            # Obter lista de clientes para o filtro
-            clientes = obras_manager.db.execute_query("SELECT ID_Clientes, Nome_Cliente FROM clientes ORDER BY Nome_Cliente", fetch_results=True)
+            clientes = obras_manager.get_all_clientes() 
             
-            # Opções de status de contrato (pode vir do banco se tiver tabela de domínios)
             status_options = ['Ativo', 'Pendente', 'Encerrado', 'Aditivado', 'Cancelado']
 
         return render_template(
@@ -5310,17 +5294,17 @@ def contratos_module(): # Este é o ENDPOINT 'contratos_module'
     except mysql.connector.Error as e:
         flash(f"Erro de banco de dados ao carregar contratos: {e}", 'danger')
         print(f"Erro de banco de dados em contratos_module: {e}")
-        return redirect(url_for('obras_module')) # Volta para o hub de obras
+        return redirect(url_for('obras_module')) 
     except Exception as e:
         flash(f"Ocorreu um erro inesperado ao carregar contratos: {e}", 'danger')
         print(f"Erro inesperado em contratos_module: {e}")
-        return redirect(url_for('obras_module')) # Volta para o hub de obras
+        return redirect(url_for('obras_module')) 
 
 
 @app.route('/obras/contratos/add', methods=['GET', 'POST'])
 @login_required
 def add_contrato():
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para adicionar contratos.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -5339,10 +5323,9 @@ def add_contrato():
                 status_contrato = request.form['status_contrato'].strip()
                 observacoes = request.form.get('observacoes', '').strip()
 
-                # Validação básica
                 if not all([id_clientes, numero_contrato, valor_contrato, data_assinatura_str, status_contrato]):
                     flash('Campos obrigatórios (Cliente, Número, Valor, Data Assinatura, Status) não podem ser vazios.', 'danger')
-                    all_clientes = obras_manager.db.execute_query("SELECT ID_Clientes, Nome_Cliente FROM clientes ORDER BY Nome_Cliente", fetch_results=True)
+                    all_clientes = obras_manager.get_all_clientes() 
                     status_options = ['Ativo', 'Pendente', 'Encerrado', 'Aditivado', 'Cancelado']
                     return render_template(
                         'obras/contratos/add_contrato.html',
@@ -5352,14 +5335,13 @@ def add_contrato():
                         form_data=request.form
                     )
                 
-                # Converter datas
                 try:
                     data_assinatura = datetime.strptime(data_assinatura_str, '%Y-%m-%d').date()
                     data_ordem_inicio = datetime.strptime(data_ordem_inicio_str, '%Y-%m-%d').date() if data_ordem_inicio_str else None
                     data_termino_previsto = datetime.strptime(data_termino_previsto_str, '%Y-%m-%d').date() if data_termino_previsto_str else None
                 except ValueError:
                     flash('Formato de data inválido. Use AAAA-MM-DD.', 'danger')
-                    all_clientes = obras_manager.db.execute_query("SELECT ID_Clientes, Nome_Cliente FROM clientes ORDER BY Nome_Cliente", fetch_results=True)
+                    all_clientes = obras_manager.get_all_clientes() 
                     status_options = ['Ativo', 'Pendente', 'Encerrado', 'Aditivado', 'Cancelado']
                     return render_template(
                         'obras/contratos/add_contrato.html',
@@ -5369,10 +5351,9 @@ def add_contrato():
                         form_data=request.form
                     )
                 
-                # Verificar unicidade do número do contrato
                 if obras_manager.get_contrato_by_numero(numero_contrato):
                     flash('Número do contrato já existe. Por favor, use um número único.', 'danger')
-                    all_clientes = obras_manager.db.execute_query("SELECT ID_Clientes, Nome_Cliente FROM clientes ORDER BY Nome_Cliente", fetch_results=True)
+                    all_clientes = obras_manager.get_all_clientes() 
                     status_options = ['Ativo', 'Pendente', 'Encerrado', 'Aditivado', 'Cancelado']
                     return render_template(
                         'obras/contratos/add_contrato.html',
@@ -5391,8 +5372,7 @@ def add_contrato():
                 else:
                     flash('Erro ao adicionar contrato. Verifique os dados e tente novamente.', 'danger')
             
-            # GET request
-            all_clientes = obras_manager.db.execute_query("SELECT ID_Clientes, Nome_Cliente FROM clientes ORDER BY Nome_Cliente", fetch_results=True)
+            all_clientes = obras_manager.get_all_clientes() 
             status_options = ['Ativo', 'Pendente', 'Encerrado', 'Aditivado', 'Cancelado']
                 
             return render_template(
@@ -5415,7 +5395,7 @@ def add_contrato():
 @app.route('/obras/contratos/edit/<int:contrato_id>', methods=['GET', 'POST'])
 @login_required
 def edit_contrato(contrato_id):
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para editar contratos.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -5439,48 +5419,45 @@ def edit_contrato(contrato_id):
                 status_contrato = request.form['status_contrato'].strip()
                 observacoes = request.form.get('observacoes', '').strip()
 
-                # Validação básica
                 if not all([id_clientes, numero_contrato, valor_contrato, data_assinatura_str, status_contrato]):
                     flash('Campos obrigatórios (Cliente, Número, Valor, Data Assinatura, Status) não podem ser vazios.', 'danger')
-                    all_clientes = obras_manager.db.execute_query("SELECT ID_Clientes, Nome_Cliente FROM clientes ORDER BY Nome_Cliente", fetch_results=True)
+                    all_clientes = obras_manager.get_all_clientes() 
                     status_options = ['Ativo', 'Pendente', 'Encerrado', 'Aditivado', 'Cancelado']
                     return render_template(
                         'obras/contratos/edit_contrato.html',
                         user=current_user,
-                        contrato=contrato,
+                        contrato=contrato, 
                         all_clientes=all_clientes,
                         status_options=status_options,
                         form_data=request.form
                     )
                 
-                # Converter datas
                 try:
                     data_assinatura = datetime.strptime(data_assinatura_str, '%Y-%m-%d').date()
                     data_ordem_inicio = datetime.strptime(data_ordem_inicio_str, '%Y-%m-%d').date() if data_ordem_inicio_str else None
                     data_termino_previsto = datetime.strptime(data_termino_previsto_str, '%Y-%m-%d').date() if data_termino_previsto_str else None
                 except ValueError:
                     flash('Formato de data inválido. Use AAAA-MM-DD.', 'danger')
-                    all_clientes = obras_manager.db.execute_query("SELECT ID_Clientes, Nome_Cliente FROM clientes ORDER BY Nome_Cliente", fetch_results=True)
+                    all_clientes = obras_manager.get_all_clientes() 
                     status_options = ['Ativo', 'Pendente', 'Encerrado', 'Aditivado', 'Cancelado']
                     return render_template(
                         'obras/contratos/edit_contrato.html',
                         user=current_user,
-                        contrato=contrato,
+                        contrato=contrato, 
                         all_clientes=all_clientes,
                         status_options=status_options,
                         form_data=request.form
                     )
 
-                # Verificar unicidade do número do contrato, exceto para o contrato atual
                 existing_contrato = obras_manager.get_contrato_by_numero(numero_contrato)
                 if existing_contrato and existing_contrato['ID_Contratos'] != contrato_id:
                     flash('Número do contrato já existe. Por favor, use um número único.', 'danger')
-                    all_clientes = obras_manager.db.execute_query("SELECT ID_Clientes, Nome_Cliente FROM clientes ORDER BY Nome_Cliente", fetch_results=True)
+                    all_clientes = obras_manager.get_all_clientes() 
                     status_options = ['Ativo', 'Pendente', 'Encerrado', 'Aditivado', 'Cancelado']
                     return render_template(
                         'obras/contratos/edit_contrato.html',
                         user=current_user,
-                        contrato=contrato,
+                        contrato=contrato, 
                         all_clientes=all_clientes,
                         status_options=status_options,
                         form_data=request.form
@@ -5495,14 +5472,13 @@ def edit_contrato(contrato_id):
                 else:
                     flash('Erro ao atualizar contrato.', 'danger')
             
-            # GET request
-            all_clientes = obras_manager.db.execute_query("SELECT ID_Clientes, Nome_Cliente FROM clientes ORDER BY Nome_Cliente", fetch_results=True)
-            status_options = ['Ativo', 'Pendente', 'Encerrado', 'Aditivado', 'Cancelado']
-            
-            # Formatar datas para o input type="date"
-            contrato['Data_Assinatura'] = contrato['Data_Assinatura'].strftime('%Y-%m-%d') if contrato['Data_Assinatura'] else ''
-            contrato['Data_Ordem_Inicio'] = contrato['Data_Ordem_Inicio'].strftime('%Y-%m-%d') if contrato['Data_Ordem_Inicio'] else ''
-            contrato['Data_Termino_Previsto'] = contrato['Data_Termino_Previsto'].strftime('%Y-%m-%d') if contrato['Data_Termino_Previsto'] else ''
+            else: # GET request
+                all_clientes = obras_manager.get_all_clientes() 
+                status_options = ['Ativo', 'Pendente', 'Encerrado', 'Aditivado', 'Cancelado']
+                
+                contrato['Data_Assinatura'] = contrato['Data_Assinatura'].strftime('%Y-%m-%d') if contrato['Data_Assinatura'] else ''
+                contrato['Data_Ordem_Inicio'] = contrato['Data_Ordem_Inicio'].strftime('%Y-%m-%d') if contrato['Data_Ordem_Inicio'] else ''
+                contrato['Data_Termino_Previsto'] = contrato['Data_Termino_Previsto'].strftime('%Y-%m-%d') if contrato['Data_Termino_Previsto'] else ''
 
             return render_template(
                 'obras/contratos/edit_contrato.html',
@@ -5524,7 +5500,7 @@ def edit_contrato(contrato_id):
 @app.route('/obras/contratos/delete/<int:contrato_id>', methods=['POST'])
 @login_required
 def delete_contrato(contrato_id):
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para excluir contratos.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -5552,7 +5528,7 @@ def delete_contrato(contrato_id):
 @app.route('/obras/contratos/details/<int:contrato_id>')
 @login_required
 def contrato_details(contrato_id):
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para ver detalhes de contratos.', 'warning')
         return redirect(url_for('welcome'))
     
@@ -5583,7 +5559,7 @@ def contrato_details(contrato_id):
 @app.route('/obras/contratos/export/excel')
 @login_required
 def export_contratos_excel():
-    if not current_user.can_access_module('Obras'): # Você pode criar uma permissão específica para exportação
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para exportar dados de contratos.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -5607,7 +5583,6 @@ def export_contratos_excel():
 
             df = pd.DataFrame(contratos_data)
 
-            # Renomeie colunas para serem mais amigáveis no Excel
             df = df.rename(columns={
                 'ID_Contratos': 'ID Contrato',
                 'Numero_Contrato': 'Número do Contrato',
@@ -5623,7 +5598,6 @@ def export_contratos_excel():
                 'Data_Modificacao': 'Última Modificação'
             })
             
-            # Ordenar colunas para melhor visualização no Excel (opcional)
             ordered_columns = [
                 'ID Contrato', 'Número do Contrato', 'Cliente', 'Valor (R$)',
                 'Data Assinatura', 'Ordem de Início', 'Prazo (Dias)', 'Término Previsto',
@@ -5648,16 +5622,14 @@ def export_contratos_excel():
         return redirect(url_for('contratos_module'))
 
 
-# ***************************
-# * submódulo ARTS (OBRAS)  *
-# ***************************
-
-# --- ROTAS DO MÓDULO OBRAS: ARTS --- 2025-06-24 MENDES / GEMINI
+# ===================================================================================================
+# === SUBMÓDULO: ARTS (OBRAS) =======================================================================
+# ===================================================================================================
 
 @app.route('/obras/arts')
 @login_required
-def arts_module(): # Este é o ENDPOINT 'arts_module'
-    if not current_user.can_access_module('Obras'): # Ou uma permissão específica para ARTs
+def arts_module(): 
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para acessar o módulo de ARTs.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -5675,10 +5647,8 @@ def arts_module(): # Este é o ENDPOINT 'arts_module'
                 search_status=search_status
             )
             
-            # Obter lista de obras para o filtro
             all_obras = obras_manager.get_all_obras_for_dropdown()
             
-            # Opções de status de ART (pode vir do banco se tiver tabela de domínios)
             status_options = ['Paga', 'Emitida', 'Cancelada', 'Em Análise']
 
         return render_template(
@@ -5695,17 +5665,17 @@ def arts_module(): # Este é o ENDPOINT 'arts_module'
     except mysql.connector.Error as e:
         flash(f"Erro de banco de dados ao carregar ARTs: {e}", 'danger')
         print(f"Erro de banco de dados em arts_module: {e}")
-        return redirect(url_for('obras_module')) # Volta para o hub de obras
+        return redirect(url_for('obras_module')) 
     except Exception as e:
         flash(f"Ocorreu um erro inesperado ao carregar ARTs: {e}", 'danger')
         print(f"Erro inesperado em arts_module: {e}")
-        return redirect(url_for('obras_module')) # Volta para o hub de obras
+        return redirect(url_for('obras_module')) 
 
 
 @app.route('/obras/arts/add', methods=['GET', 'POST'])
 @login_required
 def add_art():
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para adicionar ARTs.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -5720,7 +5690,6 @@ def add_art():
                 valor_pagamento = float(request.form.get('valor_pagamento', '0').replace(',', '.'))
                 status_art = request.form['status_art'].strip()
 
-                # Validação básica
                 if not all([id_obras, numero_art, status_art]):
                     flash('Campos obrigatórios (Obra, Número da ART, Status) não podem ser vazios.', 'danger')
                     all_obras = obras_manager.get_all_obras_for_dropdown()
@@ -5733,7 +5702,6 @@ def add_art():
                         form_data=request.form
                     )
                 
-                # Converter data (se existir)
                 try:
                     data_pagamento = datetime.strptime(data_pagamento_str, '%Y-%m-%d').date() if data_pagamento_str else None
                 except ValueError:
@@ -5748,7 +5716,6 @@ def add_art():
                         form_data=request.form
                     )
                 
-                # Verificar unicidade do número da ART
                 if obras_manager.get_art_by_numero(numero_art):
                     flash('Número da ART já existe. Por favor, use um número único.', 'danger')
                     all_obras = obras_manager.get_all_obras_for_dropdown()
@@ -5770,7 +5737,6 @@ def add_art():
                 else:
                     flash('Erro ao adicionar ART. Verifique os dados e tente novamente.', 'danger')
             
-            # GET request
             all_obras = obras_manager.get_all_obras_for_dropdown()
             status_options = ['Paga', 'Emitida', 'Cancelada', 'Em Análise']
                 
@@ -5794,7 +5760,7 @@ def add_art():
 @app.route('/obras/arts/edit/<int:art_id>', methods=['GET', 'POST'])
 @login_required
 def edit_art(art_id):
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para editar ARTs.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -5814,7 +5780,6 @@ def edit_art(art_id):
                 valor_pagamento = float(request.form.get('valor_pagamento', '0').replace(',', '.'))
                 status_art = request.form['status_art'].strip()
 
-                # Validação básica
                 if not all([id_obras, numero_art, status_art]):
                     flash('Campos obrigatórios (Obra, Número da ART, Status) não podem ser vazios.', 'danger')
                     all_obras = obras_manager.get_all_obras_for_dropdown()
@@ -5828,7 +5793,6 @@ def edit_art(art_id):
                         form_data=request.form
                     )
                 
-                # Converter data (se existir)
                 try:
                     data_pagamento = datetime.strptime(data_pagamento_str, '%Y-%m-%d').date() if data_pagamento_str else None
                 except ValueError:
@@ -5843,8 +5807,7 @@ def edit_art(art_id):
                         status_options=status_options,
                         form_data=request.form
                     )
-
-                # Verificar unicidade do número da ART, exceto para a ART atual
+                
                 existing_art = obras_manager.get_art_by_numero(numero_art)
                 if existing_art and existing_art['ID_Arts'] != art_id:
                     flash('Número da ART já existe. Por favor, use um número único.', 'danger')
@@ -5868,12 +5831,11 @@ def edit_art(art_id):
                 else:
                     flash('Erro ao atualizar ART.', 'danger')
             
-            # GET request
-            all_obras = obras_manager.get_all_obras_for_dropdown()
-            status_options = ['Paga', 'Emitida', 'Cancelada', 'Em Análise']
-            
-            # Formatar datas para o input type="date"
-            art['Data_Pagamento'] = art['Data_Pagamento'].strftime('%Y-%m-%d') if art['Data_Pagamento'] else ''
+            else: # GET request
+                all_obras = obras_manager.get_all_obras_for_dropdown()
+                status_options = ['Paga', 'Emitida', 'Cancelada', 'Em Análise']
+                
+                art['Data_Pagamento'] = art['Data_Pagamento'].strftime('%Y-%m-%d') if art['Data_Pagamento'] else ''
 
             return render_template(
                 'obras/arts/edit_art.html',
@@ -5895,7 +5857,7 @@ def edit_art(art_id):
 @app.route('/obras/arts/delete/<int:art_id>', methods=['POST'])
 @login_required
 def delete_art(art_id):
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para excluir ARTs.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -5921,7 +5883,7 @@ def delete_art(art_id):
 @app.route('/obras/arts/details/<int:art_id>')
 @login_required
 def art_details(art_id):
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para ver detalhes de ARTs.', 'warning')
         return redirect(url_for('welcome'))
     
@@ -5952,7 +5914,7 @@ def art_details(art_id):
 @app.route('/obras/arts/export/excel')
 @login_required
 def export_arts_excel():
-    if not current_user.can_access_module('Obras'): # Você pode criar uma permissão específica para exportação
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para exportar dados de ARTs.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -5976,7 +5938,6 @@ def export_arts_excel():
 
             df = pd.DataFrame(arts_data)
 
-            # Renomeie colunas para serem mais amigáveis no Excel
             df = df.rename(columns={
                 'ID_Arts': 'ID ART',
                 'ID_Obras': 'ID Obra',
@@ -5990,7 +5951,6 @@ def export_arts_excel():
                 'Data_Modificacao': 'Última Modificação'
             })
             
-            # Ordenar colunas para melhor visualização no Excel (opcional)
             ordered_columns = [
                 'ID ART', 'Número da ART', 'Número da Obra', 'Nome da Obra',
                 'Data de Pagamento', 'Valor de Pagamento (R$)', 'Status',
@@ -6014,15 +5974,14 @@ def export_arts_excel():
         print(f"Erro ao exportar ARTs Excel: {e}")
         return redirect(url_for('arts_module'))
 
-# *******************************
-# * submódulo MEDICOES (OBRAS)  *
-# *******************************
-# --- ROTAS DO MÓDULO OBRAS: MEDIÇÕES --- 2025-06-24 MENDES/GEMINI
+# ===================================================================================================
+# === SUBMÓDULO: MEDIÇÕES (OBRAS) ===================================================================
+# ===================================================================================================
 
 @app.route('/obras/medicoes')
 @login_required
-def medicoes_module(): # Este é o ENDPOINT 'medicoes_module'
-    if not current_user.can_access_module('Obras'): # Ou uma permissão específica para Medições
+def medicoes_module(): 
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para acessar o módulo de Medições.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -6040,10 +5999,8 @@ def medicoes_module(): # Este é o ENDPOINT 'medicoes_module'
                 search_status=search_status
             )
             
-            # Obter lista de obras para o filtro
             all_obras = obras_manager.get_all_obras_for_dropdown()
             
-            # Opções de status de Medição
             status_options = ['Emitida', 'Aprovada', 'Paga', 'Rejeitada']
 
         return render_template(
@@ -6060,17 +6017,17 @@ def medicoes_module(): # Este é o ENDPOINT 'medicoes_module'
     except mysql.connector.Error as e:
         flash(f"Erro de banco de dados ao carregar Medições: {e}", 'danger')
         print(f"Erro de banco de dados em medicoes_module: {e}")
-        return redirect(url_for('obras_module')) # Volta para o hub de obras
+        return redirect(url_for('obras_module')) 
     except Exception as e:
         flash(f"Ocorreu um erro inesperado ao carregar Medições: {e}", 'danger')
         print(f"Erro inesperado em medicoes_module: {e}")
-        return redirect(url_for('obras_module')) # Volta para o hub de obras
+        return redirect(url_for('obras_module')) 
 
 
 @app.route('/obras/medicoes/add', methods=['GET', 'POST'])
 @login_required
 def add_medicao():
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para adicionar Medições.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -6088,7 +6045,6 @@ def add_medicao():
                 status_medicao = request.form['status_medicao'].strip()
                 observacao_medicao = request.form.get('observacao_medicao', '').strip()
 
-                # Validação básica
                 if not all([id_obras, numero_medicao, valor_medicao, data_medicao_str, status_medicao]):
                     flash('Campos obrigatórios (Obra, Número, Valor, Data, Status) não podem ser vazios.', 'danger')
                     all_obras = obras_manager.get_all_obras_for_dropdown()
@@ -6101,7 +6057,6 @@ def add_medicao():
                         form_data=request.form
                     )
                 
-                # Converter datas
                 try:
                     data_medicao = datetime.strptime(data_medicao_str, '%Y-%m-%d').date()
                     data_aprovacao = datetime.strptime(data_aprovacao_str, '%Y-%m-%d').date() if data_aprovacao_str else None
@@ -6117,7 +6072,6 @@ def add_medicao():
                         form_data=request.form
                     )
                 
-                # Verificar unicidade (ID_Obras, Numero_Medicao)
                 if obras_manager.get_medicao_by_obra_numero(id_obras, numero_medicao):
                     flash('Já existe uma medição com este número para a obra selecionada. Use um número único.', 'danger')
                     all_obras = obras_manager.get_all_obras_for_dropdown()
@@ -6139,7 +6093,6 @@ def add_medicao():
                 else:
                     flash('Erro ao adicionar medição. Verifique os dados e tente novamente.', 'danger')
             
-            # GET request
             all_obras = obras_manager.get_all_obras_for_dropdown()
             status_options = ['Emitida', 'Aprovada', 'Paga', 'Rejeitada']
                 
@@ -6163,7 +6116,7 @@ def add_medicao():
 @app.route('/obras/medicoes/edit/<int:medicao_id>', methods=['GET', 'POST'])
 @login_required
 def edit_medicao(medicao_id):
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para editar Medições.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -6186,7 +6139,6 @@ def edit_medicao(medicao_id):
                 status_medicao = request.form['status_medicao'].strip()
                 observacao_medicao = request.form.get('observacao_medicao', '').strip()
 
-                # Validação básica
                 if not all([id_obras, numero_medicao, valor_medicao, data_medicao_str, status_medicao]):
                     flash('Campos obrigatórios (Obra, Número, Valor, Data, Status) não podem ser vazios.', 'danger')
                     all_obras = obras_manager.get_all_obras_for_dropdown()
@@ -6200,7 +6152,6 @@ def edit_medicao(medicao_id):
                         form_data=request.form
                     )
                 
-                # Converter datas
                 try:
                     data_medicao = datetime.strptime(data_medicao_str, '%Y-%m-%d').date()
                     data_aprovacao = datetime.strptime(data_aprovacao_str, '%Y-%m-%d').date() if data_aprovacao_str else None
@@ -6217,9 +6168,7 @@ def edit_medicao(medicao_id):
                         form_data=request.form
                     )
 
-                # Verificar unicidade (ID_Obras, Numero_Medicao) para outras medições
-                existing_medicao = obras_manager.get_medicao_by_obra_numero(id_obras, numero_medicao)
-                if existing_medicao and existing_medicao['ID_Medicoes'] != medicao_id:
+                if obras_manager.get_medicao_by_obra_numero(id_obras, numero_medicao):
                     flash('Já existe uma medição com este número para a obra selecionada. Use um número único.', 'danger')
                     all_obras = obras_manager.get_all_obras_for_dropdown()
                     status_options = ['Emitida', 'Aprovada', 'Paga', 'Rejeitada']
@@ -6241,13 +6190,12 @@ def edit_medicao(medicao_id):
                 else:
                     flash('Erro ao atualizar medição.', 'danger')
             
-            # GET request
-            all_obras = obras_manager.get_all_obras_for_dropdown()
-            status_options = ['Emitida', 'Aprovada', 'Paga', 'Rejeitada']
-            
-            # Formatar datas para o input type="date"
-            medicao['Data_Medicao'] = medicao['Data_Medicao'].strftime('%Y-%m-%d') if medicao['Data_Medicao'] else ''
-            medicao['Data_Aprovacao'] = medicao['Data_Aprovacao'].strftime('%Y-%m-%d') if medicao['Data_Aprovacao'] else ''
+            else: # GET request
+                all_obras = obras_manager.get_all_obras_for_dropdown()
+                status_options = ['Emitida', 'Aprovada', 'Paga', 'Rejeitada']
+                
+                medicao['Data_Medicao'] = medicao['Data_Medicao'].strftime('%Y-%m-%d') if medicao['Data_Medicao'] else ''
+                medicao['Data_Aprovacao'] = medicao['Data_Aprovacao'].strftime('%Y-%m-%d') if medicao['Data_Aprovacao'] else ''
 
             return render_template(
                 'obras/medicoes/edit_medicao.html',
@@ -6269,7 +6217,7 @@ def edit_medicao(medicao_id):
 @app.route('/obras/medicoes/delete/<int:medicao_id>', methods=['POST'])
 @login_required
 def delete_medicao(medicao_id):
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para excluir Medições.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -6295,7 +6243,7 @@ def delete_medicao(medicao_id):
 @app.route('/obras/medicoes/details/<int:medicao_id>')
 @login_required
 def medicao_details(medicao_id):
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para ver detalhes de Medições.', 'warning')
         return redirect(url_for('welcome'))
     
@@ -6326,7 +6274,7 @@ def medicao_details(medicao_id):
 @app.route('/obras/medicoes/export/excel')
 @login_required
 def export_medicoes_excel():
-    if not current_user.can_access_module('Obras'): # Você pode criar uma permissão específica para exportação
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para exportar dados de Medições.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -6350,7 +6298,6 @@ def export_medicoes_excel():
 
             df = pd.DataFrame(medicoes_data)
 
-            # Renomeie colunas para serem mais amigáveis no Excel
             df = df.rename(columns={
                 'ID_Medicoes': 'ID Medição',
                 'ID_Obras': 'ID Obra',
@@ -6367,7 +6314,6 @@ def export_medicoes_excel():
                 'Data_Modificacao': 'Última Modificação'
             })
             
-            # Ordenar colunas para melhor visualização no Excel (opcional)
             ordered_columns = [
                 'ID Medição', 'Número da Medição', 'Número da Obra', 'Nome da Obra',
                 'Valor da Medição (R$)', 'Data da Medição', 'Mês de Referência',
@@ -6391,15 +6337,14 @@ def export_medicoes_excel():
         print(f"Erro ao exportar Medições Excel: {e}")
         return redirect(url_for('medicoes_module'))
 
-# ************************************
-# * submódulo AVANÇO FÍSICO (OBRAS)  *
-# ************************************
-# --- ROTAS DO MÓDULO OBRAS: AVANÇO FÍSICO --- 2025-06-24 MENDES/GEMINI
+# ===================================================================================================
+# === SUBMÓDULO: AVANÇOS FÍSICOS (OBRAS) ============================================================
+# ===================================================================================================
 
 @app.route('/obras/avancos_fisicos')
 @login_required
-def avancos_fisicos_module(): # Este é o ENDPOINT 'avancos_fisicos_module'
-    if not current_user.can_access_module('Obras'): # Ou uma permissão específica
+def avancos_fisicos_module(): 
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para acessar o módulo de Avanços Físicos.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -6417,8 +6362,7 @@ def avancos_fisicos_module(): # Este é o ENDPOINT 'avancos_fisicos_module'
             search_data_fim = datetime.strptime(search_data_fim_str, '%Y-%m-%d').date()
     except ValueError:
         flash('Formato de data inválido nos filtros. Use AAAA-MM-DD.', 'danger')
-        # Continuar com as datas como None, ou redirecionar, dependendo da sua preferência
-        # Por simplicidade, continuaremos e deixaremos o filtro de data falhar silenciosamente no DB Manager
+        return redirect(url_for('avancos_fisicos_module')) 
 
     try:
         with DatabaseManager(**db_config) as db_base:
@@ -6430,7 +6374,6 @@ def avancos_fisicos_module(): # Este é o ENDPOINT 'avancos_fisicos_module'
                 search_data_fim=search_data_fim
             )
             
-            # Obter lista de obras para o filtro
             all_obras = obras_manager.get_all_obras_for_dropdown()
 
         return render_template(
@@ -6446,17 +6389,17 @@ def avancos_fisicos_module(): # Este é o ENDPOINT 'avancos_fisicos_module'
     except mysql.connector.Error as e:
         flash(f"Erro de banco de dados ao carregar Avanços Físicos: {e}", 'danger')
         print(f"Erro de banco de dados em avancos_fisicos_module: {e}")
-        return redirect(url_for('obras_module')) # Volta para o hub de obras
+        return redirect(url_for('obras_module')) 
     except Exception as e:
         flash(f"Ocorreu um erro inesperado ao carregar Avanços Físicos: {e}", 'danger')
         print(f"Erro inesperado em avancos_fisicos_module: {e}")
-        return redirect(url_for('obras_module')) # Volta para o hub de obras
+        return redirect(url_for('obras_module')) 
 
 
 @app.route('/obras/avancos_fisicos/add', methods=['GET', 'POST'])
 @login_required
 def add_avanco_fisico():
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para adicionar Avanços Físicos.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -6469,7 +6412,6 @@ def add_avanco_fisico():
                 percentual_avanco_fisico = float(request.form['percentual_avanco_fisico'].replace(',', '.'))
                 data_avanco_str = request.form['data_avanco'].strip()
 
-                # Validação básica
                 if not all([id_obras, percentual_avanco_fisico, data_avanco_str]):
                     flash('Campos obrigatórios (Obra, Percentual de Avanço, Data) não podem ser vazios.', 'danger')
                     all_obras = obras_manager.get_all_obras_for_dropdown()
@@ -6480,7 +6422,6 @@ def add_avanco_fisico():
                         form_data=request.form
                     )
                 
-                # Converter data
                 try:
                     data_avanco = datetime.strptime(data_avanco_str, '%Y-%m-%d').date()
                 except ValueError:
@@ -6493,7 +6434,6 @@ def add_avanco_fisico():
                         form_data=request.form
                     )
                 
-                # Opcional: Validar se percentual está entre 0 e 100
                 if not (0 <= percentual_avanco_fisico <= 100):
                     flash('Percentual de Avanço Físico deve ser entre 0 e 100.', 'danger')
                     all_obras = obras_manager.get_all_obras_for_dropdown()
@@ -6514,7 +6454,6 @@ def add_avanco_fisico():
                 else:
                     flash('Erro ao adicionar avanço físico. Verifique os dados e tente novamente.', 'danger')
             
-            # GET request
             all_obras = obras_manager.get_all_obras_for_dropdown()
                 
             return render_template(
@@ -6536,7 +6475,7 @@ def add_avanco_fisico():
 @app.route('/obras/avancos_fisicos/edit/<int:avanco_id>', methods=['GET', 'POST'])
 @login_required
 def edit_avanco_fisico(avanco_id):
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para editar Avanços Físicos.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -6554,7 +6493,6 @@ def edit_avanco_fisico(avanco_id):
                 percentual_avanco_fisico = float(request.form['percentual_avanco_fisico'].replace(',', '.'))
                 data_avanco_str = request.form['data_avanco'].strip()
 
-                # Validação básica
                 if not all([id_obras, percentual_avanco_fisico, data_avanco_str]):
                     flash('Campos obrigatórios (Obra, Percentual de Avanço, Data) não podem ser vazios.', 'danger')
                     all_obras = obras_manager.get_all_obras_for_dropdown()
@@ -6566,7 +6504,6 @@ def edit_avanco_fisico(avanco_id):
                         form_data=request.form
                     )
                 
-                # Converter data
                 try:
                     data_avanco = datetime.strptime(data_avanco_str, '%Y-%m-%d').date()
                 except ValueError:
@@ -6580,7 +6517,6 @@ def edit_avanco_fisico(avanco_id):
                         form_data=request.form
                     )
 
-                # Opcional: Validar se percentual está entre 0 e 100
                 if not (0 <= percentual_avanco_fisico <= 100):
                     flash('Percentual de Avanço Físico deve ser entre 0 e 100.', 'danger')
                     all_obras = obras_manager.get_all_obras_for_dropdown()
@@ -6602,11 +6538,10 @@ def edit_avanco_fisico(avanco_id):
                 else:
                     flash('Erro ao atualizar avanço físico.', 'danger')
             
-            # GET request
-            all_obras = obras_manager.get_all_obras_for_dropdown()
-            
-            # Formatar data para o input type="date"
-            avanco['Data_Avanco'] = avanco['Data_Avanco'].strftime('%Y-%m-%d') if avanco['Data_Avanco'] else ''
+            else: # GET request
+                all_obras = obras_manager.get_all_obras_for_dropdown()
+                
+                avanco['Data_Avanco'] = avanco['Data_Avanco'].strftime('%Y-%m-%d') if avanco['Data_Avanco'] else ''
 
             return render_template(
                 'obras/avancos_fisicos/edit_avanco_fisico.html',
@@ -6627,7 +6562,7 @@ def edit_avanco_fisico(avanco_id):
 @app.route('/obras/avancos_fisicos/delete/<int:avanco_id>', methods=['POST'])
 @login_required
 def delete_avanco_fisico(avanco_id):
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para excluir Avanços Físicos.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -6653,7 +6588,7 @@ def delete_avanco_fisico(avanco_id):
 @app.route('/obras/avancos_fisicos/details/<int:avanco_id>')
 @login_required
 def avanco_fisico_details(avanco_id):
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para ver detalhes de Avanços Físicos.', 'warning')
         return redirect(url_for('welcome'))
     
@@ -6684,7 +6619,7 @@ def avanco_fisico_details(avanco_id):
 @app.route('/obras/avancos_fisicos/export/excel')
 @login_required
 def export_avancos_fisicos_excel():
-    if not current_user.can_access_module('Obras'): # Você pode criar uma permissão específica para exportação
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para exportar dados de Avanços Físicos.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -6705,7 +6640,7 @@ def export_avancos_fisicos_excel():
                     search_data_fim = datetime.strptime(search_data_fim_str, '%Y-%m-%d').date()
             except ValueError:
                 flash('Formato de data inválido nos filtros de exportação. Use AAAA-MM-DD.', 'danger')
-                return redirect(url_for('avancos_fisicos_module')) # Redireciona com erro se a data do filtro for inválida
+                return redirect(url_for('avancos_fisicos_module')) 
 
             avancos_data = obras_manager.get_all_avancos_fisicos(
                 search_obra_id=int(search_obra_id) if search_obra_id else None,
@@ -6719,7 +6654,6 @@ def export_avancos_fisicos_excel():
 
             df = pd.DataFrame(avancos_data)
 
-            # Renomeie colunas para serem mais amigáveis no Excel
             df = df.rename(columns={
                 'ID_Avancos_Fisicos': 'ID Avanço',
                 'ID_Obras': 'ID Obra',
@@ -6731,7 +6665,6 @@ def export_avancos_fisicos_excel():
                 'Data_Modificacao': 'Última Modificação'
             })
             
-            # Ordenar colunas para melhor visualização no Excel (opcional)
             ordered_columns = [
                 'ID Avanço', 'Número da Obra', 'Nome da Obra',
                 'Percentual de Avanço (%)', 'Data do Avanço',
@@ -6755,15 +6688,14 @@ def export_avancos_fisicos_excel():
         print(f"Erro ao exportar Avanços Físicos Excel: {e}")
         return redirect(url_for('avancos_fisicos_module'))
 
-# ************************************
-# *     submódulo REIDI (OBRAS)      *
-# ************************************
-# --- ROTAS DO MÓDULO OBRAS: REIDIS ---
+# ===================================================================================================
+# === SUBMÓDULO: REIDIS (OBRAS) =====================================================================
+# ===================================================================================================
 
 @app.route('/obras/reidis')
 @login_required
 def reidis_module():
-    if not current_user.can_access_module('Obras'): # Ou uma permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para acessar o módulo de REIDIs.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -6784,7 +6716,7 @@ def reidis_module():
             )
             
             all_obras = obras_manager.get_all_obras_for_dropdown()
-            status_options = ['Ativo', 'Inativo', 'Vencido', 'Em Análise'] # Pode ser buscado do DB em um futuro sistema de domínios
+            status_options = ['Ativo', 'Inativo', 'Vencido', 'Em Análise'] 
 
         return render_template(
             'obras/reidis/reidis_module.html',
@@ -6811,7 +6743,7 @@ def reidis_module():
 @app.route('/obras/reidis/add', methods=['GET', 'POST'])
 @login_required
 def add_reidi():
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para adicionar REIDIs.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -6825,11 +6757,10 @@ def add_reidi():
                 numero_ato_declaratorio = request.form['numero_ato_declaratorio'].strip()
                 data_aprovacao_reidi_str = request.form.get('data_aprovacao_reidi', '').strip()
                 data_validade_reidi_str = request.form.get('data_validade_reidi', '').strip()
-                status_reidi = request.form.get('status_reidi', '').strip() # Agora pode ser vazio
+                status_reidi = request.form.get('status_reidi', '').strip() 
                 observacoes_reidi = request.form.get('observacoes_reidi', '').strip()
 
-                # Validação básica
-                if not all([id_obras, numero_portaria, numero_ato_declaratorio]): # Data_Aprovacao_Reidi e Status_Reidi não são mais NOT NULL
+                if not all([id_obras, numero_portaria, numero_ato_declaratorio]): 
                     flash('Campos obrigatórios (Obra, Número da Portaria, Número do Ato Declaratório) não podem ser vazios.', 'danger')
                     all_obras = obras_manager.get_all_obras_for_dropdown()
                     status_options = ['Ativo', 'Inativo', 'Vencido', 'Em Análise']
@@ -6841,7 +6772,6 @@ def add_reidi():
                         form_data=request.form
                     )
                 
-                # Converter datas (se existirem)
                 data_aprovacao_reidi = None
                 data_validade_reidi = None
                 try:
@@ -6859,7 +6789,6 @@ def add_reidi():
                         form_data=request.form
                     )
                 
-                # Verificar unicidade dos números
                 if obras_manager.get_reidi_by_numero_portaria(numero_portaria):
                     flash('Número da Portaria já existe. Por favor, use um número único.', 'danger')
                     all_obras = obras_manager.get_all_obras_for_dropdown()
@@ -6893,7 +6822,6 @@ def add_reidi():
                 else:
                     flash('Erro ao adicionar REIDI. Verifique os dados e tente novamente.', 'danger')
             
-            # GET request
             all_obras = obras_manager.get_all_obras_for_dropdown()
             status_options = ['Ativo', 'Inativo', 'Vencido', 'Em Análise']
                 
@@ -6917,7 +6845,7 @@ def add_reidi():
 @app.route('/obras/reidis/edit/<int:reidi_id>', methods=['GET', 'POST'])
 @login_required
 def edit_reidi(reidi_id):
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para editar REIDIs.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -6936,10 +6864,9 @@ def edit_reidi(reidi_id):
                 numero_ato_declaratorio = request.form['numero_ato_declaratorio'].strip()
                 data_aprovacao_reidi_str = request.form.get('data_aprovacao_reidi', '').strip()
                 data_validade_reidi_str = request.form.get('data_validade_reidi', '').strip()
-                status_reidi = request.form.get('status_reidi', '').strip() # Agora pode ser vazio
+                status_reidi = request.form.get('status_reidi', '').strip() 
                 observacoes_reidi = request.form.get('observacoes_reidi', '').strip()
 
-                # Validação básica
                 if not all([id_obras, numero_portaria, numero_ato_declaratorio]):
                     flash('Campos obrigatórios (Obra, Número da Portaria, Número do Ato Declaratório) não podem ser vazios.', 'danger')
                     all_obras = obras_manager.get_all_obras_for_dropdown()
@@ -6953,7 +6880,6 @@ def edit_reidi(reidi_id):
                         form_data=request.form
                     )
                 
-                # Converter datas
                 data_aprovacao_reidi = None
                 data_validade_reidi = None
                 try:
@@ -6972,9 +6898,7 @@ def edit_reidi(reidi_id):
                         form_data=request.form
                     )
 
-                # Verificar unicidade dos números, exceto para o REIDI atual
-                existing_reidi_portaria = obras_manager.get_reidi_by_numero_portaria(numero_portaria)
-                if existing_reidi_portaria and existing_reidi_portaria['ID_Reidis'] != reidi_id:
+                if obras_manager.get_reidi_by_numero_portaria(numero_portaria):
                     flash('Número da Portaria já existe. Por favor, use um número único.', 'danger')
                     all_obras = obras_manager.get_all_obras_for_dropdown()
                     status_options = ['Ativo', 'Inativo', 'Vencido', 'Em Análise']
@@ -6987,8 +6911,7 @@ def edit_reidi(reidi_id):
                         form_data=request.form
                     )
 
-                existing_reidi_ato = obras_manager.get_reidi_by_numero_ato_declaratorio(numero_ato_declaratorio)
-                if existing_reidi_ato and existing_reidi_ato['ID_Reidis'] != reidi_id:
+                if obras_manager.get_reidi_by_numero_ato_declaratorio(numero_ato_declaratorio):
                     flash('Número do Ato Declaratório já existe. Por favor, use um número único.', 'danger')
                     all_obras = obras_manager.get_all_obras_for_dropdown()
                     status_options = ['Ativo', 'Inativo', 'Vencido', 'Em Análise']
@@ -7011,13 +6934,12 @@ def edit_reidi(reidi_id):
                 else:
                     flash('Erro ao atualizar REIDI.', 'danger')
             
-            # GET request
-            all_obras = obras_manager.get_all_obras_for_dropdown()
-            status_options = ['Ativo', 'Inativo', 'Vencido', 'Em Análise']
-            
-            # Formatar datas para o input type="date"
-            reidi['Data_Aprovacao_Reidi'] = reidi['Data_Aprovacao_Reidi'].strftime('%Y-%m-%d') if reidi['Data_Aprovacao_Reidi'] else ''
-            reidi['Data_Validade_Reidi'] = reidi['Data_Validade_Reidi'].strftime('%Y-%m-%d') if reidi['Data_Validade_Reidi'] else ''
+            else: # GET request
+                all_obras = obras_manager.get_all_obras_for_dropdown()
+                status_options = ['Ativo', 'Inativo', 'Vencido', 'Em Análise']
+                
+                reidi['Data_Aprovacao_Reidi'] = reidi['Data_Aprovacao_Reidi'].strftime('%Y-%m-%d') if reidi['Data_Aprovacao_Reidi'] else ''
+                reidi['Data_Validade_Reidi'] = reidi['Data_Validade_Reidi'].strftime('%Y-%m-%d') if reidi['Data_Validade_Reidi'] else ''
 
             return render_template(
                 'obras/reidis/edit_reidi.html',
@@ -7039,7 +6961,7 @@ def edit_reidi(reidi_id):
 @app.route('/obras/reidis/delete/<int:reidi_id>', methods=['POST'])
 @login_required
 def delete_reidi(reidi_id):
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para excluir REIDIs.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -7065,7 +6987,7 @@ def delete_reidi(reidi_id):
 @app.route('/obras/reidis/details/<int:reidi_id>')
 @login_required
 def reidi_details(reidi_id):
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para ver detalhes de REIDIs.', 'warning')
         return redirect(url_for('welcome'))
     
@@ -7096,7 +7018,7 @@ def reidi_details(reidi_id):
 @app.route('/obras/reidis/export/excel')
 @login_required
 def export_reidis_excel():
-    if not current_user.can_access_module('Obras'): # Você pode criar uma permissão específica para exportação
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para exportar dados de REIDIs.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -7122,7 +7044,6 @@ def export_reidis_excel():
 
             df = pd.DataFrame(reidis_data)
 
-            # Renomeie colunas para serem mais amigáveis no Excel
             df = df.rename(columns={
                 'ID_Reidis': 'ID REIDI',
                 'ID_Obras': 'ID Obra',
@@ -7138,7 +7059,6 @@ def export_reidis_excel():
                 'Data_Modificacao': 'Última Modificação'
             })
             
-            # Ordenar colunas para melhor visualização no Excel (opcional)
             ordered_columns = [
                 'ID REIDI', 'Número da Portaria', 'Número do Ato Declaratório',
                 'Número da Obra', 'Nome da Obra', 'Data de Aprovação', 'Data de Validade',
@@ -7162,15 +7082,14 @@ def export_reidis_excel():
         print(f"Erro ao exportar REIDIs Excel: {e}")
         return redirect(url_for('reidis_module'))
 
-# ************************************
-# *   submódulo SEGUROS (OBRAS)      *
-# ************************************
-# --- ROTAS DO MÓDULO OBRAS: SEGUROS ---
+# ===================================================================================================
+# === SUBMÓDULO: SEGUROS (OBRAS) ====================================================================
+# ===================================================================================================
 
 @app.route('/obras/seguros')
 @login_required
-def seguros_module(): # Este é o ENDPOINT 'seguros_module'
-    if not current_user.can_access_module('Obras'): # Ou uma permissão específica
+def seguros_module(): 
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para acessar o módulo de Seguros.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -7190,10 +7109,8 @@ def seguros_module(): # Este é o ENDPOINT 'seguros_module'
                 search_tipo=search_tipo
             )
             
-            # Obter lista de obras para o filtro
             all_obras = obras_manager.get_all_obras_for_dropdown()
             
-            # Opções de status e tipo de seguro
             status_options = ['Ativo', 'Vencido', 'Cancelado', 'Em Renovação']
             tipo_seguro_options = ['Responsabilidade Civil', 'Riscos de Engenharia', 'Garantia', 'Frota', 'Outros']
 
@@ -7211,19 +7128,19 @@ def seguros_module(): # Este é o ENDPOINT 'seguros_module'
         )
 
     except mysql.connector.Error as e:
-        flash(f"Erro de banco de dados ao carregar Seguros: {e}", 'danger')
+        flash(f"Erro de banco de dados: {e}", 'danger')
         print(f"Erro de banco de dados em seguros_module: {e}")
-        return redirect(url_for('obras_module')) # Volta para o hub de obras
+        return redirect(url_for('obras_module')) 
     except Exception as e:
-        flash(f"Ocorreu um erro inesperado ao carregar Seguros: {e}", 'danger')
+        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
         print(f"Erro inesperado em seguros_module: {e}")
-        return redirect(url_for('obras_module')) # Volta para o hub de obras
+        return redirect(url_for('obras_module')) 
 
 
 @app.route('/obras/seguros/add', methods=['GET', 'POST'])
 @login_required
 def add_seguro():
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para adicionar Seguros.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -7242,7 +7159,6 @@ def add_seguro():
                 status_seguro = request.form.get('status_seguro', '').strip()
                 observacoes_seguro = request.form.get('observacoes_seguro', '').strip()
 
-                # Validação básica
                 if not all([id_obras, numero_apolice, seguradora, tipo_seguro, data_inicio_vigencia_str]):
                     flash('Campos obrigatórios (Obra, Número da Apólice, Seguradora, Tipo, Data Início Vigência) não podem ser vazios.', 'danger')
                     all_obras = obras_manager.get_all_obras_for_dropdown()
@@ -7257,7 +7173,6 @@ def add_seguro():
                         form_data=request.form
                     )
                 
-                # Converter datas
                 data_inicio_vigencia = None
                 data_fim_vigencia = None
                 try:
@@ -7277,7 +7192,6 @@ def add_seguro():
                         form_data=request.form
                     )
                 
-                # Verificar unicidade do número da apólice
                 if obras_manager.get_seguro_by_numero_apolice(numero_apolice):
                     flash('Número da Apólice já existe. Por favor, use um número único.', 'danger')
                     all_obras = obras_manager.get_all_obras_for_dropdown()
@@ -7301,7 +7215,6 @@ def add_seguro():
                 else:
                     flash('Erro ao adicionar seguro. Verifique os dados e tente novamente.', 'danger')
             
-            # GET request
             all_obras = obras_manager.get_all_obras_for_dropdown()
             status_options = ['Ativo', 'Vencido', 'Cancelado', 'Em Renovação']
             tipo_seguro_options = ['Responsabilidade Civil', 'Riscos de Engenharia', 'Garantia', 'Frota', 'Outros']
@@ -7327,7 +7240,7 @@ def add_seguro():
 @app.route('/obras/seguros/edit/<int:seguro_id>', methods=['GET', 'POST'])
 @login_required
 def edit_seguro(seguro_id):
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para editar Seguros.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -7357,7 +7270,6 @@ def edit_seguro(seguro_id):
                 status_seguro = request.form.get('status_seguro', '').strip()
                 observacoes_seguro = request.form.get('observacoes_seguro', '').strip()
 
-                # Validação básica
                 if not all([id_obras, numero_apolice, seguradora, tipo_seguro, data_inicio_vigencia_str]):
                     flash('Campos obrigatórios (Obra, Número da Apólice, Seguradora, Tipo, Data Início Vigência) não podem ser vazios.', 'danger')
                     all_obras = obras_manager.get_all_obras_for_dropdown()
@@ -7373,7 +7285,6 @@ def edit_seguro(seguro_id):
                         form_data=request.form
                     )
                 
-                # Converter datas
                 data_inicio_vigencia = None
                 data_fim_vigencia = None
                 try:
@@ -7393,10 +7304,8 @@ def edit_seguro(seguro_id):
                         tipo_seguro_options=tipo_seguro_options,
                         form_data=request.form
                     )
-
-                # Verificar unicidade do número da apólice, exceto para o seguro atual
-                existing_seguro = obras_manager.get_seguro_by_numero_apolice(numero_apolice)
-                if existing_seguro and existing_seguro['ID_Seguros'] != seguro_id:
+                
+                if obras_manager.get_seguro_by_numero_apolice(numero_apolice):
                     flash('Número da Apólice já existe. Por favor, use um número único.', 'danger')
                     all_obras = obras_manager.get_all_obras_for_dropdown()
                     status_options = ['Ativo', 'Vencido', 'Cancelado', 'Em Renovação']
@@ -7420,19 +7329,18 @@ def edit_seguro(seguro_id):
                 else:
                     flash('Erro ao atualizar seguro.', 'danger')
             
-            # GET request
-            all_obras = obras_manager.get_all_obras_for_dropdown()
-            status_options = ['Ativo', 'Vencido', 'Cancelado', 'Em Renovação']
-            tipo_seguro_options = ['Responsabilidade Civil', 'Riscos de Engenharia', 'Garantia', 'Frota', 'Outros']
-            
-            # Formatar datas para o input type="date"
-            seguro['Data_Inicio_Vigencia'] = seguro['Data_Inicio_Vigencia'].strftime('%Y-%m-%d') if seguro['Data_Inicio_Vigencia'] else ''
-            seguro['Data_Fim_Vigencia'] = seguro['Data_Fim_Vigencia'].strftime('%Y-%m-%d') if seguro['Data_Fim_Vigencia'] else ''
+            else: # GET request
+                all_obras = obras_manager.get_all_obras_for_dropdown()
+                status_options = ['Ativo', 'Vencido', 'Cancelado', 'Em Renovação']
+                tipo_seguro_options = ['Responsabilidade Civil', 'Riscos de Engenharia', 'Garantia', 'Frota', 'Outros']
+                
+                seguro['Data_Inicio_Vigencia'] = seguro['Data_Inicio_Vigencia'].strftime('%Y-%m-%d') if seguro['Data_Inicio_Vigencia'] else ''
+                seguro['Data_Fim_Vigencia'] = seguro['Data_Fim_Vigencia'].strftime('%Y-%m-%d') if seguro['Data_Fim_Vigencia'] else ''
 
-             # --- ADICIONE ESTES PRINTS DE DEBUG AQUI TAMBÉM ---
-            print(f"DEBUG (Seguro ID {seguro_id}) - Tipo Data_Inicio_Vigencia depois: {type(seguro.get('Data_Inicio_Vigencia'))}, Valor: {seguro.get('Data_Inicio_Vigencia')}")
-            print(f"DEBUG (Seguro ID {seguro_id}) - Tipo Data_Fim_Vigencia depois: {type(seguro.get('Data_Fim_Vigencia'))}, Valor: {seguro.get('Data_Fim_Vigencia')}")
-            # --- FIM DOS PRINTS DE DEBUG ---
+                # --- ADICIONE ESTES PRINTS DE DEBUG AQUI TAMBÉM ---
+                print(f"DEBUG (Seguro ID {seguro_id}) - Tipo Data_Inicio_Vigencia depois: {type(seguro.get('Data_Inicio_Vigencia'))}, Valor: {seguro.get('Data_Inicio_Vigencia')}")
+                print(f"DEBUG (Seguro ID {seguro_id}) - Tipo Data_Fim_Vigencia depois: {type(seguro.get('Data_Fim_Vigencia'))}, Valor: {seguro.get('Data_Fim_Vigencia')}")
+                # --- FIM DOS PRINTS DE DEBUG ---
 
             return render_template(
                 'obras/seguros/edit_seguro.html',
@@ -7455,7 +7363,7 @@ def edit_seguro(seguro_id):
 @app.route('/obras/seguros/delete/<int:seguro_id>', methods=['POST'])
 @login_required
 def delete_seguro(seguro_id):
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para excluir Seguros.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -7481,7 +7389,7 @@ def delete_seguro(seguro_id):
 @app.route('/obras/seguros/details/<int:seguro_id>')
 @login_required
 def seguro_details(seguro_id):
-    if not current_user.can_access_module('Obras'): # Ou permissão específica
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para ver detalhes de Seguros.', 'warning')
         return redirect(url_for('welcome'))
     
@@ -7512,7 +7420,7 @@ def seguro_details(seguro_id):
 @app.route('/obras/seguros/export/excel')
 @login_required
 def export_seguros_excel():
-    if not current_user.can_access_module('Obras'): # Você pode criar uma permissão específica para exportação
+    if not current_user.can_access_module('Obras'): 
         flash('Acesso negado. Você não tem permissão para exportar dados de Seguros.', 'warning')
         return redirect(url_for('welcome'))
 
@@ -7538,7 +7446,6 @@ def export_seguros_excel():
 
             df = pd.DataFrame(seguros_data)
 
-            # Renomeie colunas para serem mais amigáveis no Excel
             df = df.rename(columns={
                 'ID_Seguros': 'ID Seguro',
                 'ID_Obras': 'ID Obra',
@@ -7556,7 +7463,6 @@ def export_seguros_excel():
                 'Data_Modificacao': 'Última Modificação'
             })
             
-            # Ordenar colunas para melhor visualização no Excel (opcional)
             ordered_columns = [
                 'ID Seguro', 'Número da Apólice', 'Seguradora', 'Tipo de Seguro',
                 'Número da Obra', 'Nome da Obra', 'Valor Segurado (R$)',
@@ -7580,11 +7486,6 @@ def export_seguros_excel():
         flash(f"Ocorreu um erro ao exportar Seguros para Excel: {e}", 'danger')
         print(f"Erro ao exportar Seguros Excel: {e}")
         return redirect(url_for('seguros_module'))
-
-
-# |-----------------------------------------------------------------------|
-# | FIM DO MÓDULO OBRAS                                                   |
-# |-----------------------------------------------------------------------|
 
 # |-----------------------------------------------------------------------|
 # | *************   MÓDULO SEGURANÇA *****************************        |

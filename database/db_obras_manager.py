@@ -903,3 +903,88 @@ class ObrasManager:
         query = "SELECT ID_Seguros FROM seguros WHERE Numero_Apolice = %s"
         result = self.db.execute_query(query, (numero_apolice,), fetch_results=True)
         return result[0] if result else None
+
+    # ==================================================================================================================================
+    # === MÉTODOS PARA DASHBOARD DE OBRAS ==============================================================================================
+    # ==================================================================================================================================
+
+    def get_obra_status_counts(self):
+        """
+        Retorna a contagem de obras por status.
+        Ex: [{'Status_Obra': 'Em Andamento', 'Count': 5}, {'Status_Obra': 'Concluída', 'Count': 3}]
+        """
+        query = """
+            SELECT
+                Status_Obra,
+                COUNT(ID_Obras) AS Count
+            FROM
+                obras
+            GROUP BY
+                Status_Obra
+            ORDER BY
+                Status_Obra
+        """
+        results = self.db.execute_query(query, fetch_results=True)
+        # O método execute_query do db_base já deve retornar uma lista de dicionários.
+        # A chave 'Count' é o que precisamos. Jinja's 'sum' precisa ser ajustado.
+        return results if results else []
+
+    def get_total_contratos_ativos_valor(self):
+        """
+        Retorna o valor total dos contratos com status 'Ativo'.
+        """
+        query = """
+            SELECT
+                SUM(Valor_Contrato) AS Total_Valor_Contratos
+            FROM
+                contratos
+            WHERE
+                Status_Contrato = 'Ativo'
+        """
+        result = self.db.execute_query(query, fetch_results=True)
+        return result[0]['Total_Valor_Contratos'] if result and result[0]['Total_Valor_Contratos'] is not None else 0.0
+
+    def get_total_medicoes_realizadas_valor(self):
+        """
+        Retorna o valor total das medições realizadas (status 'Paga' ou 'Aprovada').
+        """
+        query = """
+            SELECT
+                SUM(Valor_Medicao) AS Total_Valor_Medicoes
+            FROM
+                medicoes
+            WHERE
+                Status_Medicao IN ('Paga', 'Aprovada')
+        """
+        result = self.db.execute_query(query, fetch_results=True)
+        return result[0]['Total_Valor_Medicoes'] if result and result[0]['Total_Valor_Medicoes'] is not None else 0.0
+
+    def get_avg_avanco_fisico_obras_ativas(self):
+        """
+        Calcula o percentual médio de avanço físico para obras ativas.
+        Assume que a tabela 'avancos_fisicos' guarda o percentual de avanço de cada obra em determinada data,
+        e queremos o *último* avanço de cada obra ativa.
+        """
+        # Subquery para encontrar o último avanço físico para cada obra
+        subquery = """
+            SELECT
+                ID_Obras,
+                Percentual_Avanco_Fisico,
+                Data_Avanco,
+                ROW_NUMBER() OVER (PARTITION BY ID_Obras ORDER BY Data_Avanco DESC, Data_Criacao DESC) as rn
+            FROM
+                avancos_fisicos
+        """
+        # Query principal para calcular a média apenas das obras ativas
+        query = f"""
+            SELECT
+                AVG(t1.Percentual_Avanco_Fisico) AS Media_Avanco_Fisico
+            FROM
+                ({subquery}) AS t1
+            JOIN
+                obras o ON t1.ID_Obras = o.ID_Obras
+            WHERE
+                t1.rn = 1 AND o.Status_Obra = 'Em Andamento'
+        """
+        result = self.db.execute_query(query, fetch_results=True)
+        return result[0]['Media_Avanco_Fisico'] if result and result[0]['Media_Avanco_Fisico'] is not None else 0.0
