@@ -988,3 +988,70 @@ class ObrasManager:
         """
         result = self.db.execute_query(query, fetch_results=True)
         return result[0]['Media_Avanco_Fisico'] if result and result[0]['Media_Avanco_Fisico'] is not None else 0.0
+    
+    # ----------------------------------------------------------------------------------------------------------------------------------
+    # --- NOVO MÉTODO: Dados para Relatório de Andamento de Obras ---------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------------------------------------------
+    def get_obras_andamento_para_relatorio(self, search_numero=None, search_nome=None, search_status=None, search_cliente_id=None):
+        """
+        Retorna dados detalhados para o relatório de andamento de obras,
+        incluindo o último percentual de avanço físico e a data desse avanço.
+        """
+        query = """
+            SELECT
+                o.ID_Obras,
+                o.Numero_Obra,
+                o.Nome_Obra,
+                o.Status_Obra,
+                o.Data_Inicio_Prevista,
+                o.Data_Fim_Prevista,
+                c.Nome_Cliente,
+                -- Subquery para obter o último percentual e data de avanço físico para cada obra
+                (SELECT
+                    af.Percentual_Avanco_Fisico
+                FROM
+                    avancos_fisicos af
+                WHERE
+                    af.ID_Obras = o.ID_Obras
+                ORDER BY
+                    af.Data_Avanco DESC, af.Data_Criacao DESC
+                LIMIT 1) AS Ultimo_Avanco_Percentual,
+                (SELECT
+                    af.Data_Avanco
+                FROM
+                    avancos_fisicos af
+                WHERE
+                    af.ID_Obras = o.ID_Obras
+                ORDER BY
+                    af.Data_Avanco DESC, af.Data_Criacao DESC
+                LIMIT 1) AS Ultima_Data_Avanco
+            FROM
+                obras o
+            LEFT JOIN
+                contratos co ON o.ID_Contratos = co.ID_Contratos
+            LEFT JOIN
+                clientes c ON co.ID_Clientes = c.ID_Clientes
+            WHERE 1=1
+        """
+        params = []
+
+        if search_numero:
+            query += " AND o.Numero_Obra LIKE %s"
+            params.append(f"%{search_numero}%")
+        if search_nome:
+            query += " AND o.Nome_Obra LIKE %s"
+            params.append(f"%{search_nome}%")
+        if search_status:
+            query += " AND o.Status_Obra = %s"
+            params.append(search_status)
+        if search_cliente_id:
+            query += " AND c.ID_Clientes = %s"
+            params.append(search_cliente_id)
+        
+        query += " ORDER BY o.Nome_Obra"
+
+        results = self.db.execute_query(query, tuple(params), fetch_results=True)
+        if results:
+            # Garante que as datas sejam formatadas corretamente para Python (datetime.date)
+            return [self._format_date_fields(item) for item in results]
+        return results

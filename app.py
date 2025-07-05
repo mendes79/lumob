@@ -3316,6 +3316,62 @@ def gerenciar_obras_lista():
         print(f"Erro inesperado em gerenciar_obras_lista: {e}")
         return redirect(url_for('obras_module'))
 
+# ---------------------------------------------------------------
+# 3.1.7 ROTA PARA O RELATÓRIO DE ANDAMENTO DE OBRAS - OBRAS
+# ---------------------------------------------------------------
+@app.route('/obras/relatorio_andamento')
+@login_required
+def obras_relatorio_andamento():
+    """
+    Rota para o relatório de andamento de obras, com filtros.
+    """
+    if not current_user.can_access_module('Obras'):
+        flash('Acesso negado. Você não tem permissão para acessar o Relatório de Andamento de Obras.', 'warning')
+        return redirect(url_for('welcome'))
+
+    # Coletar parâmetros de filtro
+    search_numero = request.args.get('numero_obra')
+    search_nome = request.args.get('nome_obra')
+    search_status = request.args.get('status_obra')
+    search_cliente_id = request.args.get('cliente_id')
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            obras_manager = ObrasManager(db_base)
+            
+            # Chama o novo método para obter os dados do relatório de andamento
+            obras_andamento = obras_manager.get_obras_andamento_para_relatorio(
+                search_numero=search_numero,
+                search_nome=search_nome,
+                search_status=search_status,
+                search_cliente_id=search_cliente_id
+            )
+            
+            # Obter listas para dropdowns de filtro (se aplicável ao template)
+            # Assumimos que get_all_clientes existe e retorna todos os clientes
+            all_clientes = obras_manager.get_all_clientes() 
+            status_options = ['Planejamento', 'Em Andamento', 'Concluída', 'Pausada', 'Cancelada'] # Opções de status
+
+            return render_template(
+                'obras/obras_relatorio_andamento.html', # Este template ainda não existe, será criado.
+                user=current_user,
+                obras_andamento=obras_andamento,
+                all_clientes=all_clientes,
+                status_options=status_options,
+                selected_numero=search_numero,
+                selected_nome=search_nome,
+                selected_status=search_status,
+                selected_cliente_id=int(search_cliente_id) if search_cliente_id else None
+            )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados ao carregar relatório de andamento de obras: {e}", 'danger')
+        print(f"Erro de banco de dados em obras_relatorio_andamento: {e}")
+        return redirect(url_for('obras_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado ao carregar relatório de andamento de obras: {e}", 'danger')
+        print(f"Erro inesperado em obras_relatorio_andamento: {e}")
+        return redirect(url_for('obras_module'))
+
 # ===============================================================
 # 3.2 ROTAS DE CLIENTES - OBRAS
 # ===============================================================

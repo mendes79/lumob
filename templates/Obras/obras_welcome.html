@@ -90,8 +90,14 @@
           <a href="{{ url_for('obras_dashboard') }}">Dashboard de Obras</a>
           <p>Visão geral de indicadores chave e resumos do módulo de obras.</p>
         </div>
-        {# FIM DO NOVO CARD #} {# CARD EXISTENTE PARA GERENCIAR OBRAS - LINK
-        AJUSTADO #}
+        {# FIM DO NOVO CARD #}
+        <div class="module-card">
+          <a href="{{ url_for('obras_relatorio_andamento') }}"
+            >Relatório de Andamento</a
+          >
+          <p>Acompanhe o progresso físico atual de cada obra.</p>
+        </div>
+        {# CARD EXISTENTE PARA GERENCIAR OBRAS - LINK AJUSTADO #}
         <div class="module-card">
           <a href="{{ url_for('gerenciar_obras_lista') }}">Gerenciar Obras</a>
           <p>Planejamento, acompanhamento e controle das obras em andamento.</p>
