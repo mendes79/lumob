@@ -31,23 +31,26 @@ from database.db_obras_manager import ObrasManager # Para o módulo Obras
 from database.db_seguranca_manager import SegurancaManager # Para o módulo Segurança
 from database.db_pessoal_manager import PessoalManager
 
+# Imaportações para Blueprint
+from modulos.users_bp import users_bp # NOVO: Importa o Blueprint de Usuários
+
 # ===============================================================
 # 0.2 CONFIGURAÇÃO DA APLICAÇÃO
 # ===============================================================
 app = Flask(__name__)
 
 # **IMPORTANTE: A CHAVE SECRETA É LIDA DE VARIÁVEL DE AMBIENTE**
-# Use uma chave de fallback diferente para ambiente de desenvolvimento local se a variável não for encontrada
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback_secret_key_dev_only')
 
-# Configurações do Banco de Dados
-# As credenciais são carregadas das variáveis de ambiente
-db_config = {
+# Configurações do Banco de Dados - Definidas GLOBALMENTE E em app.config
+db_config = { # <-- RESTAURADA AQUI COMO VARIÁVEL GLOBAL
     "host": os.getenv('DB_HOST'),
     "database": os.getenv('DB_DATABASE'),
     "user": os.getenv('DB_USER'),
     "password": os.getenv('DB_PASSWORD')
 }
+app.config['DB_CONFIG'] = db_config # Atribui a variável global a app.config
+
 
 # Disponibilizar date.today() como 'today' no ambiente Jinja2 para aniversariantes do mês
 # Isso permitirá usar 'today()' no HTML
@@ -7912,290 +7915,9 @@ def seguranca_dashboard():
         return redirect(url_for('seguranca_module'))
 
 #################################################################
-# 5. MÓDULO USUARIOS
+# 99. REGISTRO DOS BLUEPRINTS (NOVO)
 #################################################################
+app.register_blueprint(users_bp) # Registra o Blueprint do Módulo Usuários
 
-# ===============================================================
-# 5.1 ROTAS DE USUARIOS
-# ===============================================================
-@app.route('/users')
-@login_required
-def users_module():
-    # O módulo de usuários (users_module) deve ter acesso restrito apenas a 'admin'
-    if current_user.role != 'admin':
-        flash('Acesso negado. Apenas administradores podem acessar o módulo Usuários.', 'warning')
-        return redirect(url_for('welcome'))
-
-    try:
-        with DatabaseManager(**db_config) as db_base:
-            user_manager = UserManager(db_base)
-            users = user_manager.get_all_users() # Obter todos os usuários (agora com email)
-            # CORREÇÃO: Nome do template de 'users.html' para 'users/users_module.html'
-            return render_template('users/users_module.html', users=users, user=current_user)
-    except mysql.connector.Error as e:
-        flash(f"Erro de banco de dados ao carregar usuários: {e}", 'danger')
-        return redirect(url_for('welcome'))
-    except Exception as e:
-        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
-        return redirect(url_for('welcome'))
-
-# ---------------------------------------------------------------
-# 5.1.1 ROTAS DO CRUD DE USUARIOS - CRIAR
-# ---------------------------------------------------------------
-@app.route('/users/add', methods=['GET', 'POST'])
-@login_required
-def add_user():
-    if current_user.role != 'admin':
-        flash('Acesso negado. Apenas administradores podem adicionar usuários.', 'warning')
-        return redirect(url_for('users_module'))
-
-    if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email'] # NOVO: Captura o campo email
-        password = request.form['password']
-        role = request.form['role']
-
-        try:
-            with DatabaseManager(**db_config) as db_base:
-                user_manager = UserManager(db_base)
-
-                # NOVO: Validação de unicidade para username
-                if user_manager.find_user_by_username(username):
-                    flash(f"Usuário '{username}' já existe. Por favor, escolha outro.", 'danger')
-                    # Preserva os dados digitados para o usuário não ter que digitar tudo de novo
-                    available_roles = ['admin', 'rh', 'engenheiro', 'editor', 'seguranca']
-                    return render_template('users/add_user.html', user=current_user, available_roles=available_roles,
-                                            old_username=username, old_email=email, old_role=role)
-
-                # NOVO: Validação de unicidade para email
-                if user_manager.find_user_by_email(email):
-                    flash(f"Este e-mail '{email}' já está em uso. Por favor, escolha outro.", 'danger')
-                    # Preserva os dados digitados
-                    available_roles = ['admin', 'rh', 'engenheiro', 'editor', 'seguranca']
-                    return render_template('users/add_user.html', user=current_user, available_roles=available_roles,
-                                            old_username=username, old_email=email, old_role=role)
-
-                # ALTERAÇÃO: Passa o email para o método add_user
-                new_user_id = user_manager.add_user(username, password, role, email)
-                if new_user_id:
-                    flash(f"Usuário '{username}' adicionado com sucesso!", 'success')
-                    return redirect(url_for('users_module'))
-                else:
-                    flash("Erro ao adicionar usuário.", 'danger')
-        except mysql.connector.Error as e:
-            flash(f"Erro de banco de dados: {e}", 'danger')
-            print(f"Erro de banco de dados: {e}")
-        except Exception as e:
-            flash(f"Ocorreu um erro inesperado: {e}", 'danger')
-            print(f"Erro inesperado durante a adição de usuário: {e}")
-
-    # Para a página GET, ou em caso de erro no POST
-    # Pode-se passar a lista de roles disponíveis para o template
-    available_roles = ['admin', 'rh', 'engenheiro', 'editor', 'seguranca']
-    # CORREÇÃO: Nome do template de 'add_user.html' para 'users/add_user.html'
-    return render_template('users/add_user.html', user=current_user, available_roles=available_roles)
-
-# ---------------------------------------------------------------
-# 5.1.2 ROTAS DO CRUD DE USUARIOS - EDITAR
-# ---------------------------------------------------------------
-@app.route('/users/edit/<int:user_id>', methods=['GET', 'POST'])
-@login_required
-def edit_user(user_id):
-    if current_user.role != 'admin':
-        flash('Acesso negado. Apenas administradores podem editar usuários.', 'warning')
-        return redirect(url_for('users_module'))
-
-    try:
-        with DatabaseManager(**db_config) as db_base:
-            user_manager = UserManager(db_base)
-            # ALTERAÇÃO: user_to_edit agora inclui o campo 'email'
-            user_to_edit = user_manager.find_user_by_id(user_id)
-
-            if not user_to_edit:
-                flash('Usuário não encontrado.', 'danger')
-                return redirect(url_for('users_module'))
-
-            if request.method == 'POST':
-                new_username = request.form.get('username')
-                new_email = request.form.get('email') # NOVO: Captura o campo email
-                new_password = request.form.get('password') # Pode ser vazio se não for alterada
-                new_role = request.form.get('role')
-
-                # Validação básica
-                if not new_username or not new_role or not new_email: # NOVO: Email é obrigatório
-                    flash("Nome de usuário, Email e Papel (Role) são obrigatórios.", 'danger')
-                    # CORREÇÃO: Nome do template de 'edit_user.html' para 'users/edit_user.html'
-                    return render_template('users/edit_user.html', user_to_edit=user_to_edit, user=current_user, available_roles=['admin', 'rh', 'engenheiro', 'editor', 'seguranca'])
-
-                # Validação de unicidade do username (se for alterado e já existir)
-                if new_username != user_to_edit['username']:
-                    existing_user_with_new_name = user_manager.find_user_by_username(new_username)
-                    if existing_user_with_new_name and existing_user_with_new_name['id'] != user_id:
-                        flash(f"O nome de usuário '{new_username}' já está em uso por outro usuário.", 'danger')
-                        # CORREÇÃO: Nome do template de 'edit_user.html' para 'users/edit_user.html'
-                        return render_template('users/edit_user.html', user_to_edit=user_to_edit, user=current_user, available_roles=['admin', 'rh', 'engenheiro', 'editor', 'seguranca'])
-
-                # NOVO: Validação de unicidade do email (se for alterado e já existir)
-                if new_email != user_to_edit['email']:
-                    existing_user_with_new_email = user_manager.find_user_by_email(new_email)
-                    if existing_user_with_new_email and existing_user_with_new_email['id'] != user_id:
-                        flash(f"O e-mail '{new_email}' já está em uso por outro usuário.", 'danger')
-                        # CORREÇÃO: Nome do template de 'edit_user.html' para 'users/edit_user.html'
-                        return render_template('users/edit_user.html', user_to_edit=user_to_edit, user=current_user, available_roles=['admin', 'rh', 'engenheiro', 'editor', 'seguranca'])
-
-                # ALTERAÇÃO: Passa o new_email para o método update_user
-                success = user_manager.update_user(user_id, new_username, new_password if new_password else None, new_role, new_email)
-                if success:
-                    flash(f"Usuário '{user_to_edit['username']}' atualizado com sucesso!", 'success')
-                    return redirect(url_for('users_module'))
-                else:
-                    flash("Erro ao atualizar usuário.", 'danger')
-
-            # GET request
-            available_roles = ['admin', 'rh', 'engenheiro', 'editor', 'seguranca']
-            # CORREÇÃO: Nome do template de 'edit_user.html' para 'users/edit_user.html'
-            return render_template('users/edit_user.html', user_to_edit=user_to_edit, user=current_user, available_roles=available_roles)
-
-    except mysql.connector.Error as e:
-        flash(f"Erro de banco de dados: {e}", 'danger')
-        return redirect(url_for('users_module'))
-    except Exception as e:
-        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
-        return redirect(url_for('users_module'))
-
-# ---------------------------------------------------------------
-# 5.1.3 ROTAS DO CRUD DE USUARIOS - DELETAR
-# ---------------------------------------------------------------
-@app.route('/users/delete/<int:user_id>', methods=['POST'])
-@login_required
-def delete_user(user_id):
-    if current_user.role != 'admin':
-        flash('Acesso negado. Apenas administradores podem deletar usuários.', 'warning')
-        return redirect(url_for('users_module'))
-
-    if current_user.id == user_id:
-        flash('Você não pode deletar sua própria conta.', 'danger')
-        return redirect(url_for('users_module'))
-
-    try:
-        with DatabaseManager(**db_config) as db_base:
-            user_manager = UserManager(db_base)
-            # Opcional: buscar o nome do usuário antes de deletar para mensagem de feedback
-            user_to_delete = user_manager.find_user_by_id(user_id)
-            if user_to_delete:
-                if user_manager.delete_user(user_id):
-                    flash(f"Usuário '{user_to_delete['username']}' deletado com sucesso!", 'success')
-                else:
-                    flash("Erro ao deletar usuário.", 'danger')
-            else:
-                flash("Usuário não encontrado para deletar.", 'danger')
-    except mysql.connector.Error as e:
-        flash(f"Erro de banco de dados: {e}", 'danger')
-    except Exception as e:
-        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
-
-    return redirect(url_for('users_module'))
-
-# ---------------------------------------------------------------
-# 5.1.4 ROTAS DO CRUD DE USUARIOS - DETALHES
-# ---------------------------------------------------------------
-@app.route('/users/reset_password/<int:user_id>', methods=['POST'])
-@login_required
-def reset_password(user_id):
-    if current_user.role != 'admin':
-        flash('Acesso negado. Apenas administradores podem resetar senhas.', 'warning')
-        return redirect(url_for('users_module'))
-
-    if current_user.id == user_id:
-        flash('Você não pode resetar a sua própria senha padrão por aqui. Altere-a pela edição.', 'danger')
-        return redirect(url_for('users_module'))
-
-    try:
-        with DatabaseManager(**db_config) as db_base:
-            user_manager = UserManager(db_base)
-            user_to_reset = user_manager.find_user_by_id(user_id)
-            if user_to_reset:
-                # A senha padrão está definida no db_user_manager.py como "lumob@123"
-                if user_manager.reset_password(user_id):
-                    flash(f"Senha do usuário '{user_to_reset['username']}' resetada para a padrão!", 'info')
-                else:
-                    flash("Erro ao resetar senha.", 'danger')
-            else:
-                flash("Usuário não encontrado para resetar senha.", 'danger')
-    except mysql.connector.Error as e:
-        flash(f"Erro de banco de dados: {e}", 'danger')
-    except Exception as e:
-        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
-
-    return redirect(url_for('users_module'))
-
-# ---------------------------------------------------------------
-# 5.1.5 ROTA PERMISSÕES DE USUARIOS - USUARIOS
-# ---------------------------------------------------------------
-@app.route('/users/permissions/<int:user_id>', methods=['GET', 'POST'])
-@login_required
-def manage_user_permissions(user_id):
-    if current_user.role != 'admin':
-        flash('Acesso negado. Apenas administradores podem gerenciar permissões.', 'warning')
-        return redirect(url_for('users_module'))
-
-    try:
-        with DatabaseManager(**db_config) as db_base:
-            user_manager = UserManager(db_base)
-            # user_to_manage agora inclui o campo 'email'
-            user_to_manage = user_manager.find_user_by_id(user_id)
-
-            if not user_to_manage:
-                flash('Usuário não encontrado.', 'danger')
-                return redirect(url_for('users_module'))
-
-            # Admins sempre têm acesso total, suas permissões não devem ser editáveis aqui
-            if user_to_manage['role'] == 'admin':
-                flash('As permissões de um administrador são totais por padrão e não podem ser gerenciadas individualmente.', 'info')
-                # CORREÇÃO: Nome do template de 'manage_permissions.html' para 'users/manage_permissions.html'
-                return render_template('users/manage_permissions.html',
-                                       user_to_manage=user_to_manage,
-                                       all_modules=[], # Nenhum módulo para selecionar
-                                       current_permissions_ids=[], # Nenhuma permissão individual
-                                       user=current_user)
-
-            all_modules = user_manager.get_all_modules()
-            current_permissions_ids = user_manager.get_user_module_permissions(user_id)
-
-            if request.method == 'POST':
-                # Obter os IDs dos módulos selecionados no formulário
-                # request.form.getlist('module_ids') retorna uma lista de strings
-                selected_module_ids_str = request.form.getlist('module_ids')
-                selected_module_ids = [int(mod_id) for mod_id in selected_module_ids_str]
-
-                if user_manager.update_user_module_permissions(user_id, selected_module_ids):
-                    flash(f"Permissões do usuário '{user_to_manage['username']}' atualizadas com sucesso!", 'success')
-                    # Se o usuário que teve as permissões alteradas for o current_user,
-                    # precisamos forçar a atualização das permissões em current_user.permissions
-                    if current_user.id == user_id:
-                        current_user.permissions = user_manager.get_user_permissions(current_user.id)
-
-                    return redirect(url_for('users_module'))
-                else:
-                    flash("Erro ao atualizar permissões.", 'danger')
-
-            # GET request
-            # CORREÇÃO: Nome do template de 'manage_permissions.html' para 'users/manage_permissions.html'
-            return render_template('users/manage_permissions.html',
-                                   user_to_manage=user_to_manage,
-                                   all_modules=all_modules,
-                                   current_permissions_ids=current_permissions_ids,
-                                   user=current_user)
-
-    except mysql.connector.Error as e:
-        flash(f"Erro de banco de dados: {e}", 'danger')
-        return redirect(url_for('users_module'))
-    except Exception as e:
-        flash(f"Ocorreu um erro inesperado: {e}", 'danger')
-        return redirect(url_for('users_module'))
-
-#################################################################
-# 99. INICIALIZAÇÃO DA APLICAÇÃO LUMOB
-#################################################################
 if __name__ == '__main__':
     app.run(debug=True)

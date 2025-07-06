@@ -144,7 +144,7 @@
           <button
             type="button"
             class="cancel"
-            onclick="window.location.href='{{ url_for('users_module') }}';"
+            onclick="window.location.href='{{ url_for('users_bp.users_module') }}';"
           >
             Cancelar
           </button>
@@ -153,7 +153,7 @@
       {% endif %}
 
       <div class="back-link">
-        <a href="{{ url_for('users_module') }}"
+        <a href="{{ url_for('users_bp.users_module') }}"
           >Voltar para a Lista de Usuários</a
         >
       </div>
