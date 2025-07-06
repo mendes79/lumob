@@ -7083,7 +7083,68 @@ def export_treinamentos_excel():
 
 
 # ---------------------------------------------------------------
-# 4.3.6 ROTAS TREINAMENTOS AGENDAMENTOS - SEGURANCA
+# 4.3.6 ROTAS RELATORIO DE TREINAMENTOS - SEGURANCA
+# ---------------------------------------------------------------
+@app.route('/seguranca/relatorio_treinamentos')
+@login_required
+def seguranca_relatorio_treinamentos():
+    """
+    Rota para o relatório de treinamentos de segurança, com filtros.
+    """
+    if not current_user.can_access_module('Segurança'):
+        flash('Acesso negado. Você não tem permissão para acessar o Relatório de Treinamentos de Segurança.', 'warning')
+        return redirect(url_for('welcome'))
+
+    # Coletar parâmetros de filtro
+    search_nome_treinamento = request.args.get('nome_treinamento')
+    search_tipo_treinamento = request.args.get('tipo_treinamento')
+    search_status_agendamento = request.args.get('status_agendamento')
+    search_matricula_participante = request.args.get('matricula_participante')
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            seguranca_manager = SegurancaManager(db_base)
+            pessoal_manager = PessoalManager(db_base) # Necessário para o dropdown de funcionários
+
+            # Chama o novo método para obter os dados do relatório
+            treinamentos_relatorio_data = seguranca_manager.get_treinamentos_para_relatorio(
+                search_nome_treinamento=search_nome_treinamento,
+                search_tipo_treinamento=search_tipo_treinamento,
+                search_status_agendamento=search_status_agendamento,
+                search_matricula_participante=search_matricula_participante
+            )
+            
+            # Obter listas para dropdowns de filtro
+            all_treinamentos_for_filter = seguranca_manager.get_all_treinamentos_for_dropdown()
+            all_funcionarios_for_filter = pessoal_manager.get_all_funcionarios() # Para o filtro de participante
+            
+            tipo_treinamento_options = ['Obrigatório', 'Reciclagem', 'Voluntário', 'Outro']
+            status_agendamento_options = ['Programado', 'Realizado', 'Cancelado', 'Adiado']
+
+            return render_template(
+                'seguranca/treinamentos/treinamentos_relatorio.html', # Novo template que criaremos
+                user=current_user,
+                treinamentos_relatorio_data=treinamentos_relatorio_data,
+                all_treinamentos_for_filter=all_treinamentos_for_filter,
+                all_funcionarios_for_filter=all_funcionarios_for_filter,
+                tipo_treinamento_options=tipo_treinamento_options,
+                status_agendamento_options=status_agendamento_options,
+                selected_nome_treinamento=search_nome_treinamento,
+                selected_tipo_treinamento=search_tipo_treinamento,
+                selected_status_agendamento=search_status_agendamento,
+                selected_matricula_participante=search_matricula_participante
+            )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados ao carregar relatório de treinamentos de segurança: {e}", 'danger')
+        print(f"Erro de banco de dados em seguranca_relatorio_treinamentos: {e}")
+        return redirect(url_for('seguranca_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado ao carregar relatório de treinamentos de segurança: {e}", 'danger')
+        print(f"Erro inesperado em seguranca_relatorio_treinamentos: {e}")
+        return redirect(url_for('seguranca_module'))
+
+# ---------------------------------------------------------------
+# 4.3.7 ROTAS TREINAMENTOS AGENDAMENTOS - SEGURANCA
 # ---------------------------------------------------------------
 @app.route('/seguranca/treinamentos/agendamentos')
 @login_required
@@ -7139,7 +7200,7 @@ def treinamentos_agendamentos_module():
         return redirect(url_for('seguranca_module'))
 
 # ·······························································
-# 4.3.6.1 TREINAMENTOS AGENDAMENTOS CRUD CRIAR - SEGURANCA
+# 4.3.7.1 TREINAMENTOS AGENDAMENTOS CRUD CRIAR - SEGURANCA
 # ·······························································
 @app.route('/seguranca/treinamentos/agendamentos/add', methods=['GET', 'POST'])
 @login_required
@@ -7214,7 +7275,7 @@ def add_treinamento_agendamento():
         return redirect(url_for('treinamentos_agendamentos_module'))
 
 # ·······························································
-# 4.3.6.2 TREINAMENTOS AGENDAMENTOS CRUD EDITAR - SEGURANCA
+# 4.3.7.2 TREINAMENTOS AGENDAMENTOS CRUD EDITAR - SEGURANCA
 # ·······························································
 @app.route('/seguranca/treinamentos/agendamentos/edit/<int:agendamento_id>', methods=['GET', 'POST'])
 @login_required
@@ -7299,7 +7360,7 @@ def edit_treinamento_agendamento(agendamento_id):
         return redirect(url_for('treinamentos_agendamentos_module'))
 
 # ·······························································
-# 4.3.6.3 TREINAMENTOS AGENDAMENTOS CRUD DELETAR - SEGURANCA
+# 4.3.7.3 TREINAMENTOS AGENDAMENTOS CRUD DELETAR - SEGURANCA
 # ·······························································
 @app.route('/seguranca/treinamentos/agendamentos/delete/<int:agendamento_id>', methods=['POST'])
 @login_required
@@ -7329,7 +7390,7 @@ def delete_treinamento_agendamento(agendamento_id):
         return redirect(url_for('treinamentos_agendamentos_module'))
 
 # ·······························································
-# 4.3.6.4 TREINAMENTOS AGENDAMENTOS CRUD DETALHES - SEGURANCA
+# 4.3.7.4 TREINAMENTOS AGENDAMENTOS CRUD DETALHES - SEGURANCA
 # ·······························································
 @app.route('/seguranca/treinamentos/agendamentos/details/<int:agendamento_id>')
 @login_required
@@ -7364,7 +7425,7 @@ def treinamento_agendamento_details(agendamento_id):
         return redirect(url_for('treinamentos_agendamentos_module'))
 
 # ·······························································
-# 4.3.6.1 TREINAMENTOS AGENDAMENTOS EXPORTAR P/ EXCEL - SEGURANCA
+# 4.3.7.5 TREINAMENTOS AGENDAMENTOS EXPORTAR P/ EXCEL - SEGURANCA
 # ·······························································
 @app.route('/seguranca/treinamentos/agendamentos/export/excel')
 @login_required
@@ -7437,7 +7498,7 @@ def export_treinamentos_agendamentos_excel():
         return redirect(url_for('treinamentos_agendamentos_module'))
 
 # ---------------------------------------------------------------
-# 4.3.7 ROTAS TREINAMENTOS PARTICIPANTES - SEGURANCA
+# 4.3.8 ROTAS TREINAMENTOS PARTICIPANTES - SEGURANCA
 # ---------------------------------------------------------------
 @app.route('/seguranca/treinamentos/participantes')
 @login_required
@@ -7493,7 +7554,7 @@ def treinamentos_participantes_module():
         return redirect(url_for('seguranca_module'))
 
 # ·······························································
-# 4.3.7.1 TREINAMENTOS AGENDAMENTOS CRUD CRIAR - SEGURANCA
+# 4.3.8.1 TREINAMENTOS AGENDAMENTOS CRUD CRIAR - SEGURANCA
 # ·······························································
 @app.route('/seguranca/treinamentos/participantes/add', methods=['GET', 'POST'])
 @login_required
@@ -7577,7 +7638,7 @@ def add_treinamento_participante():
         return redirect(url_for('treinamentos_participantes_module'))
 
 # ·······························································
-# 4.3.7.2 TREINAMENTOS AGENDAMENTOS CRUD EDITAR - SEGURANCA
+# 4.3.8.2 TREINAMENTOS AGENDAMENTOS CRUD EDITAR - SEGURANCA
 # ·······························································
 @app.route('/seguranca/treinamentos/participantes/edit/<int:participante_id>', methods=['GET', 'POST'])
 @login_required
@@ -7672,7 +7733,7 @@ def edit_treinamento_participante(participante_id):
         return redirect(url_for('treinamentos_participantes_module'))
 
 # ·······························································
-# 4.3.7.3 TREINAMENTOS AGENDAMENTOS CRUD DELETAR - SEGURANCA
+# 4.3.8.3 TREINAMENTOS AGENDAMENTOS CRUD DELETAR - SEGURANCA
 # ·······························································
 @app.route('/seguranca/treinamentos/participantes/delete/<int:participante_id>', methods=['POST'])
 @login_required
@@ -7700,7 +7761,7 @@ def delete_treinamento_participante(participante_id):
         return redirect(url_for('treinamentos_participantes_module'))
 
 # ·······························································
-# 4.3.7.4 TREINAMENTOS AGENDAMENTOS CRUD DETALHES - SEGURANCA
+# 4.3.8.4 TREINAMENTOS AGENDAMENTOS CRUD DETALHES - SEGURANCA
 # ·······························································
 @app.route('/seguranca/treinamentos/participantes/details/<int:participante_id>')
 @login_required
@@ -7733,7 +7794,7 @@ def treinamento_participante_details(participante_id):
         return redirect(url_for('treinamentos_participantes_module'))
 
 # ·······························································
-# 4.3.7.5 TREINAMENTOS AGENDAMENTOS EXPORTAR P/ EXCEL - SEGURANCA
+# 4.3.8.5 TREINAMENTOS AGENDAMENTOS EXPORTAR P/ EXCEL - SEGURANCA
 # ·······························································
 @app.route('/seguranca/treinamentos/participantes/export/excel')
 @login_required
@@ -7802,6 +7863,53 @@ def export_treinamentos_participantes_excel():
         print(f"Erro ao exportar Participantes Excel: {e}")
         return redirect(url_for('treinamentos_participantes_module'))
 
+# ===============================================================
+# 4.4 ROTAS PARA DASHBOARD - SEGURANCA
+# ===============================================================
+@app.route('/seguranca/dashboard')
+@login_required
+def seguranca_dashboard():
+    """
+    Rota para o Dashboard de Segurança, exibindo KPIs e resumos.
+    """
+    if not current_user.can_access_module('Segurança'):
+        flash('Acesso negado. Você não tem permissão para acessar o Dashboard de Segurança.', 'warning')
+        return redirect(url_for('welcome'))
+
+    try:
+        with DatabaseManager(**db_config) as db_base:
+            seguranca_manager = SegurancaManager(db_base)
+            
+            # --- CORRIGIDO AQUI: GARANTIR NOMES E FORMATOS CONSISTENTES ---
+            total_incidentes_acidentes = seguranca_manager.get_total_incidentes_acidentes()
+
+            type_counts_list = seguranca_manager.get_incidentes_acidentes_counts_by_type()
+            # Converte a lista de dicionários para um único dicionário para fácil acesso no template
+            type_counts_dict = {item['Tipo_Registro']: item['Count'] for item in type_counts_list}
+
+            status_counts_list_from_db = seguranca_manager.get_incidentes_acidentes_counts_by_status()
+            # Converte a lista de dicionários para um único dicionário para fácil acesso no template para KPIs específicos
+            status_counts_dict = {item['Status_Registro']: item['Count'] for item in status_counts_list_from_db}
+
+            monthly_counts = seguranca_manager.get_incidentes_acidentes_counts_by_month_year()
+
+            return render_template(
+                'seguranca/seguranca_dashboard.html',
+                user=current_user,
+                total_incidentes_acidentes=total_incidentes_acidentes, # Valor total
+                type_counts=type_counts_list,       # Lista para iteração por tipo
+                status_counts=status_counts_dict,   # Dicionário para KPIs abertos/concluídos (ex: .get('Aberto'))
+                status_counts_list=status_counts_list_from_db, # Lista para iteração por status geral
+                monthly_counts=monthly_counts       # Lista para iteração mensal
+            )
+    except mysql.connector.Error as e:
+        flash(f"Erro de banco de dados ao carregar dashboard de segurança: {e}", 'danger')
+        print(f"Erro de banco de dados em seguranca_dashboard: {e}")
+        return redirect(url_for('seguranca_module'))
+    except Exception as e:
+        flash(f"Ocorreu um erro inesperado ao carregar dashboard de segurança: {e}", 'danger')
+        print(f"Erro inesperado em seguranca_dashboard: {e}")
+        return redirect(url_for('seguranca_module'))
 
 #################################################################
 # 5. MÓDULO USUARIOS

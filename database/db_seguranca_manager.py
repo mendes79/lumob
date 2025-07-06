@@ -125,7 +125,7 @@ class SegurancaManager:
         """
         params = (
             tipo_registro, data_hora_ocorrencia, local_ocorrencia, id_obras,
-            descricao_resumida, causas_identificadas, acoes_corretivas_recomendadas, # Corrigido o nome da variável aqui
+            descricao_resumida, causas_identificadas, acoes_preventivas_recomendadas, # Corrigido o nome da variável aqui
             acoes_preventivas_recomendadas, status_registro, responsavel_investigacao_matricula,
             data_fechamento, observacoes
         )
@@ -727,3 +727,141 @@ class SegurancaManager:
                 else:
                     item['Nome_Agendamento_Formatado'] = item['Nome_Treinamento']
         return results
+    
+    # ==================================================================================================================================
+    # === MÉTODOS PARA DASHBOARD E RELATÓRIOS DE SEGURANÇA =============================================================================
+    # ==================================================================================================================================
+
+    def get_incidentes_acidentes_counts_by_type(self):
+        """
+        Retorna a contagem de incidentes/acidentes por tipo (Incidente vs Acidente).
+        Ex: [{'Tipo_Registro': 'Incidente', 'Count': 10}, {'Tipo_Registro': 'Acidente', 'Count': 3}]
+        """
+        query = """
+            SELECT
+                Tipo_Registro,
+                COUNT(ID_Incidente_Acidente) AS Count
+            FROM
+                incidentes_acidentes
+            GROUP BY
+                Tipo_Registro
+            ORDER BY
+                Tipo_Registro
+        """
+        results = self.db.execute_query(query, fetch_results=True)
+        return results if results else []
+
+    def get_incidentes_acidentes_counts_by_status(self):
+        """
+        Retorna a contagem de incidentes/acidentes por status (Aberto, Concluído, etc.).
+        Ex: [{'Status_Registro': 'Aberto', 'Count': 5}, {'Status_Registro': 'Concluído', 'Count': 8}]
+        """
+        query = """
+            SELECT
+                Status_Registro,
+                COUNT(ID_Incidente_Acidente) AS Count
+            FROM
+                incidentes_acidentes
+            GROUP BY
+                Status_Registro
+            ORDER BY
+                Status_Registro
+        """
+        results = self.db.execute_query(query, fetch_results=True)
+        return results if results else []
+
+    def get_incidentes_acidentes_counts_by_month_year(self):
+        """
+        Retorna a contagem de incidentes/acidentes por mês e ano.
+        Útil para gráficos de tendência ao longo do tempo.
+        Ex: [{'AnoMes': '2024-01', 'Count': 2}, {'AnoMes': '2024-02', 'Count': 5}]
+        """
+        query = """
+            SELECT
+                DATE_FORMAT(Data_Hora_Ocorrencia, '%Y-%m') AS AnoMes,
+                COUNT(ID_Incidente_Acidente) AS Count
+            FROM
+                incidentes_acidentes
+            GROUP BY
+                AnoMes
+            ORDER BY
+                AnoMes
+        """
+        results = self.db.execute_query(query, fetch_results=True)
+        return results if results else []
+
+    def get_total_incidentes_acidentes(self):
+        """
+        Retorna o número total de incidentes e acidentes registrados.
+        """
+        query = """
+            SELECT
+                COUNT(ID_Incidente_Acidente) AS Total
+            FROM
+                incidentes_acidentes
+        """
+        result = self.db.execute_query(query, fetch_results=True)
+        return result[0]['Total'] if result and result[0]['Total'] is not None else 0
+
+    # ----------------------------------------------------------------------------------------------------------------------------------
+    # --- NOVO MÉTODO: Dados para Relatório de Treinamentos de Segurança ----------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------------------------------------------
+    def get_treinamentos_para_relatorio(self, search_nome_treinamento=None, search_tipo_treinamento=None, search_status_agendamento=None, search_matricula_participante=None):
+        """
+        Retorna dados detalhados para o relatório de treinamentos, incluindo informações de agendamentos e participantes.
+        LISTA APENAS TREINAMENTOS QUE POSSUEM AGENDAMENTOS OU PARTICIPANTES.
+        Permite filtros por nome/tipo de treinamento, status do agendamento e matrícula do participante.
+        """
+        query = """
+            SELECT
+                t.ID_Treinamento,
+                t.Nome_Treinamento,
+                t.Descricao,
+                t.Carga_Horaria_Horas,
+                t.Tipo_Treinamento,
+                t.Validade_Dias,
+                t.Instrutor_Responsavel,
+                ta.ID_Agendamento,
+                ta.Data_Hora_Inicio,
+                ta.Data_Hora_Fim,
+                ta.Local_Treinamento,
+                ta.Status_Agendamento,
+                tp.ID_Participante,
+                tp.Matricula_Funcionario,
+                f.Nome_Completo AS Nome_Participante,
+                tp.Presenca,
+                tp.Nota_Avaliacao,
+                tp.Data_Conclusao,
+                tp.Certificado_Emitido
+            FROM
+                treinamentos t
+            INNER JOIN  -- ALTERADO DE LEFT JOIN PARA INNER JOIN AQUI
+                treinamentos_agendamentos ta ON t.ID_Treinamento = ta.ID_Treinamento
+            LEFT JOIN   -- MANTIDO LEFT JOIN para participantes, pois um agendamento pode não ter participantes ainda
+                treinamentos_participantes tp ON ta.ID_Agendamento = tp.ID_Agendamento
+            LEFT JOIN
+                funcionarios f ON tp.Matricula_Funcionario = f.Matricula
+            WHERE 1=1
+        """
+        params = []
+
+        if search_nome_treinamento:
+            query += " AND t.Nome_Treinamento LIKE %s"
+            params.append(f"%{search_nome_treinamento}%")
+        if search_tipo_treinamento:
+            query += " AND t.Tipo_Treinamento = %s"
+            params.append(search_tipo_treinamento)
+        if search_status_agendamento:
+            query += " AND ta.Status_Agendamento = %s"
+            params.append(search_status_agendamento)
+        if search_matricula_participante:
+            query += " AND tp.Matricula_Funcionario = %s"
+            params.append(search_matricula_participante)
+        
+        query += " ORDER BY t.Nome_Treinamento, ta.Data_Hora_Inicio DESC, f.Nome_Completo"
+
+        results = self.db.execute_query(query, tuple(params), fetch_results=True)
+        if results:
+            return [self._format_date_fields(item) for item in results]
+        return results
+

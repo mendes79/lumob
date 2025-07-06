@@ -153,7 +153,40 @@
           <p>Gerencie treinamentos, agendamentos e participantes.</p>
         </div>
         {# Você pode adicionar mais cards aqui para outras funcionalidades
-        futuras: #} {#
+        futuras: #}
+        <div class="module-card">
+          <a href="{{ url_for('seguranca_dashboard') }}"
+            >Dashboard de Segurança</a
+          >
+          <p>
+            Visão geral de indicadores chave e resumos do módulo de segurança.
+          </p>
+        </div>
+        {# NOVO CARD PARA O RELATÓRIO DE TREINAMENTOS DE SEGURANÇA #}
+        <div class="module-card">
+          <a href="{{ url_for('seguranca_relatorio_treinamentos') }}"
+            >Relatório de Treinamentos</a
+          >
+          <p>Acompanhe o histórico de treinamentos e participantes.</p>
+        </div>
+        {# NOVO CARD PARA GERENCIAR AGENDAMENTOS DE TREINAMENTOS #}
+        <div class="module-card">
+          <a href="{{ url_for('treinamentos_agendamentos_module') }}"
+            >Gerenciar Agendamentos de Treinamentos</a
+          >
+          <p>Gerencie datas, locais e status de treinamentos agendados.</p>
+        </div>
+        {# FIM DO NOVO CARD #} {# NOVO CARD PARA GERENCIAR PARTICIPANTES DE
+        TREINAMENTOS #}
+        <div class="module-card">
+          <a href="{{ url_for('treinamentos_participantes_module') }}"
+            >Gerenciar Participantes de Treinamentos</a
+          >
+          <p>
+            Acompanhe a presença e avaliação de participantes em treinamentos.
+          </p>
+        </div>
+        {# FIM DO NOVO CARD #} {# FIM DO NOVO CARD #} {#
         <div class="module-card">
           <a href="#">Gestão de Riscos</a>
           <p>

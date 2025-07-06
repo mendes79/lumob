@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Treinamentos de Segurança - LUMOB</title>
+    <style>
+        /* Estilos básicos para o container e cabeçalho, copiados de outros templates para consistência mínima */
+        body {
+            font-family: sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 20px;
+        }
+        .container {
+            max-width: 1200px; /* Ajuste se precisar de mais largura */
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #0056b3;
+            margin-bottom: 30px;
+        }
+        .card {
+            background-color: #f0f8ff;
+            border: 1px solid #cceeff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        .card-header {
+            font-weight: bold;
+            color: #0056b3;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #cceeff;
+        }
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .form-row > div {
+            flex: 1;
+            min-width: 200px; /* Garante que os campos não fiquem muito pequenos */
+        }
+        .form-control {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box; /* Garante que padding não aumente a largura total */
+        }
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none; /* Para botões que são links */
+            display: inline-block; /* Para alinhar com outros botões */
+            margin-right: 10px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #e9f5ff;
+            color: #0056b3;
+        }
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .back-link {
+            display: block;
+            margin-top: 30px;
+            text-align: center;
+        }
+        .back-link a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+        /* Estilos adicionais para as seções de gráficos/listas de dados (se houver) */
+        .data-list ul {
+            list-style: none;
+            padding: 0;
+        }
+        .data-list ul li {
+            padding: 5px 0;
+            border-bottom: 1px dashed #eee;
+        }
+        .data-list ul li:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Relatório de Treinamentos de Segurança</h1>
+        <p class="lead">Visualize o histórico e o status dos treinamentos de segurança.</p>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                Filtrar Relatório
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('seguranca_relatorio_treinamentos') }}" method="GET">
+                    <div class="form-row">
+                        <div>
+                            <label for="nome_treinamento">Nome do Treinamento:</label>
+                            <input type="text" class="form-control" id="nome_treinamento" name="nome_treinamento" value="{{ selected_nome_treinamento or '' }}" placeholder="Ex: NR-35 Trabalho em Altura">
+                        </div>
+                        <div>
+                            <label for="tipo_treinamento">Tipo de Treinamento:</label>
+                            <select class="form-control" id="tipo_treinamento" name="tipo_treinamento">
+                                <option value="">Todos</option>
+                                {% for tipo in tipo_treinamento_options %}
+                                    <option value="{{ tipo }}" {% if selected_tipo_treinamento == tipo %}selected{% endif %}>{{ tipo }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label for="status_agendamento">Status do Agendamento:</label>
+                            <select class="form-control" id="status_agendamento" name="status_agendamento">
+                                <option value="">Todos</option>
+                                {% for status in status_agendamento_options %}
+                                    <option value="{{ status }}" {% if selected_status_agendamento == status %}selected{% endif %}>{{ status }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label for="matricula_participante">Matrícula do Participante:</label>
+                            <input type="text" class="form-control" id="matricula_participante" name="matricula_participante" value="{{ selected_matricula_participante or '' }}" placeholder="Ex: F001">
+                        </div>
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
+                        <a href="{{ url_for('seguranca_relatorio_treinamentos') }}" class="btn btn-secondary">Limpar Filtros</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                Detalhes dos Treinamentos
+            </div>
+            <div class="card-body">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nome Treinamento</th>
+                            <th>Tipo</th>
+                            <th>Carga Horária (h)</th>
+                            <th>Validade (dias)</th>
+                            <th>Instrutor</th>
+                            <th>Local Agendamento</th>
+                            <th>Início Agendamento</th>
+                            <th>Fim Agendamento</th>
+                            <th>Status Agendamento</th>
+                            <th>Participante</th>
+                            <th>Presença</th>
+                            <th>Nota Avaliação</th>
+                            <th>Conclusão Participante</th>
+                            <th>Certificado Emitido</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in treinamentos_relatorio_data %}
+                        <tr>
+                            <td>{{ item.Nome_Treinamento or 'N/A' }}</td>
+                            <td>{{ item.Tipo_Treinamento or 'N/A' }}</td>
+                            <td>{{ "%.1f" | format(item.Carga_Horaria_Horas) if item.Carga_Horaria_Horas is not none else 'N/A' }}</td>
+                            <td>{{ item.Validade_Dias or 'N/A' }}</td>
+                            <td>{{ item.Instrutor_Responsavel or 'N/A' }}</td>
+                            <td>{{ item.Local_Treinamento or 'N/A' }}</td>
+                            <td>{{ item.Data_Hora_Inicio.strftime('%d/%m/%Y %H:%M') if item.Data_Hora_Inicio else 'N/A' }}</td>
+                            <td>{{ item.Data_Hora_Fim.strftime('%d/%m/%Y %H:%M') if item.Data_Hora_Fim else 'N/A' }}</td>
+                            <td>{{ item.Status_Agendamento or 'N/A' }}</td>
+                            <td>{{ item.Nome_Participante or 'N/A' }} (Matrícula: {{ item.Matricula_Funcionario or 'N/A' }})</td>
+                            <td>{{ 'Sim' if item.Presenca else ('Não' if item.Presenca is not none else 'N/A') }}</td>
+                            <td>{{ "%.1f" | format(item.Nota_Avaliacao) if item.Nota_Avaliacao is not none else 'N/A' }}</td>
+                            <td>{{ item.Data_Conclusao.strftime('%d/%m/%Y') if item.Data_Conclusao else 'N/A' }}</td>
+                            <td>{{ 'Sim' if item.Certificado_Emitido else ('Não' if item.Certificado_Emitido is not none else 'N/A') }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="14" class="text-center">Nenhum dado de treinamento encontrado com os filtros aplicados.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="back-link">
+            <a href="{{ url_for('seguranca_module') }}">Voltar para o Módulo Segurança</a>
+        </div>
+    </div>
+</body>
+</html>
