@@ -65,12 +65,12 @@
         {% endwith %}
 
         <div class="action-buttons">
-            <a href="{{ url_for('add_funcionario') }}" class="add-button">Adicionar Novo Funcionário</a>
+            <a href="{{ url_for('pessoal_bp.add_funcionario') }}" class="add-button">Adicionar Novo Funcionário</a>
             <button type="button" onclick="window.print()" class="print-button">Imprimir Relação</button>
-            <a href="{{ url_for('export_funcionarios_excel') }}" class="export-excel-button">Exportar para Excel</a>
+            <a href="{{ url_for('pessoal_bp.export_funcionarios_excel') }}" class="export-excel-button">Exportar para Excel</a>
         </div>
 
-        <form method="GET" class="filter-form" action="{{ url_for('funcionarios_module') }}">
+        <form method="GET" class="filter-form" action="{{ url_for('pessoal_bp.funcionarios_module') }}">
             <label for="matricula">Matrícula:</label>
             <input type="text" id="matricula" name="matricula" value="{{ selected_matricula if selected_matricula else '' }}" placeholder="Buscar por Matrícula">
 
@@ -94,7 +94,7 @@
             </select>
 
             <button type="submit">Filtrar</button>
-            <a href="{{ url_for('funcionarios_module') }}" class="button">Limpar Filtros</a>
+            <a href="{{ url_for('pessoal_bp.funcionarios_module') }}" class="button">Limpar Filtros</a>
         </form>
 
         {% if funcionarios %}
@@ -120,9 +120,9 @@
                     <td>{{ funcionario.Status }}</td>
                     <td>{{ funcionario.Data_Admissao.strftime('%d/%m/%Y') if funcionario.Data_Admissao else 'N/A' }}</td>
                     <td class="actions">
-                        <a href="{{ url_for('funcionario_details', matricula=funcionario.Matricula) }}" class="view">Detalhes</a>
-                        <a href="{{ url_for('edit_funcionario', matricula=funcionario.Matricula) }}" class="edit">Editar</a>
-                        <form action="{{ url_for('delete_funcionario', matricula=funcionario.Matricula) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir o funcionário {{ funcionario.Nome_Completo }}? Esta ação é irreversível e excluirá todos os documentos, endereços e contatos associados.');">
+                        <a href="{{ url_for('pessoal_bp.funcionario_details', matricula=funcionario.Matricula) }}" class="view">Detalhes</a>
+                        <a href="{{ url_for('pessoal_bp.edit_funcionario', matricula=funcionario.Matricula) }}" class="edit">Editar</a>
+                        <form action="{{ url_for('pessoal_bp.delete_funcionario', matricula=funcionario.Matricula) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir o funcionário {{ funcionario.Nome_Completo }}? Esta ação é irreversível e excluirá todos os documentos, endereços e contatos associados.');">
                             <button type="submit" class="delete">Excluir</button>
                         </form>
                     </td>
@@ -135,7 +135,7 @@
         {% endif %}
 
         <div class="back-link">
-            <a href="{{ url_for('pessoal_module') }}">Voltar para o Módulo Pessoal</a>
+            <a href="{{ url_for('pessoal_bp.pessoal_module') }}">Voltar para o Módulo Pessoal</a>
         </div>
     </div>
 </body>

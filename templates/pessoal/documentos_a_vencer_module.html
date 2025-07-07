@@ -69,10 +69,17 @@
       <h1>Documentos e Contratos a Vencer</h1>
       <nav>
         <a href="{{ url_for('welcome') }}">Início</a> |
-        <a href="{{ url_for('pessoal_module') }}">Módulo Pessoal</a> |
-        <a href="{{ url_for('pessoal_dashboard') }}">Dashboard de Pessoal</a> |
-        <a href="{{ url_for('pessoal_aniversariantes') }}">Aniversariantes</a> |
-        <a href="{{ url_for('pessoal_experiencia_a_vencer') }}"
+        <a href="{{ url_for('pessoal_bp.pessoal_module') }}">Módulo Pessoal</a>
+        |
+        <a href="{{ url_for('pessoal_bp.pessoal_dashboard') }}"
+          >Dashboard de Pessoal</a
+        >
+        |
+        <a href="{{ url_for('pessoal_bp.pessoal_aniversariantes') }}"
+          >Aniversariantes</a
+        >
+        |
+        <a href="{{ url_for('pessoal_bp.pessoal_experiencia_a_vencer') }}"
           >Período de Experiência</a
         >
         |

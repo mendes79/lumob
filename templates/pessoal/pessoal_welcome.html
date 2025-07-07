@@ -136,7 +136,7 @@
 
       <div class="module-grid">
         <div class="module-card">
-          <a href="{{ url_for('funcionarios_module') }}"
+          <a href="{{ url_for('pessoal_bp.funcionarios_module') }}"
             >Gestão de Funcionários</a
           >
           <p>
@@ -152,39 +152,45 @@
           </p>
         </div>
         <div class="module-card">
-          <a href="{{ url_for('cargos_module') }}">Cargos</a>
+          <a href="{{ url_for('pessoal_bp.cargos_module') }}">Cargos</a>
           <p>Gerencie a estrutura de cargos da empresa.</p>
         </div>
         <div class="module-card">
-          <a href="{{ url_for('niveis_module') }}">Níveis</a>
+          <a href="{{ url_for('pessoal_bp.niveis_module') }}">Níveis</a>
           <p>Gerencie os níveis de carreira dos funcionários.</p>
         </div>
         <div class="module-card">
-          <a href="{{ url_for('salarios_module') }}">Salários e Benefícios</a>
+          <a href="{{ url_for('pessoal_bp.salarios_module') }}"
+            >Salários e Benefícios</a
+          >
           <p>Gerencie os pacotes salariais e benefícios por cargo e nível.</p>
         </div>
         <div class="module-card">
-          <a href="{{ url_for('ferias_module') }}">Controle de Férias</a>
+          <a href="{{ url_for('pessoal_bp.ferias_module') }}"
+            >Controle de Férias</a
+          >
           <p>Gerencie períodos aquisitivos e de gozo de férias.</p>
         </div>
         <div class="module-card">
-          <a href="{{ url_for('dependentes_module') }}"
+          <a href="{{ url_for('pessoal_bp.dependentes_module') }}"
             >Dependentes e Emergência</a
           >
           <p>Gerencie dependentes e contatos de emergência dos funcionários.</p>
         </div>
         <div class="module-card">
-          <a href="{{ url_for('pessoal_dashboard') }}">Dashboard de Pessoal</a>
+          <a href="{{ url_for('pessoal_bp.pessoal_dashboard') }}"
+            >Dashboard de Pessoal</a
+          >
           <p>Visualize métricas e indicadores chave do módulo de pessoal.</p>
         </div>
         <div class="module-card">
-          <a href="{{ url_for('pessoal_aniversariantes') }}"
+          <a href="{{ url_for('pessoal_bp.pessoal_aniversariantes') }}"
             >Relatório de Aniversariantes</a
           >
           <p>Consulte os funcionários que fazem aniversário no mês atual.</p>
         </div>
         <div class="module-card">
-          <a href="{{ url_for('pessoal_experiencia_a_vencer') }}"
+          <a href="{{ url_for('pessoal_bp.pessoal_experiencia_a_vencer') }}"
             >Período de Experiência</a
           >
           <p>
@@ -193,7 +199,7 @@
           </p>
         </div>
         <div class="module-card">
-          <a href="{{ url_for('pessoal_documentos_a_vencer') }}"
+          <a href="{{ url_for('pessoal_bp.pessoal_documentos_a_vencer') }}"
             >Documentos a Vencer</a
           >
           <p>

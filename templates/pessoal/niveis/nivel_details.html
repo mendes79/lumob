@@ -81,11 +81,12 @@
       </div>
 
       <div class="actions">
-        <a href="{{ url_for('edit_nivel', nivel_id=nivel.ID_Niveis) }}"
+        <a
+          href="{{ url_for('pessoal_bp.edit_nivel', nivel_id=nivel.ID_Niveis) }}"
           >Editar</a
         >
         <form
-          action="{{ url_for('delete_nivel', nivel_id=nivel.ID_Niveis) }}"
+          action="{{ url_for('pessoal_bp.delete_nivel', nivel_id=nivel.ID_Niveis) }}"
           method="POST"
           style="display: inline"
           onsubmit="return confirm('Tem certeza que deseja excluir este nível? Esta ação é irreversível.');"
@@ -96,7 +97,7 @@
 
       <div class="back-link">
         <p>
-          <a href="{{ url_for('niveis_module') }}"
+          <a href="{{ url_for('pessoal_bp.niveis_module') }}"
             >Voltar para a Lista de Níveis</a
           >
         </p>

@@ -65,12 +65,12 @@
         {% endwith %}
 
         <div class="action-buttons">
-            <a href="{{ url_for('add_ferias') }}" class="add-button">Adicionar Novo Registro de Férias</a>
+            <a href="{{ url_for('pessoal_bp.add_ferias') }}" class="add-button">Adicionar Novo Registro de Férias</a>
             <button type="button" onclick="window.print()" class="print-button">Imprimir Relação</button>
-            <a href="{{ url_for('export_ferias_excel') }}" class="export-excel-button">Exportar para Excel</a>
+            <a href="{{ url_for('pessoal_bp.export_ferias_excel') }}" class="export-excel-button">Exportar para Excel</a>
         </div>
 
-        <form method="GET" class="filter-form" action="{{ url_for('ferias_module') }}">
+        <form method="GET" class="filter-form" action="{{ url_for('pessoal_bp.ferias_module') }}">
             <label for="matricula">Funcionário (Matrícula):</label>
             <select id="matricula" name="matricula">
                 <option value="">Todos os Funcionários</option>
@@ -96,7 +96,7 @@
             <input type="date" id="periodo_fim" name="periodo_fim" value="{{ selected_periodo_fim if selected_periodo_fim else '' }}">
 
             <button type="submit">Filtrar</button>
-            <a href="{{ url_for('ferias_module') }}" class="button">Limpar Filtros</a>
+            <a href="{{ url_for('pessoal_bp.ferias_module') }}" class="button">Limpar Filtros</a>
         </form>
 
         {% if ferias %}
@@ -128,9 +128,9 @@
                     <td>{{ registro.Dias_Gozo if registro.Dias_Gozo is not none else 'N/A' }}</td>
                     <td>{{ registro.Status_Ferias }}</td>
                     <td class="actions">
-                        <a href="{{ url_for('ferias_details', ferias_id=registro.ID_Ferias) }}" class="view">Detalhes</a>
-                        <a href="{{ url_for('edit_ferias', ferias_id=registro.ID_Ferias) }}" class="edit">Editar</a>
-                        <form action="{{ url_for('delete_ferias', ferias_id=registro.ID_Ferias) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este registro de férias (ID: {{ registro.ID_Ferias }})? Esta ação é irreversível.');">
+                        <a href="{{ url_for('pessoal_bp.ferias_details', ferias_id=registro.ID_Ferias) }}" class="view">Detalhes</a>
+                        <a href="{{ url_for('pessoal_bp.edit_ferias', ferias_id=registro.ID_Ferias) }}" class="edit">Editar</a>
+                        <form action="{{ url_for('pessoal_bp.delete_ferias', ferias_id=registro.ID_Ferias) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este registro de férias (ID: {{ registro.ID_Ferias }})? Esta ação é irreversível.');">
                             <button type="submit" class="delete">Excluir</button>
                         </form>
                     </td>
@@ -143,7 +143,7 @@
         {% endif %}
 
         <div class="back-link">
-            <a href="{{ url_for('pessoal_module') }}">Voltar para o Módulo Pessoal</a>
+            <a href="{{ url_for('pessoal_bp.pessoal_module') }}">Voltar para o Módulo Pessoal</a>
         </div>
     </div>
 </body>

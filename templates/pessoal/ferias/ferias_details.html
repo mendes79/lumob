@@ -109,11 +109,12 @@
       </div>
 
       <div class="actions">
-        <a href="{{ url_for('edit_ferias', ferias_id=ferias.ID_Ferias) }}"
+        <a
+          href="{{ url_for('pessoal_bp.edit_ferias', ferias_id=ferias.ID_Ferias) }}"
           >Editar</a
         >
         <form
-          action="{{ url_for('delete_ferias', ferias_id=ferias.ID_Ferias) }}"
+          action="{{ url_for('pessoal_bp.delete_ferias', ferias_id=ferias.ID_Ferias) }}"
           method="POST"
           style="display: inline"
           onsubmit="return confirm('Tem certeza que deseja excluir este registro de férias? Esta ação é irreversível.');"
@@ -124,7 +125,7 @@
 
       <div class="back-link">
         <p>
-          <a href="{{ url_for('ferias_module') }}"
+          <a href="{{ url_for('pessoal_bp.ferias_module') }}"
             >Voltar para a Lista de Férias</a
           >
         </p>

@@ -42,7 +42,7 @@
             {% endif %}
         {% endwith %}
 
-        <form action="{{ url_for('add_ferias') }}" method="POST">
+        <form action="{{ url_for('pessoal_bp.add_ferias') }}" method="POST">
             <div>
                 <label for="matricula_funcionario">Funcionário:</label>
                 <select id="matricula_funcionario" name="matricula_funcionario" required>
@@ -89,11 +89,11 @@
             </div>
             <div>
                 <button type="submit">Adicionar Registro</button>
-                <a href="{{ url_for('ferias_module') }}" class="cancel-link">Cancelar</a>
+                <a href="{{ url_for('pessoal_bp.ferias_module') }}" class="cancel-link">Cancelar</a>
             </div>
         </form>
         <div class="back-link">
-            <p><a href="{{ url_for('ferias_module') }}">Voltar para a Lista de Férias</a></p>
+            <p><a href="{{ url_for('pessoal_bp.ferias_module') }}">Voltar para a Lista de Férias</a></p>
         </div>
     </div>
 </body>

@@ -18,8 +18,12 @@
       <h1>Aniversariantes de {{ mes_referencia }}</h1>
       <nav>
         <a href="{{ url_for('welcome') }}">Início</a> |
-        <a href="{{ url_for('pessoal_module') }}">Módulo Pessoal</a> |
-        <a href="{{ url_for('pessoal_dashboard') }}">Dashboard de Pessoal</a> |
+        <a href="{{ url_for('pessoal_bp.pessoal_module') }}">Módulo Pessoal</a>
+        |
+        <a href="{{ url_for('pessoal_bp.pessoal_dashboard') }}"
+          >Dashboard de Pessoal</a
+        >
+        |
         <a href="{{ url_for('logout') }}">Sair</a>
       </nav>
     </header>

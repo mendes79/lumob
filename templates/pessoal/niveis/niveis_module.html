@@ -201,14 +201,14 @@
       {% endif %} {% endwith %}
 
       <div class="action-buttons">
-        <a href="{{ url_for('add_nivel') }}" class="add-button"
+        <a href="{{ url_for('pessoal_bp.add_nivel') }}" class="add-button"
           >Adicionar Novo Nível</a
         >
         <button type="button" onclick="window.print()" class="print-button">
           Imprimir Relação
         </button>
         <a
-          href="{{ url_for('export_niveis_excel') }}"
+          href="{{ url_for('pessoal_bp.export_niveis_excel') }}"
           class="export-excel-button"
           >Exportar para Excel</a
         >
@@ -217,7 +217,7 @@
       <form
         method="GET"
         class="filter-form"
-        action="{{ url_for('niveis_module') }}"
+        action="{{ url_for('pessoal_bp.niveis_module') }}"
       >
         <label for="nome_nivel">Nome do Nível:</label>
         <input
@@ -228,7 +228,7 @@
           placeholder="Buscar por Nome do Nível"
         />
         <button type="submit">Filtrar</button>
-        <a href="{{ url_for('niveis_module') }}" class="button"
+        <a href="{{ url_for('pessoal_bp.niveis_module') }}" class="button"
           >Limpar Filtros</a
         >
       </form>
@@ -251,17 +251,17 @@
             <td>{{ nivel.Descricao if nivel.Descricao else 'N/A' }}</td>
             <td class="actions">
               <a
-                href="{{ url_for('nivel_details', nivel_id=nivel.ID_Niveis) }}"
+                href="{{ url_for('pessoal_bp.nivel_details', nivel_id=nivel.ID_Niveis) }}"
                 class="view"
                 >Detalhes</a
               >
               <a
-                href="{{ url_for('edit_nivel', nivel_id=nivel.ID_Niveis) }}"
+                href="{{ url_for('pessoal_bp.edit_nivel', nivel_id=nivel.ID_Niveis) }}"
                 class="edit"
                 >Editar</a
               >
               <form
-                action="{{ url_for('delete_nivel', nivel_id=nivel.ID_Niveis) }}"
+                action="{{ url_for('pessoal_bp.delete_nivel', nivel_id=nivel.ID_Niveis) }}"
                 method="POST"
                 style="display: inline"
                 onsubmit="return confirm('Tem certeza que deseja excluir o nível {{ nivel.Nome_Nivel }}? Esta ação é irreversível e impedirá a exclusão se houver funcionários associados.');"
@@ -278,7 +278,7 @@
       {% endif %}
 
       <div class="back-link">
-        <a href="{{ url_for('pessoal_module') }}"
+        <a href="{{ url_for('pessoal_bp.pessoal_module') }}"
           >Voltar para o Módulo Pessoal</a
         >
       </div>

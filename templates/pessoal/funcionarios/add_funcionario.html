@@ -43,7 +43,7 @@
             {% endif %}
         {% endwith %}
 
-        <form action="{{ url_for('add_funcionario') }}" method="POST">
+        <form action="{{ url_for('pessoal_bp.add_funcionario') }}" method="POST">
             <div class="section-title">Dados Cadastrais</div>
             <div>
                 <label for="matricula">Matrícula:</label>
@@ -237,11 +237,11 @@
 
             <div>
                 <button type="submit">Adicionar Funcionário</button>
-                <a href="{{ url_for('funcionarios_module') }}" class="cancel-link">Cancelar</a>
+                <a href="{{ url_for('pessoal_bp.funcionarios_module') }}" class="cancel-link">Cancelar</a>
             </div>
         </form>
         <div class="back-link">
-            <p><a href="{{ url_for('funcionarios_module') }}">Voltar para a Lista de Funcionários</a></p>
+            <p><a href="{{ url_for('pessoal_bp.funcionarios_module') }}">Voltar para a Lista de Funcionários</a></p>
         </div>
     </div>
 </body>

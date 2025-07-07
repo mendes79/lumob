@@ -50,7 +50,7 @@
             {% endif %}
         {% endwith %}
 
-        <form action="{{ url_for('edit_dependente', dependente_id=dependente.ID_Dependente) }}" method="POST">
+        <form action="{{ url_for('pessoal_bp.edit_dependente', dependente_id=dependente.ID_Dependente) }}" method="POST">
             <div>
                 <label for="dependente_id">ID do Dependente:</label>
                 <input type="text" id="dependente_id" name="dependente_id" value="{{ dependente.ID_Dependente }}" readonly>
@@ -101,11 +101,11 @@
             </div>
             <div>
                 <button type="submit">Salvar Alterações</button>
-                <a href="{{ url_for('dependentes_module') }}" class="cancel-link">Cancelar</a>
+                <a href="{{ url_for('pessoal_bp.dependentes_module') }}" class="cancel-link">Cancelar</a>
             </div>
         </form>
         <div class="back-link">
-            <p><a href="{{ url_for('dependentes_module') }}">Voltar para a Lista de Dependentes</a></p>
+            <p><a href="{{ url_for('pessoal_bp.dependentes_module') }}">Voltar para a Lista de Dependentes</a></p>
         </div>
     </div>
 </body>

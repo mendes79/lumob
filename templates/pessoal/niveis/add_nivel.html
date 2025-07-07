@@ -95,7 +95,7 @@
       <div class="flash {{ category }}">{{ message }}</div>
       {% endfor %} {% endif %} {% endwith %}
 
-      <form action="{{ url_for('add_nivel') }}" method="POST">
+      <form action="{{ url_for('pessoal_bp.add_nivel') }}" method="POST">
         <div>
           <label for="nome_nivel">Nome do Nível:</label>
           <input
@@ -114,14 +114,16 @@
         </div>
         <div>
           <button type="submit">Adicionar Nível</button>
-          <a href="{{ url_for('niveis_module') }}" class="cancel-link"
+          <a
+            href="{{ url_for('pessoal_bp.niveis_module') }}"
+            class="cancel-link"
             >Cancelar</a
           >
         </div>
       </form>
       <div class="back-link">
         <p>
-          <a href="{{ url_for('niveis_module') }}"
+          <a href="{{ url_for('pessoal_bp.niveis_module') }}"
             >Voltar para a Lista de Níveis</a
           >
         </p>

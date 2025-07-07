@@ -219,7 +219,7 @@
         <p>
           <strong>Link da Foto:</strong>
           {% if funcionario.Link_Foto %}
-          <a href="{{ funcionario.Link_Foto }}" target="_blank"
+          <a href="{{ pessoal_bp.funcionario.Link_Foto }}" target="_blank"
             >{{ funcionario.Link_Foto }}</a
           >
           {% else %} N/A {% endif %}
@@ -264,7 +264,7 @@
 
       <div class="actions">
         <a
-          href="{{ url_for('edit_funcionario', matricula=funcionario.Matricula) }}"
+          href="{{ url_for('pessoal_bp.edit_funcionario', matricula=funcionario.Matricula) }}"
           >Editar</a
         >
         <button
@@ -275,7 +275,7 @@
           Imprimir
         </button>
         <form
-          action="{{ url_for('delete_funcionario', matricula=funcionario.Matricula) }}"
+          action="{{ url_for('pessoal_bp.delete_funcionario', matricula=funcionario.Matricula) }}"
           method="POST"
           style="display: inline"
           onsubmit="return confirm('Tem certeza que deseja excluir este funcionário? Esta ação é irreversível.');"
@@ -286,7 +286,7 @@
 
       <div class="back-link">
         <p>
-          <a href="{{ url_for('funcionarios_module') }}"
+          <a href="{{ url_for('pessoal_bp.funcionarios_module') }}"
             >Voltar para a Lista de Funcionários</a
           >
         </p>

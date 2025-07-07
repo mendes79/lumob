@@ -82,11 +82,12 @@
       </div>
 
       <div class="actions">
-        <a href="{{ url_for('edit_cargo', cargo_id=cargo.ID_Cargos) }}"
+        <a
+          href="{{ url_for('pessoal_bp.edit_cargo', cargo_id=cargo.ID_Cargos) }}"
           >Editar</a
         >
         <form
-          action="{{ url_for('delete_cargo', cargo_id=cargo.ID_Cargos) }}"
+          action="{{ url_for('pessoal_bp.delete_cargo', cargo_id=cargo.ID_Cargos) }}"
           method="POST"
           style="display: inline"
           onsubmit="return confirm('Tem certeza que deseja excluir este cargo? Esta ação é irreversível.');"
@@ -97,7 +98,7 @@
 
       <div class="back-link">
         <p>
-          <a href="{{ url_for('cargos_module') }}"
+          <a href="{{ url_for('pessoal_bp.cargos_module') }}"
             >Voltar para a Lista de Cargos</a
           >
         </p>

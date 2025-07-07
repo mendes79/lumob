@@ -50,7 +50,7 @@
             {% endif %}
         {% endwith %}
 
-        <form action="{{ url_for('add_salario') }}" method="POST">
+        <form action="{{ url_for('pessoal_bp.add_salario') }}" method="POST">
             <div>
                 <label for="id_cargos">Cargo:</label>
                 <select id="id_cargos" name="id_cargos" required>
@@ -111,11 +111,11 @@
             </div>
             <div>
                 <button type="submit">Adicionar Pacote Salarial</button>
-                <a href="{{ url_for('salarios_module') }}" class="cancel-link">Cancelar</a>
+                <a href="{{ url_for('pessoal_bp.salarios_module') }}" class="cancel-link">Cancelar</a>
             </div>
         </form>
         <div class="back-link">
-            <p><a href="{{ url_for('salarios_module') }}">Voltar para a Lista de Salários</a></p>
+            <p><a href="{{ url_for('pessoal_bp.salarios_module') }}">Voltar para a Lista de Salários</a></p>
         </div>
     </div>
 </body>

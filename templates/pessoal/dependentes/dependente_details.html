@@ -113,11 +113,11 @@
 
       <div class="actions">
         <a
-          href="{{ url_for('edit_dependente', dependente_id=dependente.ID_Dependente) }}"
+          href="{{ url_for('pessoal_bp.edit_dependente', dependente_id=dependente.ID_Dependente) }}"
           >Editar</a
         >
         <form
-          action="{{ url_for('delete_dependente', dependente_id=dependente.ID_Dependente) }}"
+          action="{{ url_for('pessoal_bp.delete_dependente', dependente_id=dependente.ID_Dependente) }}"
           method="POST"
           style="display: inline"
           onsubmit="return confirm('Tem certeza que deseja excluir este dependente? Esta ação é irreversível.');"
@@ -128,7 +128,7 @@
 
       <div class="back-link">
         <p>
-          <a href="{{ url_for('dependentes_module') }}"
+          <a href="{{ url_for('pessoal_bp.dependentes_module') }}"
             >Voltar para a Lista de Dependentes</a
           >
         </p>

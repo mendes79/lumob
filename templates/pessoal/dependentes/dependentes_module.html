@@ -65,12 +65,12 @@
         {% endwith %}
 
         <div class="action-buttons">
-            <a href="{{ url_for('add_dependente') }}" class="add-button">Adicionar Novo Dependente</a>
+            <a href="{{ url_for('pessoal_bp.add_dependente') }}" class="add-button">Adicionar Novo Dependente</a>
             <button type="button" onclick="window.print()" class="print-button">Imprimir Relação</button>
-            <a href="{{ url_for('export_dependentes_excel') }}" class="export-excel-button">Exportar para Excel</a>
+            <a href="{{ url_for('pessoal_bp.export_dependentes_excel') }}" class="export-excel-button">Exportar para Excel</a>
         </div>
 
-        <form method="GET" class="filter-form" action="{{ url_for('dependentes_module') }}">
+        <form method="GET" class="filter-form" action="{{ url_for('pessoal_bp.dependentes_module') }}">
             <label for="matricula">Funcionário (Matrícula):</label>
             <select id="matricula" name="matricula">
                 <option value="">Todos os Funcionários</option>
@@ -93,7 +93,7 @@
             </select>
 
             <button type="submit">Filtrar</button>
-            <a href="{{ url_for('dependentes_module') }}" class="button">Limpar Filtros</a>
+            <a href="{{ url_for('pessoal_bp.dependentes_module') }}" class="button">Limpar Filtros</a>
         </form>
 
         {% if dependentes %}
@@ -121,9 +121,9 @@
                     <td>{{ dep.Idade if dep.Idade is not none else 'N/A' }}</td>
                     <td>{{ 'Sim' if dep.Contato_Emergencia else 'Não' }}</td>
                     <td class="actions">
-                        <a href="{{ url_for('dependente_details', dependente_id=dep.ID_Dependente) }}" class="view">Detalhes</a>
-                        <a href="{{ url_for('edit_dependente', dependente_id=dep.ID_Dependente) }}" class="edit">Editar</a>
-                        <form action="{{ url_for('delete_dependente', dependente_id=dep.ID_Dependente) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este dependente ({{ dep.Nome_Completo }})? Esta ação é irreversível.');">
+                        <a href="{{ url_for('pessoal_bp.dependente_details', dependente_id=dep.ID_Dependente) }}" class="view">Detalhes</a>
+                        <a href="{{ url_for('pessoal_bp.edit_dependente', dependente_id=dep.ID_Dependente) }}" class="edit">Editar</a>
+                        <form action="{{ url_for('pessoal_bp.delete_dependente', dependente_id=dep.ID_Dependente) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este dependente ({{ dep.Nome_Completo }})? Esta ação é irreversível.');">
                             <button type="submit" class="delete">Excluir</button>
                         </form>
                     </td>
@@ -136,7 +136,7 @@
         {% endif %}
 
         <div class="back-link">
-            <a href="{{ url_for('pessoal_module') }}">Voltar para o Módulo Pessoal</a>
+            <a href="{{ url_for('pessoal_bp.pessoal_module') }}">Voltar para o Módulo Pessoal</a>
         </div>
     </div>
 </body>

@@ -201,14 +201,14 @@
       {% endif %} {% endwith %}
 
       <div class="action-buttons">
-        <a href="{{ url_for('add_cargo') }}" class="add-button"
+        <a href="{{ url_for('pessoal_bp.add_cargo') }}" class="add-button"
           >Adicionar Novo Cargo</a
         >
         <button type="button" onclick="window.print()" class="print-button">
           Imprimir Relação
         </button>
         <a
-          href="{{ url_for('export_cargos_excel') }}"
+          href="{{ url_for('pessoal_bp.export_cargos_excel') }}"
           class="export-excel-button"
           >Exportar para Excel</a
         >
@@ -217,7 +217,7 @@
       <form
         method="GET"
         class="filter-form"
-        action="{{ url_for('cargos_module') }}"
+        action="{{ url_for('pessoal_bp.cargos_module') }}"
       >
         <label for="nome_cargo">Nome do Cargo:</label>
         <input
@@ -228,7 +228,7 @@
           placeholder="Buscar por Nome do Cargo"
         />
         <button type="submit">Filtrar</button>
-        <a href="{{ url_for('cargos_module') }}" class="button"
+        <a href="{{ url_for('pessoal_bp.cargos_module') }}" class="button"
           >Limpar Filtros</a
         >
       </form>
@@ -251,17 +251,17 @@
             <td>{{ cargo.Cbo if cargo.Cbo else 'N/A' }}</td>
             <td class="actions">
               <a
-                href="{{ url_for('cargo_details', cargo_id=cargo.ID_Cargos) }}"
+                href="{{ url_for('pessoal_bp.cargo_details', cargo_id=cargo.ID_Cargos) }}"
                 class="view"
                 >Detalhes</a
               >
               <a
-                href="{{ url_for('edit_cargo', cargo_id=cargo.ID_Cargos) }}"
+                href="{{ url_for('pessoal_bp.edit_cargo', cargo_id=cargo.ID_Cargos) }}"
                 class="edit"
                 >Editar</a
               >
               <form
-                action="{{ url_for('delete_cargo', cargo_id=cargo.ID_Cargos) }}"
+                action="{{ url_for('pessoal_bp.delete_cargo', cargo_id=cargo.ID_Cargos) }}"
                 method="POST"
                 style="display: inline"
                 onsubmit="return confirm('Tem certeza que deseja excluir o cargo {{ cargo.Nome_Cargo }}? Esta ação é irreversível e impedirá a exclusão se houver funcionários associados.');"
@@ -278,7 +278,7 @@
       {% endif %}
 
       <div class="back-link">
-        <a href="{{ url_for('pessoal_module') }}"
+        <a href="{{ url_for('pessoal_bp.pessoal_module') }}"
           >Voltar para o Módulo Pessoal</a
         >
       </div>

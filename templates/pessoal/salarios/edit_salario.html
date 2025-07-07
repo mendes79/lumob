@@ -50,7 +50,7 @@
             {% endif %}
         {% endwith %}
 
-        <form action="{{ url_for('edit_salario', salario_id=salario.ID_Salarios) }}" method="POST">
+        <form action="{{ url_for('pessoal_bp.edit_salario', salario_id=salario.ID_Salarios) }}" method="POST">
             <div>
                 <label for="salario_id">ID do Pacote Salarial:</label>
                 <input type="text" id="salario_id" name="salario_id" value="{{ salario.ID_Salarios }}" readonly>
@@ -115,11 +115,11 @@
             </div>
             <div>
                 <button type="submit">Salvar Alterações</button>
-                <a href="{{ url_for('salarios_module') }}" class="cancel-link">Cancelar</a>
+                <a href="{{ url_for('pessoal_bp.salarios_module') }}" class="cancel-link">Cancelar</a>
             </div>
         </form>
         <div class="back-link">
-            <p><a href="{{ url_for('salarios_module') }}">Voltar para a Lista de Salários</a></p>
+            <p><a href="{{ url_for('pessoal_bp.salarios_module') }}">Voltar para a Lista de Salários</a></p>
         </div>
     </div>
 </body>
