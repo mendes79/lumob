@@ -904,21 +904,51 @@ class PessoalManager:
         return results if results else []
 
     def get_proximas_ferias(self, dias_antecedencia=60):
-        """Retorna uma lista de funcionários com férias programadas para os próximos dias_antecedencia."""
-        hoje = date.today()
-        data_limite = hoje + timedelta(days=dias_antecedencia)
+        """
+        Retorna uma lista de férias que estão 'Programada' ou 'Gozo' e que
+        o período de gozo *inicia ou está ativo* nos próximos 'dias_antecedencia'
+        ou termina nos próximos 'dias_antecedencia' a partir da data atual.
+        """
+        today = date.today()
+        # Calculamos a data limite futura (hoje + 60 dias)
+        future_date_limit = today + timedelta(days=dias_antecedencia)
+        
         query = """
             SELECT
-                f.Matricula, f.Nome_Completo,
-                fe.Data_Inicio_Gozo, fe.Data_Fim_Gozo, fe.Dias_Gozo, fe.Status_Ferias
-            FROM ferias fe
-            JOIN funcionarios f ON fe.Matricula_Funcionario = f.Matricula
-            WHERE fe.Data_Inicio_Gozo BETWEEN %s AND %s
-            ORDER BY fe.Data_Inicio_Gozo ASC
+                f.ID_Ferias,
+                f.Matricula_Funcionario,
+                p.Nome_Completo AS Nome_Funcionario,
+                f.Periodo_Aquisitivo_Inicio,
+                f.Periodo_Aquisitivo_Fim,
+                f.Data_Inicio_Gozo,
+                f.Data_Fim_Gozo,
+                f.Dias_Gozo,
+                f.Status_Ferias
+            FROM
+                ferias f
+            JOIN
+                funcionarios p ON f.Matricula_Funcionario = p.Matricula
+            WHERE
+                -- Férias PROGRAMADAS com Data_Inicio_Gozo no futuro próximo
+                (f.Status_Ferias = 'Programada' AND
+                 f.Data_Inicio_Gozo IS NOT NULL AND
+                 f.Data_Inicio_Gozo BETWEEN %s AND %s)
+                OR
+                -- Férias em GOZO que ainda não terminaram (ou terminam em breve)
+                (f.Status_Ferias = 'Gozo' AND
+                 f.Data_Fim_Gozo IS NOT NULL AND
+                 f.Data_Fim_Gozo >= %s) -- Que terminam de hoje em diante
+            ORDER BY
+                f.Data_Inicio_Gozo ASC
         """
-        params = (hoje, data_limite)
-        results = self.db.execute_query(query, params=params, fetch_results=True)
-        return results if results else []
+        params = (today, future_date_limit, today) # Parâmetros para os BETWEEN e o >=
+        
+        results = self.db.execute_query(query, params, fetch_results=True)
+        
+        if results:
+            return [self._format_date_fields(item) for item in results]
+        return results
+
     
     def get_aniversariantes_do_mes(self, mes=None):
         """

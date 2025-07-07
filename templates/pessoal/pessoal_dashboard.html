@@ -121,8 +121,11 @@
           <tbody>
             {% for ferias in proximas_ferias %}
             <tr>
-              <td>{{ ferias.Matricula }}</td>
-              <td>{{ ferias.Nome_Completo }}</td>
+              {# CORRIGIDO AQUI: USAR NOMES EXATOS RETORNADOS PELA QUERY #}
+              <td>{{ ferias.Matricula_Funcionario }}</td>
+              {# Era ferias.Matricula #}
+              <td>{{ ferias.Nome_Funcionario }}</td>
+              {# Era ferias.Nome_Completo #}
               <td>
                 {{ ferias.Data_Inicio_Gozo.strftime('%d/%m/%Y') if
                 ferias.Data_Inicio_Gozo else 'N/A' }}
