@@ -32,56 +32,59 @@
 </head>
 <body>
     <div class="container">
-        <h1>Editar ART: {{ art.Numero_Art }}</h1>
+        <h1>Editar ART: {{ art['numero_art'] }}</h1> {# Acesso por colchetes, minúscula #}
 
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                {% for category, message in messages %}
-                    <div class="flash {{ category }}">{{ message }}</div>
-                {% endfor %}
+                <ul class="flash-messages">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
             {% endif %}
         {% endwith %}
 
-        <form action="{{ url_for('obras_bp.edit_art', art_id=art.ID_Arts) }}" method="POST">
-            <div>
+        <form action="{{ url_for('obras_bp.edit_art', art_id=art['art_id']) }}" method="POST"> {# Acesso por colchetes, minúscula #}
+            <div class="form-group">
                 <label for="art_id">ID da ART:</label>
-                <input type="text" id="art_id" name="art_id" value="{{ art.ID_Arts }}" readonly>
+                <input type="text" id="art_id" name="art_id" value="{{ art['art_id'] }}" readonly class="form-control"> {# Acesso por colchetes, minúscula #}
             </div>
-            <div>
+            <div class="form-group">
                 <label for="id_obras">Obra:</label>
-                <select id="id_obras" name="id_obras" required>
+                <select class="form-control" id="id_obras" name="id_obras" required>
                     <option value="">Selecione uma Obra</option>
                     {% for obra in all_obras %}
-                        <option value="{{ obra.ID_Obras }}" {% if (form_data and form_data['id_obras']|default('')|int == obra.ID_Obras) or (not form_data and art.ID_Obras == obra.ID_Obras) %}selected{% endif %}>
-                            {{ obra.Numero_Obra }} - {{ obra.Nome_Obra }}
+                        <option value="{{ obra.ID_Obras }}" {% if art['id_obras']|string == obra.ID_Obras|string %}selected{% endif %}> {# Acesso por colchetes, minúscula #}
+                            {{ obra.Nome_Obra }} ({{ obra.Numero_Obra }})
                         </option>
                     {% endfor %}
                 </select>
             </div>
-            <div>
+            <div class="form-group">
                 <label for="numero_art">Número da ART:</label>
-                <input type="text" id="numero_art" name="numero_art" value="{{ form_data['numero_art'] if form_data else art.Numero_Art }}" required>
+                <input type="text" class="form-control" id="numero_art" name="numero_art" value="{{ art['numero_art']|default('') }}" required> {# Acesso por colchetes, minúscula #}
             </div>
-            <div>
-                <label for="data_pagamento">Data de Pagamento:</label>
-                <input type="date" id="data_pagamento" name="data_pagamento" value="{{ form_data['data_pagamento'] if form_data else (art.Data_Pagamento.strftime('%Y-%m-%d') if art.Data_Pagamento else '') }}">
+            <div class="form-group">
+                <label for="data_pagamento">Data de Pagamento (Opcional):</label>
+                <input type="date" class="form-control" id="data_pagamento" name="data_pagamento" value="{{ art['data_pagamento']|default('') }}"> {# Acesso por colchetes, minúscula #}
             </div>
-            <div>
+            <div class="form-group">
                 <label for="valor_pagamento">Valor de Pagamento (R$):</label>
-                <input type="number" step="0.01" id="valor_pagamento" name="valor_pagamento" value="{{ form_data['valor_pagamento'] if form_data else '%.2f'|format(art.Valor_Pagamento) }}">
+                <input type="number" step="0.01" class="form-control" id="valor_pagamento" name="valor_pagamento" value="{{ art['valor_pagamento']|default('0.00') }}"> {# Acesso por colchetes, minúscula #}
             </div>
-            <div>
+            <div class="form-group">
                 <label for="status_art">Status da ART:</label>
-                <select id="status_art" name="status_art" required>
+                <select class="form-control" id="status_art" name="status_art" required>
                     <option value="">Selecione o Status</option>
                     {% for status in status_options %}
-                        <option value="{{ status }}" {% if (form_data and form_data['status_art'] == status) or (not form_data and art.Status_Art == status) %}selected{% endif %}>{{ status }}</option>
+                        <option value="{{ status }}" {% if art['status_art'] == status %}selected{% endif %}>{{ status }}</option> {# Acesso por colchetes, minúscula #}
                     {% endfor %}
                 </select>
             </div>
-            <div>
-                <button type="submit">Salvar Alterações</button>
-                <a href="{{ url_for('obras_bp.arts_module') }}" class="cancel-link">Cancelar</a>
+            
+            <div class="btn-container">
+                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                <a href="{{ url_for('obras_bp.arts_module') }}" class="btn btn-secondary">Cancelar</a>
             </div>
         </form>
         <div class="back-link">

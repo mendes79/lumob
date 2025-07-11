@@ -144,12 +144,9 @@
         </div>
         <div class="kpi-card">
           <h4>Total de Obras (Geral)</h4>
-          {# Calcule a soma total iterando sobre os valores de 'Count' #}
-          <p>
-            {% set total_obras = 0 %} {% for status, count in
-            status_counts.items() %} {% set total_obras = total_obras + count %}
-            {% endfor %} {{ total_obras }}
-          </p>
+          {# CORRIGIDO AQUI: Exibir a variável 'total_obras_geral' diretamente
+          #}
+          <p>{{ total_obras_geral }}</p>
         </div>
         <div class="kpi-card">
           <h4>Valor Total de Contratos Ativos</h4>

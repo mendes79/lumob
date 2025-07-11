@@ -27,13 +27,13 @@ class ObrasManager:
             'Data_Avanco', # Avancos_Fisicos
             'Data_Aprovacao_Reidi', 'Data_Validade_Reidi', # Reidis
             'Data_Inicio_Vigencia', 'Data_Fim_Vigencia' # Seguros
+            # CRÍTICO: 'Valor_Obra' e 'Valor_Aditivo_Total' NÃO PODEM ESTAR AQUI!
+            # Remova-os se estiverem.
         ]
         
         for key in date_fields_to_format:
             if key in item:
                 value = item[key]
-                
-                # Se o valor for uma string
                 if isinstance(value, str):
                     if not value.strip(): # Se for string vazia ou só espaços, trate como None
                         item[key] = None
@@ -47,7 +47,6 @@ class ObrasManager:
                             item[key] = datetime.strptime(value, '%Y-%m-%d %H:%M:%S').date()
                         except ValueError:
                             # Se ainda assim falhar, define como None e loga um aviso
-                            # Isso é um fallback seguro para evitar o erro de strftime
                             print(f"AVISO: Não foi possível converter a string de data '{value}' para objeto date para o campo '{key}'. Definindo como None.")
                             item[key] = None
                 
@@ -60,7 +59,6 @@ class ObrasManager:
                     item[key] = None # Garante explicitamente que é None
 
         return item
-
     # --- Métodos OBRAS ---
     def get_all_obras(self, search_numero=None, search_nome=None, search_status=None, search_cliente_id=None):
         query = """
@@ -127,8 +125,8 @@ class ObrasManager:
                 o.Nome_Obra,
                 o.Endereco_Obra,
                 o.Escopo_Obra,
-                o.Valor_Obra,
-                o.Valor_Aditivo_Total,
+                o.Valor_Obra,          -- O campo problemático
+                o.Valor_Aditivo_Total, -- O campo problemático
                 o.Status_Obra,
                 o.Data_Inicio_Prevista,
                 o.Data_Fim_Prevista,
@@ -146,8 +144,32 @@ class ObrasManager:
         """
         result = self.db.execute_query(query, (obra_id,), fetch_results=True)
         if result:
-            return self._format_date_fields(result[0])
+            item = result[0] # Pega o dicionário de resultado da query
+
+            # --- DEBUG PRINTS AQUI ---
+            print(f"DEBUG DB_OBRAS_MANAGER: Obra ID: {obra_id}")
+            print(f"DEBUG DB_OBRAS_MANAGER: Valor_Obra - Tipo: {type(item.get('Valor_Obra'))}, Valor: {item.get('Valor_Obra')}")
+            print(f"DEBUG DB_OBRAS_MANAGER: Valor_Aditivo_Total - Tipo: {type(item.get('Valor_Aditivo_Total'))}, Valor: {item.get('Valor_Aditivo_Total')}")
+            # --- FIM DEBUG PRINTS ---
+
+            # --- TRATAMENTO EXPLÍCITO DE DECIMAIS PARA FLOAT AQUI NO MANAGER ---
+            # O mysql.connector pode retornar DECIMAL como Decimal (do módulo decimal)
+            # ou como string se o modo SQL for especial.
+            for key in ['Valor_Obra', 'Valor_Aditivo_Total']:
+                value = item.get(key)
+                if value is not None:
+                    try:
+                        # Converte para float explicitamente para garantir o tipo para o Blueprint
+                        item[key] = float(value)
+                    except (ValueError, TypeError):
+                        # Se não puder ser float, define como None.
+                        # Isso deve evitar o erro 'must be real number, not str' no Blueprint
+                        item[key] = None
+            # --- FIM DO TRATAMENTO ---
+
+            return self._format_date_fields(item) # Formata as datas por último
         return None
+
 
     def update_obra(self, obra_id, id_contratos, numero_obra, nome_obra, endereco_obra, escopo_obra, valor_obra, valor_aditivo_total, status_obra, data_inicio_prevista, data_fim_prevista):
         query = """
@@ -722,6 +744,23 @@ class ObrasManager:
         # Retorna a soma como float. Se não houver avanços, retorna 0.0
         return float(result[0]['Avanco_Acumulado']) if result and result[0]['Avanco_Acumulado'] is not None else 0.0
 
+    # ----------------------------------------------------------------------------------------------------------------------------------
+    # --- NOVO MÉTODO: Contagem Total de Obras -----------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------------------------------------------
+    def get_total_obras_count(self):
+        """
+        Retorna a contagem total de obras registradas.
+        """
+        query = """
+            SELECT
+                COUNT(ID_Obras) AS Total_Obras
+            FROM
+                obras
+        """
+        result = self.db.execute_query(query, fetch_results=True)
+        # Retorna a contagem como int. Se não houver obras, retorna 0
+        return int(result[0]['Total_Obras']) if result and result[0]['Total_Obras'] is not None else 0
+    
     # --- Métodos REIDIS ---
     def get_all_reidis(self, search_numero_portaria=None, search_numero_ato=None, search_obra_id=None, search_status=None):
         query = """

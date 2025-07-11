@@ -40,7 +40,6 @@ def obras_module():
 
     return render_template('obras/obras_welcome.html', user=current_user)
 
-# ROTA PARA O DASHBOARD DE OBRAS
 @obras_bp.route('/dashboard')
 @login_required
 def obras_dashboard():
@@ -58,10 +57,14 @@ def obras_dashboard():
             status_counts_list = obras_manager.get_obra_status_counts()
             status_counts = {item['Status_Obra']: item['Count'] for item in status_counts_list}
 
+            # --- CORRIGIDO AQUI: CHAMAR O MÉTODO PARA OBTER A CONTAGEM TOTAL ---
+            total_obras_geral = obras_manager.get_total_obras_count()
+            # --- FIM DA CORREÇÃO ---
+
             total_contratos_ativos = obras_manager.get_total_contratos_ativos_valor()
             total_medicoes_realizadas = obras_manager.get_total_medicoes_realizadas_valor()
             avg_avanco_fisico = obras_manager.get_avg_avanco_fisico_obras_ativas()
-
+            
             total_contratos_ativos_formatado = f"R$ {total_contratos_ativos:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if total_contratos_ativos is not None else "R$ 0,00"
             total_medicoes_realizadas_formatado = f"R$ {total_medicoes_realizadas:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if total_medicoes_realizadas is not None else "R$ 0,00"
             avg_avanco_fisico_formatado = f"{avg_avanco_fisico:.2f}%" if avg_avanco_fisico is not None else "0.00%"
@@ -70,6 +73,9 @@ def obras_dashboard():
                 'obras/obras_dashboard.html',
                 user=current_user,
                 status_counts=status_counts,
+                # --- CORRIGIDO AQUI: PASSAR A VARIÁVEL total_obras_geral PARA O TEMPLATE ---
+                total_obras_geral=total_obras_geral, 
+                # --- FIM DA CORREÇÃO ---
                 total_contratos_ativos=total_contratos_ativos_formatado,
                 total_medicoes_realizadas=total_medicoes_realizadas_formatado,
                 avg_avanco_fisico=avg_avanco_fisico_formatado
@@ -209,70 +215,73 @@ def add_obra():
                 nome_obra = request.form['nome_obra'].strip()
                 endereco_obra = request.form['endereco_obra'].strip()
                 escopo_obra = request.form['escopo_obra'].strip()
-                valor_obra = float(request.form['valor_obra'].replace(',', '.')) 
+                valor_obra = float(request.form['valor_obra'].replace(',', '.'))
                 valor_aditivo_total = float(request.form.get('valor_aditivo_total', '0').replace(',', '.'))
                 status_obra = request.form['status_obra'].strip()
                 data_inicio_prevista_str = request.form['data_inicio_prevista'].strip()
                 data_fim_prevista_str = request.form['data_fim_prevista'].strip()
 
+                is_valid = True
+
                 if not all([id_contratos, numero_obra, nome_obra, status_obra, data_inicio_prevista_str, data_fim_prevista_str]):
                     flash('Campos obrigatórios (Contrato, Número, Nome, Status, Datas de Início/Fim) não podem ser vazios.', 'danger')
-                    all_contratos = obras_manager.get_all_contratos_for_dropdown()
-                    status_options = ['Planejamento', 'Em Andamento', 'Concluída', 'Pausada', 'Cancelada']
-                    return render_template(
-                        'obras/add_obra.html',
-                        user=current_user,
-                        all_contratos=all_contratos,
-                        status_options=status_options,
-                        form_data=request.form 
-                    )
+                    is_valid = False
 
+                data_inicio_prevista = None
+                data_fim_prevista = None
                 try:
                     data_inicio_prevista = datetime.strptime(data_inicio_prevista_str, '%Y-%m-%d').date()
                     data_fim_prevista = datetime.strptime(data_fim_prevista_str, '%Y-%m-%d').date()
                 except ValueError:
                     flash('Formato de data inválido. Use AAAA-MM-DD.', 'danger')
-                    all_contratos = obras_manager.get_all_contratos_for_dropdown()
-                    status_options = ['Planejamento', 'Em Andamento', 'Concluída', 'Pausada', 'Cancelada']
-                    return render_template(
-                        'obras/add_obra.html',
-                        user=current_user,
-                        all_contratos=all_contratos,
-                        status_options=status_options,
-                        form_data=request.form
-                    )
+                    is_valid = False
 
                 if obras_manager.get_obra_by_numero(numero_obra):
                     flash('Número da obra já existe. Por favor, use um número único.', 'danger')
+                    is_valid = False
+
+                if not is_valid:
+                    form_data_to_template = request.form.to_dict()
+                    form_data_to_template['data_inicio_prevista'] = data_inicio_prevista_str
+                    form_data_to_template['data_fim_prevista'] = data_fim_prevista_str
+                    # Garante que o ID do contrato esteja como string para o template
+                    form_data_to_template['id_contratos'] = str(id_contratos)
+
                     all_contratos = obras_manager.get_all_contratos_for_dropdown()
-                    status_options = ['Planejamento', 'Em Andamento', 'Concluída', 'Pausada', 'Cancelada']
+                    status_options_list = ['Planejamento', 'Em Andamento', 'Concluída', 'Pausada', 'Cancelada']
                     return render_template(
                         'obras/add_obra.html',
                         user=current_user,
+                        obra=form_data_to_template,
                         all_contratos=all_contratos,
-                        status_options=status_options,
-                        form_data=request.form
+                        status_options=status_options_list
                     )
 
                 success = obras_manager.add_obra(
-                    id_contratos, numero_obra, nome_obra, endereco_obra, escopo_obra, valor_obra, valor_aditivo_total, status_obra, data_inicio_prevista, data_fim_prevista
+                    id_contratos, numero_obra, nome_obra, endereco_obra, escopo_obra,
+                    valor_obra, valor_aditivo_total, status_obra,
+                    data_inicio_prevista, data_fim_prevista
                 )
                 if success:
                     flash('Obra adicionada com sucesso!', 'success')
                     return redirect(url_for('obras_bp.gerenciar_obras_lista'))
                 else:
-                    flash('Erro ao adicionar obra. Verifique os dados.', 'danger')
+                    flash('Erro ao adicionar obra.', 'danger')
 
-            # GET request: Carregar dados para o formulário
+            else: # GET request: Carregar dados para o formulário
+                form_data_to_template = {} # Inicia vazio para o GET
+                # Você pode pré-popula campos aqui, se necessário
+                # Ex: form_data_to_template['status_obra'] = 'Planejamento'
+
             all_contratos = obras_manager.get_all_contratos_for_dropdown()
-            status_options = ['Planejamento', 'Em Andamento', 'Concluída', 'Pausada', 'Cancelada'] 
+            status_options_list = ['Planejamento', 'Em Andamento', 'Concluída', 'Pausada', 'Cancelada']
 
             return render_template(
                 'obras/add_obra.html',
                 user=current_user,
+                obra=form_data_to_template, # Passa form_data_to_template
                 all_contratos=all_contratos,
-                status_options=status_options,
-                form_data={}
+                status_options=status_options_list
             )
     except mysql.connector.Error as e:
         flash(f"Erro de banco de dados: {e}", 'danger')
@@ -284,108 +293,202 @@ def add_obra():
         return redirect(url_for('obras_bp.gerenciar_obras_lista'))
 
 # ROTA PARA EDITAR OBRA
-@obras_bp.route('/edit/<int:obra_id>', methods=['GET', 'POST'])
+@obras_bp.route('/edit/<int:obra_id>', methods=['GET', 'POST']) # Sua rota existente
 @login_required
 def edit_obra(obra_id):
+    print(f"DEBUG_EDIT_OBRA: Início da função edit_obra para ID: {obra_id}")
     if not current_user.can_access_module('Obras'):
         flash('Acesso negado. Você não tem permissão para editar obras.', 'warning')
+        print("DEBUG_EDIT_OBRA: Acesso negado por permissão.")
         return redirect(url_for('welcome'))
 
+    # Inicializa obra_from_db fora do try/except para que esteja sempre no escopo para depuração final
+    # se necessário, embora não deva ser o caso mais
+    obra_from_db = None 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
-            obra = obras_manager.get_obra_by_id(obra_id)
+            
+            obra_from_db = obras_manager.get_obra_by_id(obra_id)
+            print(f"DEBUG_EDIT_OBRA: Obra do DB (original): {obra_from_db}")
 
-            if not obra:
+            if not obra_from_db:
                 flash('Obra não encontrada.', 'danger')
+                print(f"DEBUG_EDIT_OBRA: Obra ID {obra_id} não encontrada no DB.")
                 return redirect(url_for('obras_bp.gerenciar_obras_lista'))
 
+            all_contratos = obras_manager.get_all_contratos_for_dropdown()
+            status_options_list = ['Planejamento', 'Em Andamento', 'Concluída', 'Pausada', 'Cancelada']
+
+            form_data_to_template = {} # Inicializa como um dicionário vazio para passar ao template
+
             if request.method == 'POST':
-                id_contratos = int(request.form['id_contratos'])
-                numero_obra = request.form['numero_obra'].strip()
-                nome_obra = request.form['nome_obra'].strip()
-                endereco_obra = request.form['endereco_obra'].strip()
-                escopo_obra = request.form['escopo_obra'].strip()
-                valor_obra = float(request.form['valor_obra'].replace(',', '.'))
-                valor_aditivo_total = float(request.form.get('valor_aditivo_total', '0').replace(',', '.'))
-                status_obra = request.form['status_obra'].strip()
-                data_inicio_prevista_str = request.form['data_inicio_prevista'].strip()
-                data_fim_prevista_str = request.form['data_fim_prevista'].strip()
+                print("DEBUG_EDIT_OBRA: Método POST detectado.")
+                form_data_received = request.form.to_dict()
 
-                if not all([id_contratos, numero_obra, nome_obra, status_obra, data_inicio_prevista_str, data_fim_prevista_str]):
-                    flash('Campos obrigatórios (Contrato, Número, Nome, Status, Datas de Início/Fim) não podem ser vazios.', 'danger')
-                    all_contratos = obras_manager.get_all_contratos_for_dropdown()
-                    status_options = ['Planejamento', 'Em Andamento', 'Concluída', 'Pausada', 'Cancelada']
-                    return render_template(
-                        'obras/edit_obra.html',
-                        user=current_user,
-                        obra=obra, 
-                        all_contratos=all_contratos,
-                        status_options=status_options,
-                        form_data=request.form 
-                    )
+                is_valid = True
 
+                # Validação e Conversão de Data de Início Prevista
+                data_inicio_prevista_str = form_data_received.get('data_inicio_prevista', '').strip()
+                data_inicio_prevista = None
+                if data_inicio_prevista_str:
+                    try:
+                        data_inicio_prevista = datetime.strptime(data_inicio_prevista_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        flash('Formato de Data de Início Prevista inválido. Use AAAA-MM-DD.', 'danger')
+                        is_valid = False
+                else:
+                    flash('Data de Início Prevista é obrigatória.', 'danger')
+                    is_valid = False
+
+                # Validação e Conversão de Data de Fim Prevista
+                data_fim_prevista_str = form_data_received.get('data_fim_prevista', '').strip()
+                data_fim_prevista = None
+                if data_fim_prevista_str:
+                    try:
+                        data_fim_prevista = datetime.strptime(data_fim_prevista_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        flash('Formato de Data de Fim Prevista inválido. Use AAAA-MM-DD.', 'danger')
+                        is_valid = False
+                else:
+                    flash('Data de Fim Prevista é obrigatória.', 'danger')
+                    is_valid = False
+
+                # Validação e Conversão de Valor da Obra
+                valor_obra = None
+                valor_obra_str = form_data_received.get('valor_obra', '').strip()
+                if valor_obra_str:
+                    try:
+                        valor_obra = float(valor_obra_str.replace(',', '.'))
+                    except ValueError:
+                        flash('Valor da Obra inválido. Use números.', 'danger')
+                        is_valid = False
+                else:
+                    flash('Valor da Obra é obrigatório.', 'danger')
+                    is_valid = False
+
+                # Validação e Conversão de Valor Aditivo Total (Opcional)
+                valor_aditivo_total = None
+                valor_aditivo_total_str = form_data_received.get('valor_aditivo_total', '0').strip()
                 try:
-                    data_inicio_prevista = datetime.strptime(data_inicio_prevista_str, '%Y-%m-%d').date()
-                    data_fim_prevista = datetime.strptime(data_fim_prevista_str, '%Y-%m-%d').date()
+                    valor_aditivo_total = float(valor_aditivo_total_str.replace(',', '.'))
                 except ValueError:
-                    flash('Formato de data inválido. Use AAAA-MM-DD.', 'danger')
-                    all_contratos = obras_manager.get_all_contratos_for_dropdown()
-                    status_options = ['Planejamento', 'Em Andamento', 'Concluída', 'Pausada', 'Cancelada']
+                    flash('Valor Aditivo Total inválido. Use números.', 'danger')
+                    is_valid = False
+
+                # Captura de outros campos
+                id_contratos = int(request.form.get('id_contratos'))
+                numero_obra = request.form.get('numero_obra', '').strip()
+                nome_obra = request.form.get('nome_obra', '').strip()
+                endereco_obra = request.form.get('endereco_obra', '').strip()
+                escopo_obra = request.form.get('escopo_obra', '').strip()
+                status_obra = request.form.get('status_obra', '').strip()
+
+                # Validações de Campos Obrigatórios (gerais)
+                if not all([id_contratos, numero_obra, nome_obra, status_obra]):
+                    flash('Campos obrigatórios (Contrato, Número, Nome, Status) não podem ser vazios.', 'danger')
+                    is_valid = False
+
+                # VALIDAÇÃO DE UNICIDADE DO NÚMERO DA OBRA (CORRIGIDO PARA EDIÇÃO)
+                if is_valid: # Só verifica unicidade se os dados básicos já são válidos
+                    existing_obra_by_numero = obras_manager.get_obra_by_numero(numero_obra)
+                    if existing_obra_by_numero and existing_obra_by_numero['ID_Obras'] != obra_id:
+                        flash('Número da obra já existe. Por favor, use um número único.', 'danger')
+                        is_valid = False
+
+                # --- SE HOUVER ERROS DE VALIDAÇÃO NO POST ---
+                if not is_valid:
+                    print("DEBUG_EDIT_OBRA: POST - Validação falhou. Repopulando formulário.")
+                    form_data_to_template = request.form.to_dict()
+                    form_data_to_template['data_inicio_prevista'] = data_inicio_prevista_str
+                    form_data_to_template['data_fim_prevista'] = data_fim_prevista_str
+                    form_data_to_template['valor_obra'] = valor_obra_str
+                    form_data_to_template['valor_aditivo_total'] = valor_aditivo_total_str
+
+                    form_data_to_template['ID_Obras'] = obra_id
+                    form_data_to_template['ID_Contratos'] = str(id_contratos)
+
                     return render_template(
                         'obras/edit_obra.html',
                         user=current_user,
-                        obra=obra, 
+                        obra=form_data_to_template,
                         all_contratos=all_contratos,
-                        status_options=status_options,
-                        form_data=request.form
+                        status_options=status_options_list
                     )
 
-                if obras_manager.get_obra_by_numero(numero_obra):
-                    flash('Número da obra já existe. Por favor, use um número único.', 'danger')
-                    all_contratos = obras_manager.get_all_contratos_for_dropdown()
-                    status_options = ['Planejamento', 'Em Andamento', 'Concluída', 'Pausada', 'Cancelada']
-                    return render_template(
-                        'obras/edit_obra.html',
-                        user=current_user,
-                        obra=obra, 
-                        all_contratos=all_contratos,
-                        status_options=status_options,
-                        form_data=request.form
-                    )
-
+                # --- SE TODAS AS VALIDAÇÕES PASSARAM NO POST, TENTA ATUALIZAR ---
+                print("DEBUG_EDIT_OBRA: POST - Validação bem-sucedida. Tentando atualizar DB.")
                 success = obras_manager.update_obra(
-                    obra_id, id_contratos, numero_obra, nome_obra, endereco_obra, escopo_obra, valor_obra, valor_aditivo_total, status_obra, data_inicio_prevista, data_fim_prevista
+                    obra_id, id_contratos, numero_obra, nome_obra, endereco_obra, escopo_obra,
+                    valor_obra, valor_aditivo_total, status_obra,
+                    data_inicio_prevista, data_fim_prevista
                 )
                 if success:
                     flash('Obra atualizada com sucesso!', 'success')
+                    print("DEBUG_EDIT_OBRA: Obra atualizada com sucesso.")
                     return redirect(url_for('obras_bp.gerenciar_obras_lista'))
                 else:
                     flash('Erro ao atualizar obra.', 'danger')
+                    print("DEBUG_EDIT_OBRA: Erro ao atualizar obra no DB.")
 
-            else: # GET request
-                all_contratos = obras_manager.get_all_contratos_for_dropdown()
-                status_options = ['Planejamento', 'Em Andamento', 'Concluída', 'Pausada', 'Cancelada']
+            else: # GET request (carregar dados do DB para o formulário)
+                print("DEBUG_EDIT_OBRA: Método GET detectado. Carregando dados do DB.")
 
-                obra['Data_Inicio_Prevista'] = obra['Data_Inicio_Prevista'].strftime('%Y-%m-%d') if obra['Data_Inicio_Prevista'] else ''
-                obra['Data_Fim_Prevista'] = obra['Data_Fim_Prevista'].strftime('%Y-%m-%d') if obra['Data_Fim_Prevista'] else ''
+                # Popula form_data_to_template com os dados do banco de dados (chaves originais)
+                form_data_to_template = obra_from_db.copy()
 
+                form_data_to_template['ID_Contratos'] = str(form_data_to_template['ID_Contratos']) if form_data_to_template.get('ID_Contratos') is not None else ''
+
+                text_fields = ['Numero_Obra', 'Nome_Obra', 'Endereco_Obra', 'Escopo_Obra', 'Status_Obra']
+                for key in text_fields:
+                    if key in form_data_to_template and form_data_to_template[key] is None:
+                        form_data_to_template[key] = ''
+                    else:
+                        form_data_to_template[key] = form_data_to_template.get(key, '')
+
+                data_fields = ['Data_Inicio_Prevista', 'Data_Fim_Prevista']
+                for key in data_fields:
+                    date_obj = form_data_to_template.get(key)
+                    form_data_to_template[key] = date_obj.strftime('%Y-%m-%d') if isinstance(date_obj, date) else ''
+
+                # --- CORREÇÃO AQUI: TRATAMENTO ROBUSTO PARA VALORES NUMÉRICOS (Valor_Obra, Valor_Aditivo_Total) ---
+                numeric_fields_to_format = ['Valor_Obra', 'Valor_Aditivo_Total']
+                for key in numeric_fields_to_format:
+                    value = form_data_to_template.get(key)
+                    print(f"DEBUG_EDIT_OBRA: GET - Preparando '{key}' para template. Valor: {value}, Tipo: {type(value)}")
+                    if value is None:
+                        form_data_to_template[key] = ''
+                    else:
+                        try:
+                            # Usamos f-string que é mais robusta para formatar float
+                            formatted_value_str = f"{float(value):.2f}"
+                            form_data_to_template[key] = formatted_value_str
+                            print(f"DEBUG_EDIT_OBRA: GET - '{key}' formatado para: {formatted_value_str}")
+                        except (ValueError, TypeError) as conv_err:
+                            # Em caso de qualquer falha na conversão para float, define como string vazia
+                            print(f"DEBUG_EDIT_OBRA: GET - ERRO NA CONVERSÃO/FORMATAÇÃO DE '{key}'! Valor: {value}, Tipo: {type(value)}, Erro: {conv_err}")
+                            form_data_to_template[key] = ''
+                # --- FIM DA CORREÇÃO ---
+
+            print("DEBUG_EDIT_OBRA: Renderizando template 'obras/edit_obra.html'.")
             return render_template(
                 'obras/edit_obra.html',
                 user=current_user,
-                obra=obra,
+                obra=form_data_to_template,
                 all_contratos=all_contratos,
-                status_options=status_options
+                status_options=status_options_list
             )
+
     except mysql.connector.Error as e:
         flash(f"Erro de banco de dados: {e}", 'danger')
-        print(f"Erro de banco de dados em edit_obra: {e}")
+        print(f"DEBUG_EDIT_OBRA: Erro MySQL: {e}")
         return redirect(url_for('obras_bp.gerenciar_obras_lista'))
     except Exception as e:
         flash(f"Ocorreu um erro inesperado: {e}", 'danger')
-        print(f"Erro inesperado em edit_obra: {e}")
+        print(f"DEBUG_EDIT_OBRA: Erro Inesperado: {e}")
         return redirect(url_for('obras_bp.gerenciar_obras_lista'))
 
+  
 # ROTA PARA DELETAR OBRA
 @obras_bp.route('/delete/<int:obra_id>', methods=['POST'])
 @login_required
@@ -1249,67 +1352,101 @@ def add_art():
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
+            
+            # --- CORRIGIDO AQUI: DEFINIR AS VARIÁVEIS PARA O DROPDOWN SEMPRE ---
+            all_obras = obras_manager.get_all_obras_for_dropdown() # <-- MOVIDA PARA CÁ
+            status_options = ['Paga', 'Emitida', 'Cancelada', 'Em Análise'] # <-- MOVIDA PARA CÁ
+            # --- FIM DA CORREÇÃO ---
+
+            # Inicializa form_data_to_template para preencher o formulário em caso de erro ou GET
+            form_data_to_template = {}
 
             if request.method == 'POST':
-                id_obras = int(request.form['id_obras'])
-                numero_art = request.form['numero_art'].strip()
-                data_pagamento_str = request.form.get('data_pagamento', '').strip()
-                valor_pagamento = float(request.form.get('valor_pagamento', '0').replace(',', '.'))
-                status_art = request.form['status_art'].strip()
+                form_data_received = request.form.to_dict()
 
+                data_pagamento_obj = None
+                is_valid = True
+
+                # Validação e Conversão de Data de Pagamento
+                data_pagamento_str = form_data_received.get('data_pagamento', '').strip()
+                if data_pagamento_str:
+                    try:
+                        data_pagamento_obj = datetime.strptime(data_pagamento_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        flash('Formato de Data de Pagamento inválido. Use AAAA-MM-DD.', 'danger')
+                        is_valid = False
+                
+                # Converte valores numéricos
+                valor_pagamento = None
+                valor_pagamento_str = form_data_received.get('valor_pagamento', '').strip()
+                try:
+                    if valor_pagamento_str:
+                        valor_pagamento = float(valor_pagamento_str.replace(',', '.'))
+                    else: # Valor de Pagamento pode ser opcional/zero
+                        valor_pagamento = 0.0
+                except ValueError:
+                    flash('Valor de Pagamento inválido. Use números.', 'danger')
+                    is_valid = False
+                
+                # Captura de outros campos
+                id_obras = None
+                id_obras_str = form_data_received.get('id_obras', '').strip()
+                try:
+                    if id_obras_str:
+                        id_obras = int(id_obras_str)
+                    else:
+                        flash('Obra é obrigatória.', 'danger')
+                        is_valid = False
+                except ValueError:
+                    flash('ID da Obra inválido.', 'danger')
+                    is_valid = False
+
+                numero_art = form_data_received.get('numero_art', '').strip()
+                status_art = form_data_received.get('status_art', '').strip()
+
+                # Validações de campos obrigatórios
                 if not all([id_obras, numero_art, status_art]):
                     flash('Campos obrigatórios (Obra, Número da ART, Status) não podem ser vazios.', 'danger')
-                    all_obras = obras_manager.get_all_obras_for_dropdown()
-                    status_options = ['Paga', 'Emitida', 'Cancelada', 'Em Análise']
-                    return render_template(
-                        'obras/arts/add_art.html',
-                        user=current_user,
-                        all_obras=all_obras,
-                        status_options=status_options,
-                        form_data=request.form
-                    )
+                    is_valid = False
 
-                try:
-                    data_pagamento = datetime.strptime(data_pagamento_str, '%Y-%m-%d').date() if data_pagamento_str else None
-                except ValueError:
-                    flash('Formato de Data de Pagamento inválido. Use AAAA-MM-DD.', 'danger')
-                    all_obras = obras_manager.get_all_obras_for_dropdown()
-                    status_options = ['Paga', 'Emitida', 'Cancelada', 'Em Análise']
-                    return render_template(
-                        'obras/arts/add_art.html',
-                        user=current_user,
-                        all_obras=all_obras,
-                        status_options=status_options,
-                        form_data=request.form
-                    )
-
-                if obras_manager.get_art_by_numero(numero_art):
+                # Validação de unicidade
+                existing_art = obras_manager.get_art_by_numero(numero_art)
+                if existing_art: # Não precisa de exclude_id no add
                     flash('Número da ART já existe. Por favor, use um número único.', 'danger')
-                    all_obras = obras_manager.get_all_obras_for_dropdown()
-                    status_options = ['Paga', 'Emitida', 'Cancelada', 'Em Análise']
+                    is_valid = False
+
+                # --- SE ALGUMA VALIDAÇÃO FALHOU NO POST ---
+                if not is_valid:
+                    form_data_to_template = form_data_received.copy() # Copia para repopular
+                    # Garante que as strings originais do form sejam usadas para repopular os inputs
+                    form_data_to_template['data_pagamento'] = data_pagamento_str
+                    form_data_to_template['valor_pagamento'] = valor_pagamento_str # Valor pode ser string vazia
+
                     return render_template(
                         'obras/arts/add_art.html',
                         user=current_user,
                         all_obras=all_obras,
                         status_options=status_options,
-                        form_data=request.form
+                        form_data=form_data_to_template
                     )
 
+                # --- SE TODAS AS VALIDAÇÕES PASSARAM NO POST ---
                 success = obras_manager.add_art(
-                    id_obras, numero_art, data_pagamento, valor_pagamento, status_art
+                    id_obras, numero_art, data_pagamento_obj, valor_pagamento, status_art
                 )
                 if success:
                     flash('ART adicionada com sucesso!', 'success')
                     return redirect(url_for('obras_bp.arts_module'))
                 else:
                     flash('Erro ao adicionar ART. Verifique os dados e tente novamente.', 'danger')
-
+            
+            # --- ESTE BLOCO AGORA SÓ PRECISA RENDERIZAR, POIS AS VARIAVEIS FORAM DEFINIDAS ACIMA ---
             return render_template(
                 'obras/arts/add_art.html',
                 user=current_user,
                 all_obras=all_obras,
                 status_options=status_options,
-                form_data={}
+                form_data={} # Para o GET, form_data é vazio
             )
     except mysql.connector.Error as e:
         flash(f"Erro de banco de dados: {e}", 'danger')
@@ -1331,82 +1468,117 @@ def edit_art(art_id):
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
-            art = obras_manager.get_art_by_id(art_id)
+            art_from_db = obras_manager.get_art_by_id(art_id) # Renomeado para consistência
 
-            if not art:
+            if not art_from_db:
                 flash('ART não encontrada.', 'danger')
                 return redirect(url_for('obras_bp.arts_module'))
 
-            if request.method == 'POST':
-                id_obras = int(request.form['id_obras'])
-                numero_art = request.form['numero_art'].strip()
-                data_pagamento_str = request.form.get('data_pagamento', '').strip()
-                valor_pagamento = float(request.form.get('valor_pagamento', '0').replace(',', '.'))
-                status_art = request.form['status_art'].strip()
+            all_obras = obras_manager.get_all_obras_for_dropdown()
+            status_options = ['Paga', 'Emitida', 'Cancelada', 'Em Análise']
 
+            # Inicializa form_data_to_template aqui
+            form_data_to_template = {}
+            
+            if request.method == 'POST':
+                form_data_received = request.form.to_dict()
+
+                data_pagamento_obj = None
+                is_valid = True
+
+                # Validação e Conversão de Data de Pagamento
+                data_pagamento_str = form_data_received.get('data_pagamento', '').strip()
+                if data_pagamento_str:
+                    try:
+                        data_pagamento_obj = datetime.strptime(data_pagamento_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        flash('Formato de Data de Pagamento inválido. Use AAAA-MM-DD.', 'danger')
+                        is_valid = False
+                
+                # Converte valores numéricos
+                valor_pagamento = None
+                try:
+                    valor_pagamento_str = form_data_received.get('valor_pagamento', '').strip()
+                    if valor_pagamento_str:
+                        valor_pagamento = float(valor_pagamento_str.replace(',', '.'))
+                    else: # Valor de Pagamento pode ser opcional/zero, mas se preenchido deve ser numérico
+                        valor_pagamento = 0.0 # Define como zero se vazio
+                except ValueError:
+                    flash('Valor de Pagamento inválido. Use números.', 'danger')
+                    is_valid = False
+                
+                # Captura de outros campos
+                id_obras = int(form_data_received.get('id_obras'))
+                numero_art = form_data_received.get('numero_art', '').strip()
+                status_art = form_data_received.get('status_art', '').strip()
+
+                # Validações de campos obrigatórios
                 if not all([id_obras, numero_art, status_art]):
                     flash('Campos obrigatórios (Obra, Número da ART, Status) não podem ser vazios.', 'danger')
-                    all_obras = obras_manager.get_all_obras_for_dropdown()
-                    status_options = ['Paga', 'Emitida', 'Cancelada', 'Em Análise']
-                    return render_template(
-                        'obras/arts/edit_art.html',
-                        user=current_user,
-                        art=art,
-                        all_obras=all_obras,
-                        status_options=status_options,
-                        form_data=request.form
-                    )
+                    is_valid = False
 
-                try:
-                    data_pagamento = datetime.strptime(data_pagamento_str, '%Y-%m-%d').date() if data_pagamento_str else None
-                except ValueError:
-                    flash('Formato de Data de Pagamento inválido. Use AAAA-MM-DD.', 'danger')
-                    all_obras = obras_manager.get_all_obras_for_dropdown()
-                    status_options = ['Paga', 'Emitida', 'Cancelada', 'Em Análise']
-                    return render_template(
-                        'obras/arts/edit_art.html',
-                        user=current_user,
-                        art=art,
-                        all_obras=all_obras,
-                        status_options=status_options,
-                        form_data=request.form
-                    )
-
-                if obras_manager.get_art_by_numero(numero_art):
+                # Validação de unicidade
+                existing_art = obras_manager.get_art_by_numero(numero_art)
+                if existing_art and existing_art['ID_Arts'] != art_id:
                     flash('Número da ART já existe. Por favor, use um número único.', 'danger')
-                    all_obras = obras_manager.get_all_obras_for_dropdown()
-                    status_options = ['Paga', 'Emitida', 'Cancelada', 'Em Análise']
+                    is_valid = False
+
+                # --- SE ALGUMA VALIDAÇÃO FALHOU NO POST ---
+                if not is_valid:
+                    form_data_to_template = form_data_received.copy() # Copia para repopular
+                    # Garante que as strings originais do form sejam usadas para repopular os inputs
+                    form_data_to_template['data_pagamento'] = data_pagamento_str
+                    form_data_to_template['valor_pagamento'] = valor_pagamento_str if valor_pagamento_str else '' # Converte para string ou vazia
+                    form_data_to_template['id_obras'] = str(id_obras) # ID da obra como string
+                    form_data_to_template['art_id'] = art_id # Passa o ID da ART também
+
                     return render_template(
                         'obras/arts/edit_art.html',
                         user=current_user,
-                        art=art,
+                        art=form_data_to_template, # Passa os dados para repopular
                         all_obras=all_obras,
-                        status_options=status_options,
-                        form_data=request.form
+                        status_options=status_options
                     )
 
+                # --- SE TODAS AS VALIDAÇÕES PASSARAM NO POST ---
                 success = obras_manager.update_art(
-                    art_id, id_obras, numero_art, data_pagamento, valor_pagamento, status_art
+                    art_id, id_obras, numero_art, data_pagamento_obj, valor_pagamento, status_art
                 )
                 if success:
                     flash('ART atualizada com sucesso!', 'success')
                     return redirect(url_for('obras_bp.arts_module'))
                 else:
                     flash('Erro ao atualizar ART.', 'danger')
+            
+            else: # GET request (carregar dados do DB para o formulário)
+                # Popula form_data_to_template com os dados do banco de dados, normalizando as chaves
+                form_data_to_template = art_from_db.copy()
 
-            else: # GET request
-                all_obras = obras_manager.get_all_obras_for_dropdown()
-                status_options = ['Paga', 'Emitida', 'Cancelada', 'Em Análise']
+                # Normaliza ID e números para strings
+                form_data_to_template['art_id'] = form_data_to_template['ID_Arts'] # Mapeia para art_id
+                form_data_to_template['id_obras'] = str(form_data_to_template['ID_Obras']) if form_data_to_template.get('ID_Obras') is not None else ''
+                form_data_to_template['numero_art'] = form_data_to_template['Numero_Art'] if form_data_to_template.get('Numero_Art') is not None else ''
 
-                art['Data_Pagamento'] = art['Data_Pagamento'].strftime('%Y-%m-%d') if art['Data_Pagamento'] else ''
+                # Formata datas para o formato 'YYYY-MM-DD' para os inputs HTML
+                form_data_to_template['data_pagamento'] = form_data_to_template['Data_Pagamento'].strftime('%Y-%m-%d') if form_data_to_template.get('Data_Pagamento') else ''
+                
+                # Converte valores numéricos para string para exibição no input
+                valor_pagamento_value = form_data_to_template.get('Valor_Pagamento')
+                form_data_to_template['valor_pagamento'] = "%.2f" % float(valor_pagamento_value) if valor_pagamento_value is not None else '0.00'
+                
+                # Outros campos textuais
+                form_data_to_template['status_art'] = form_data_to_template['Status_Art'] if form_data_to_template.get('Status_Art') is not None else ''
 
+
+            # Renderiza o template, sempre passando form_data_to_template como a variável 'art'
             return render_template(
                 'obras/arts/edit_art.html',
                 user=current_user,
-                art=art,
+                art=form_data_to_template, # AGORA SEMPRE PASSA form_data_to_template COMO 'art'
                 all_obras=all_obras,
                 status_options=status_options
             )
+
     except mysql.connector.Error as e:
         flash(f"Erro de banco de dados: {e}", 'danger')
         print(f"Erro de banco de dados em edit_art: {e}")
@@ -1686,87 +1858,139 @@ def edit_medicao(medicao_id):
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
-            medicao = obras_manager.get_medicao_by_id(medicao_id)
+            medicao_from_db = obras_manager.get_medicao_by_id(medicao_id) # Renomeado para consistência
 
-            if not medicao:
+            if not medicao_from_db:
                 flash('Medição não encontrada.', 'danger')
                 return redirect(url_for('obras_bp.medicoes_module'))
 
+            all_obras = obras_manager.get_all_obras_for_dropdown()
+            status_options = ['Emitida', 'Aprovada', 'Paga', 'Rejeitada']
+
+            # Inicializa form_data_to_template aqui
+            form_data_to_template = {}
+            
             if request.method == 'POST':
-                id_obras = int(request.form['id_obras'])
-                numero_medicao = int(request.form['numero_medicao'])
-                valor_medicao = float(request.form['valor_medicao'].replace(',', '.'))
-                data_medicao_str = request.form['data_medicao'].strip()
-                mes_referencia = request.form.get('mes_referencia', '').strip()
-                data_aprovacao_str = request.form.get('data_aprovacao', '').strip()
-                status_medicao = request.form['status_medicao'].strip()
-                observacao_medicao = request.form.get('observacao_medicao', '').strip()
+                form_data_received = request.form.to_dict()
 
-                if not all([id_obras, numero_medicao, valor_medicao, data_medicao_str, status_medicao]):
-                    flash('Campos obrigatórios (Obra, Número, Valor, Data, Status) não podem ser vazios.', 'danger')
-                    all_obras = obras_manager.get_all_obras_for_dropdown()
-                    status_options = ['Emitida', 'Aprovada', 'Paga', 'Rejeitada']
-                    return render_template(
-                        'obras/medicoes/edit_medicao.html',
-                        user=current_user,
-                        medicao=medicao,
-                        all_obras=all_obras,
-                        status_options=status_options,
-                        form_data=request.form
-                    )
+                # Conversões de data para objeto date/datetime.date
+                data_medicao_obj = None
+                data_aprovacao_obj = None
+                is_valid = True
 
+                data_medicao_str = form_data_received.get('data_medicao', '').strip()
+                if data_medicao_str:
+                    try:
+                        data_medicao_obj = datetime.strptime(data_medicao_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        flash('Formato de Data da Medição inválido. Use AAAA-MM-DD.', 'danger')
+                        is_valid = False
+                else:
+                    flash('Data da Medição é obrigatória.', 'danger')
+                    is_valid = False # Data da Medição é obrigatória
+
+                data_aprovacao_str = form_data_received.get('data_aprovacao', '').strip()
+                if data_aprovacao_str:
+                    try:
+                        data_aprovacao_obj = datetime.strptime(data_aprovacao_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        flash('Formato de Data de Aprovação inválido. Use AAAA-MM-DD.', 'danger')
+                        is_valid = False
+                
+                # Conversões de valores numéricos
+                numero_medicao = None
                 try:
-                    data_medicao = datetime.strptime(data_medicao_str, '%Y-%m-%d').date()
-                    data_aprovacao = datetime.strptime(data_aprovacao_str, '%Y-%m-%d').date() if data_aprovacao_str else None
+                    numero_medicao_str = form_data_received.get('numero_medicao', '').strip()
+                    if numero_medicao_str:
+                        numero_medicao = int(numero_medicao_str)
+                    else:
+                        flash('Número da Medição é obrigatório.', 'danger')
+                        is_valid = False
                 except ValueError:
-                    flash('Formato de data inválido. Use AAAA-MM-DD.', 'danger')
-                    all_obras = obras_manager.get_all_obras_for_dropdown()
-                    status_options = ['Emitida', 'Aprovada', 'Paga', 'Rejeitada']
-                    return render_template(
-                        'obras/medicoes/edit_medicao.html',
-                        user=current_user,
-                        medicao=medicao,
-                        all_obras=all_obras,
-                        status_options=status_options,
-                        form_data=request.form
-                    )
+                    flash('Número da Medição inválido. Use números inteiros.', 'danger')
+                    is_valid = False
 
-                if obras_manager.get_medicao_by_obra_numero(id_obras, numero_medicao):
+                valor_medicao = None
+                try:
+                    valor_medicao_str = form_data_received.get('valor_medicao', '').strip()
+                    if valor_medicao_str:
+                        valor_medicao = float(valor_medicao_str.replace(',', '.'))
+                    else:
+                        flash('Valor da Medição é obrigatório.', 'danger')
+                        is_valid = False
+                except ValueError:
+                    flash('Valor da Medição inválido. Use números.', 'danger')
+                    is_valid = False
+
+                # Captura de outros campos
+                mes_referencia = form_data_received.get('mes_referencia', '').strip()
+                status_medicao = form_data_received.get('status_medicao', '').strip()
+                observacao_medicao = form_data_received.get('observacao_medicao', '').strip()
+                id_obras = int(form_data_received.get('id_obras')) # ID da obra é obrigatório
+
+                if not all([status_medicao, id_obras]): # Validação final de campos obrigatórios
+                        flash('Status e Obra são obrigatórios.', 'danger')
+                        is_valid = False
+
+                # Validação de unicidade
+                existing_medicao = obras_manager.get_medicao_by_obra_numero(id_obras, numero_medicao)
+                if existing_medicao and existing_medicao['ID_Medicoes'] != medicao_id:
                     flash('Já existe uma medição com este número para a obra selecionada. Use um número único.', 'danger')
-                    all_obras = obras_manager.get_all_obras_for_dropdown()
-                    status_options = ['Emitida', 'Aprovada', 'Paga', 'Rejeitada']
+                    is_valid = False
+
+                # --- SE ALGUMA VALIDAÇÃO FALHOU NO POST ---
+                if not is_valid:
+                    form_data_to_template = form_data_received.copy() # Copia para repopular
+                    # Garante que as strings originais do form sejam usadas para repopular os inputs
+                    form_data_to_template['data_medicao'] = data_medicao_str
+                    form_data_to_template['data_aprovacao'] = data_aprovacao_str
+                    form_data_to_template['numero_medicao'] = numero_medicao_str
+                    form_data_to_template['valor_medicao'] = valor_medicao_str
+                    form_data_to_template['id_obras'] = id_obras_str # ID da obra como string
+                    form_data_to_template['medicao_id'] = medicao_id # Passa o ID da medição também
+
                     return render_template(
                         'obras/medicoes/edit_medicao.html',
                         user=current_user,
-                        medicao=medicao,
+                        medicao=form_data_to_template, # Passa os dados para repopular
                         all_obras=all_obras,
-                        status_options=status_options,
-                        form_data=request.form
+                        status_options=status_options
                     )
 
+                # --- SE TODAS AS VALIDAÇÕES PASSARAM NO POST ---
                 success = obras_manager.update_medicao(
-                    medicao_id, id_obras, numero_medicao, valor_medicao, data_medicao, mes_referencia, data_aprovacao, status_medicao, observacao_medicao
+                    medicao_id, id_obras, numero_medicao, valor_medicao, data_medicao_obj, mes_referencia, data_aprovacao_obj, status_medicao, observacao_medicao
                 )
                 if success:
                     flash('Medição atualizada com sucesso!', 'success')
                     return redirect(url_for('obras_bp.medicoes_module'))
                 else:
                     flash('Erro ao atualizar medição.', 'danger')
+            
+            else: # GET request (carregar dados do DB para o formulário)
+                # Popula form_data_to_template com os dados do banco de dados, normalizando as chaves
+                # e garantindo que o ID da medição seja 'medicao_id'
+                form_data_to_template['medicao_id'] = medicao_from_db['ID_Medicoes']
+                form_data_to_template['id_obras'] = str(medicao_from_db['ID_Obras']) if medicao_from_db['ID_Obras'] is not None else ''
+                form_data_to_template['numero_medicao'] = str(medicao_from_db['Numero_Medicao']) if medicao_from_db['Numero_Medicao'] is not None else ''
+                form_data_to_template['valor_medicao'] = "%.2f" % medicao_from_db['Valor_Medicao'] if medicao_from_db['Valor_Medicao'] is not None else ''
+                
+                form_data_to_template['data_medicao'] = medicao_from_db['Data_Medicao'].strftime('%Y-%m-%d') if medicao_from_db['Data_Medicao'] else ''
+                form_data_to_template['mes_referencia'] = medicao_from_db['Mes_Referencia'] if medicao_from_db['Mes_Referencia'] is not None else ''
+                form_data_to_template['data_aprovacao'] = medicao_from_db['Data_Aprovacao'].strftime('%Y-%m-%d') if medicao_from_db['Data_Aprovacao'] else ''
+                form_data_to_template['status_medicao'] = medicao_from_db['Status_Medicao'] if medicao_from_db['Status_Medicao'] is not None else ''
+                form_data_to_template['observacao_medicao'] = medicao_from_db['Observacao_Medicao'] if medicao_from_db['Observacao_Medicao'] is not None else ''
 
-            else: # GET request
-                all_obras = obras_manager.get_all_obras_for_dropdown()
-                status_options = ['Emitida', 'Aprovada', 'Paga', 'Rejeitada']
 
-                medicao['Data_Medicao'] = medicao['Data_Medicao'].strftime('%Y-%m-%d') if medicao['Data_Medicao'] else ''
-                medicao['Data_Aprovacao'] = medicao['Data_Aprovacao'].strftime('%Y-%m-%d') if medicao['Data_Aprovacao'] else ''
-
+            # Renderiza o template, sempre passando form_data_to_template como a variável 'medicao'
             return render_template(
                 'obras/medicoes/edit_medicao.html',
                 user=current_user,
-                medicao=medicao,
+                medicao=form_data_to_template, # AGORA SEMPRE PASSA form_data_to_template COMO 'medicao'
                 all_obras=all_obras,
                 status_options=status_options
             )
+
     except mysql.connector.Error as e:
         flash(f"Erro de banco de dados: {e}", 'danger')
         print(f"Erro de banco de dados em edit_medicao: {e}")
@@ -2101,8 +2325,8 @@ def edit_avanco_fisico(avanco_id):
 
             all_obras = obras_manager.get_all_obras_for_dropdown()
             
-            form_data_to_template = {}
-            
+            form_data_to_template = {} # Inicializa como um dicionário vazio
+
             if request.method == 'POST':
                 form_data_received = request.form.to_dict()
 
@@ -2151,25 +2375,24 @@ def edit_avanco_fisico(avanco_id):
                     flash('Obra é obrigatória.', 'danger')
                     is_valid = False
 
-                # --- NOVA VALIDAÇÃO: NÃO PERMITIR AVANÇO ACUMULADO > 100% (EDITAR) ---
+                # --- VALIDAÇÃO: NÃO PERMITIR AVANÇO ACUMULADO > 100% (EDITAR) ---
                 if is_valid: # Só faz a validação se os campos básicos já são válidos
-                    # Obtém o avanço acumulado DA OBRA, EXCLUINDO o avanço que está sendo EDITADO
                     avanco_acumulado_anterior = obras_manager.get_avanco_acumulado_para_obra(id_obras, avanco_id_excluir=avanco_id)
                     
                     if (avanco_acumulado_anterior + percentual_avanco_fisico) > 100.0:
                         flash(f'O avanço físico total da obra "{obras_manager.get_obra_by_id(id_obras)["Nome_Obra"]}" excederia 100% com esta edição. Avanço acumulado anterior (sem esta edição): {avanco_acumulado_anterior:.2f}%.', 'danger')
                         is_valid = False
-                # --- FIM DA NOVA VALIDAÇÃO ---
+                # --- FIM DA VALIDAÇÃO ---
 
-                # Se alguma validação falhou, repopula o formulário
+                # Se alguma validação falhou, repopula o formulário com os dados recebidos (já em minúsculas)
                 if not is_valid:
                     form_data_to_template = form_data_received.copy()
                     form_data_to_template['data_avanco'] = data_avanco_str
                     form_data_to_template['percentual_avanco_fisico'] = percentual_avanco_fisico_str
                     form_data_to_template['id_obras'] = id_obras_str
+                    form_data_to_template['id_avancos_fisicos'] = avanco_id # Garante que o ID do avanço esteja aqui, em minúscula
 
                     # Calcula o avanço acumulado para exibir no template mesmo em caso de erro
-                    # Note: aqui, é o acumulado ANTERIOR (sem esta edição), para dar contexto ao erro
                     if id_obras: 
                             form_data_to_template['avanco_acumulado_obra'] = obras_manager.get_avanco_acumulado_para_obra(id_obras, avanco_id_excluir=avanco_id)
                     else:
@@ -2178,8 +2401,8 @@ def edit_avanco_fisico(avanco_id):
                     return render_template(
                         'obras/avancos_fisicos/edit_avanco_fisico.html',
                         user=current_user,
-                        all_obras=all_obras,
-                        avanco=form_data_to_template
+                        avanco=form_data_to_template,
+                        all_obras=all_obras
                     )
 
                 # Se todas as validações passaram, tenta atualizar
@@ -2193,40 +2416,30 @@ def edit_avanco_fisico(avanco_id):
                     flash('Erro ao atualizar avanço físico.', 'danger')
                 
             else: # GET request (carregar dados do DB para o formulário)
-                # Popula form_data_to_template com os dados do banco de dados
-                form_data_to_template = avanco_from_db.copy()
-
-                # Formata as datas para o formato 'YYYY-MM-DD' para os inputs HTML
-                form_data_to_template['Data_Avanco'] = avanco_from_db['Data_Avanco'].strftime('%Y-%m-%d') if avanco_from_db['Data_Avanco'] else ''
+                # Popula form_data_to_template com os dados do banco de dados, normalizando as chaves para minúsculas
+                # e garantindo que o ID do avanço seja 'id_avancos_fisicos'
+                form_data_to_template['id_avancos_fisicos'] = avanco_from_db['ID_Avancos_Fisicos']
+                form_data_to_template['id_obras'] = str(avanco_from_db['ID_Obras']) if avanco_from_db['ID_Obras'] is not None else ''
                 
-                # Converte valores numéricos para string para exibição no input type="number"
-                percentual_value = form_data_to_template.get('Percentual_Avanco_Fisico')
-                if percentual_value is None:
-                    form_data_to_template['Percentual_Avanco_Fisico'] = ''
-                else:
-                    try:
-                        form_data_to_template['Percentual_Avanco_Fisico'] = "%.2f" % float(percentual_value)
-                    except (ValueError, TypeError):
-                        form_data_to_template['Percentual_Avanco_Fisico'] = ''
-                
-                # Converte ID_Obras para string para o dropdown
-                form_data_to_template['ID_Obras'] = str(form_data_to_template['ID_Obras']) if form_data_to_template.get('ID_Obras') is not None else ''
+                percentual_value = avanco_from_db.get('Percentual_Avanco_Fisico')
+                form_data_to_template['percentual_avanco_fisico'] = "%.2f" % float(percentual_value) if percentual_value is not None else ''
 
+                form_data_to_template['data_avanco'] = avanco_from_db['Data_Avanco'].strftime('%Y-%m-%d') if avanco_from_db['Data_Avanco'] else ''
+                
                 # Calcula o avanço acumulado para exibir no template no GET inicial
                 # Passamos o avanco_id para EXCLUIR o próprio avanço atual do cálculo
-                if form_data_to_template['ID_Obras']:
+                if form_data_to_template['id_obras']:
                     form_data_to_template['avanco_acumulado_obra'] = obras_manager.get_avanco_acumulado_para_obra(
-                        int(form_data_to_template['ID_Obras']), avanco_id_excluir=avanco_id
+                        int(form_data_to_template['id_obras']), avanco_id_excluir=avanco_id
                     )
                 else:
                     form_data_to_template['avanco_acumulado_obra'] = 0.0
-
 
             # Renderiza o template, sempre passando form_data_to_template como a variável 'avanco'
             return render_template(
                 'obras/avancos_fisicos/edit_avanco_fisico.html',
                 user=current_user,
-                avanco=form_data_to_template, # AGORA SEMPRE PASSA form_data_to_template COMO 'avanco'
+                avanco=form_data_to_template, # AGORA SEMPRE PASSA form_data_to_template COMO 'avanco' (chaves minúsculas)
                 all_obras=all_obras
             )
 
@@ -2238,6 +2451,7 @@ def edit_avanco_fisico(avanco_id):
         flash(f"Ocorreu um erro inesperado: {e}", 'danger')
         print(f"Erro inesperado em edit_avanco_fisico: {e}")
         return redirect(url_for('obras_bp.avancos_fisicos_module'))
+
 
 
 @obras_bp.route('/avancos_fisicos/delete/<int:avanco_id>', methods=['POST'])
@@ -2266,11 +2480,11 @@ def delete_avanco_fisico(avanco_id):
         return redirect(url_for('obras_bp.avancos_fisicos_module'))
 
 
-@obras_bp.route('/avancos_fisicos/details/<int:avanco_id>')
+@obras_bp.route('/avancos_fisicos/details/<int:avanco_id>', methods=['GET'])
 @login_required
 def avanco_fisico_details(avanco_id):
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para ver detalhes de Avanços Físicos.', 'warning')
+    if not current_user.can_access_module('Obras'):
+        flash('Acesso negado. Você não tem permissão para visualizar detalhes de Avanços Físicos.', 'warning')
         return redirect(url_for('welcome'))
 
     try:
@@ -2282,11 +2496,22 @@ def avanco_fisico_details(avanco_id):
                 flash('Avanço Físico não encontrado.', 'danger')
                 return redirect(url_for('obras_bp.avancos_fisicos_module'))
 
-        return render_template(
-            'obras/avancos_fisicos/avanco_fisico_details.html',
-            user=current_user,
-            avanco=avanco
-        )
+            # Obter o nome da obra associada
+            obra_info = obras_manager.get_obra_by_id(avanco['ID_Obras'])
+            nome_obra = obra_info['Nome_Obra'] if obra_info else 'Obra Desconhecida'
+
+            # --- NOVO: Obter o avanço físico acumulado da obra ---
+            avanco_acumulado_obra = obras_manager.get_avanco_acumulado_para_obra(avanco['ID_Obras'])
+            # --- FIM DO NOVO ---
+
+            return render_template(
+                'obras/avancos_fisicos/avanco_fisico_details.html',
+                user=current_user,
+                avanco=avanco,
+                nome_obra=nome_obra,
+                avanco_acumulado_obra=avanco_acumulado_obra # Passa o avanço acumulado para o template
+            )
+
     except mysql.connector.Error as e:
         flash(f"Erro de banco de dados: {e}", 'danger')
         print(f"Erro de banco de dados em avanco_fisico_details: {e}")
@@ -2295,7 +2520,6 @@ def avanco_fisico_details(avanco_id):
         flash(f"Ocorreu um erro inesperado: {e}", 'danger')
         print(f"Erro inesperado em avanco_fisico_details: {e}")
         return redirect(url_for('obras_bp.avancos_fisicos_module'))
-
 
 @obras_bp.route('/avancos_fisicos/export/excel')
 @login_required

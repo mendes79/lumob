@@ -32,68 +32,71 @@
 </head>
 <body>
     <div class="container">
-        <h1>Editar Medição: {{ medicao.Numero_Medicao }} (Obra: {{ medicao.Nome_Obra }})</h1>
+        <h1>Editar Medição: {{ medicao['numero_medicao'] }}</h1> {# Acesso por colchetes, minúscula #}
 
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                {% for category, message in messages %}
-                    <div class="flash {{ category }}">{{ message }}</div>
-                {% endfor %}
+                <ul class="flash-messages">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
             {% endif %}
         {% endwith %}
 
-        <form action="{{ url_for('obras_bp.edit_medicao', medicao_id=medicao.ID_Medicoes) }}" method="POST">
-            <div>
+        <form action="{{ url_for('obras_bp.edit_medicao', medicao_id=medicao['medicao_id']) }}" method="POST"> {# Acesso por colchetes, minúscula #}
+            <div class="form-group">
                 <label for="medicao_id">ID da Medição:</label>
-                <input type="text" id="medicao_id" name="medicao_id" value="{{ medicao.ID_Medicoes }}" readonly>
+                <input type="text" id="medicao_id" name="medicao_id" value="{{ medicao['medicao_id'] }}" readonly class="form-control"> {# Acesso por colchetes, minúscula #}
             </div>
-            <div>
+            <div class="form-group">
                 <label for="id_obras">Obra:</label>
-                <select id="id_obras" name="id_obras" required>
+                <select class="form-control" id="id_obras" name="id_obras" required>
                     <option value="">Selecione uma Obra</option>
                     {% for obra in all_obras %}
-                        <option value="{{ obra.ID_Obras }}" {% if (form_data and form_data['id_obras']|default('')|int == obra.ID_Obras) or (not form_data and medicao.ID_Obras == obra.ID_Obras) %}selected{% endif %}>
-                            {{ obra.Numero_Obra }} - {{ obra.Nome_Obra }}
+                        <option value="{{ obra.ID_Obras }}" {% if medicao['id_obras']|string == obra.ID_Obras|string %}selected{% endif %}> {# Acesso por colchetes, minúscula #}
+                            {{ obra.Nome_Obra }} ({{ obra.Numero_Obra }})
                         </option>
                     {% endfor %}
                 </select>
             </div>
-            <div>
+            <div class="form-group">
                 <label for="numero_medicao">Número da Medição:</label>
-                <input type="number" id="numero_medicao" name="numero_medicao" value="{{ form_data['numero_medicao'] if form_data else medicao.Numero_Medicao }}" required>
+                <input type="number" class="form-control" id="numero_medicao" name="numero_medicao" value="{{ medicao['numero_medicao']|default('') }}" required> {# Acesso por colchetes, minúscula #}
             </div>
-            <div>
+            <div class="form-group">
                 <label for="valor_medicao">Valor da Medição (R$):</label>
-                <input type="number" step="0.01" id="valor_medicao" name="valor_medicao" value="{{ form_data['valor_medicao'] if form_data else '%.2f'|format(medicao.Valor_Medicao) }}" required>
+                <input type="number" step="0.01" class="form-control" id="valor_medicao" name="valor_medicao" value="{{ medicao['valor_medicao']|default('') }}" required> {# Acesso por colchetes, minúscula #}
             </div>
-            <div>
+            <div class="form-group">
                 <label for="data_medicao">Data da Medição:</label>
-                <input type="date" id="data_medicao" name="data_medicao" value="{{ form_data['data_medicao'] if form_data else (medicao.Data_Medicao.strftime('%Y-%m-%d') if medicao.Data_Medicao else '') }}" required>
+                <input type="date" class="form-control" id="data_medicao" name="data_medicao" value="{{ medicao['data_medicao']|default('') }}" required> {# Acesso por colchetes, minúscula #}
             </div>
-            <div>
-                <label for="mes_referencia">Mês de Referência (AAAA-MM):</label>
-                <input type="text" id="mes_referencia" name="mes_referencia" placeholder="Ex: 2025-06" value="{{ form_data['mes_referencia'] if form_data else (medicao.Mes_Referencia if medicao.Mes_Referencia else '') }}">
+            <div class="form-group">
+                <label for="mes_referencia">Mês de Referência (Opcional):</label>
+                <input type="text" class="form-control" id="mes_referencia" name="mes_referencia" value="{{ medicao['mes_referencia']|default('') }}" placeholder="Ex: Março/2025"> {# Acesso por colchetes, minúscula #}
             </div>
-            <div>
-                <label for="data_aprovacao">Data de Aprovação:</label>
-                <input type="date" id="data_aprovacao" name="data_aprovacao" value="{{ form_data['data_aprovacao'] if form_data else (medicao.Data_Aprovacao.strftime('%Y-%m-%d') if medicao.Data_Aprovacao else '') }}">
+            <div class="form-group">
+                <label for="data_aprovacao">Data de Aprovação (Opcional):</label>
+                <input type="date" class="form-control" id="data_aprovacao" name="data_aprovacao" value="{{ medicao['data_aprovacao']|default('') }}"> {# Acesso por colchetes, minúscula #}
             </div>
-            <div>
+            <div class="form-group">
                 <label for="status_medicao">Status da Medição:</label>
-                <select id="status_medicao" name="status_medicao" required>
+                <select class="form-control" id="status_medicao" name="status_medicao" required>
                     <option value="">Selecione o Status</option>
                     {% for status in status_options %}
-                        <option value="{{ status }}" {% if (form_data and form_data['status_medicao'] == status) or (not form_data and medicao.Status_Medicao == status) %}selected{% endif %}>{{ status }}</option>
+                        <option value="{{ status }}" {% if medicao['status_medicao'] == status %}selected{% endif %}>{{ status }}</option> {# Acesso por colchetes, minúscula #}
                     {% endfor %}
                 </select>
             </div>
-            <div>
-                <label for="observacao_medicao">Observações:</label>
-                <textarea id="observacao_medicao" name="observacao_medicao" rows="3">{{ form_data['observacao_medicao'] if form_data else medicao.Observacao_Medicao }}</textarea>
+            <div class="form-group">
+                <label for="observacao_medicao">Observações (Opcional):</label>
+                <textarea class="form-control" id="observacao_medicao" name="observacao_medicao" rows="3">{{ medicao['observacao_medicao']|default('') }}</textarea> {# Acesso por colchetes, minúscula #}
             </div>
-            <div>
-                <button type="submit">Salvar Alterações</button>
-                <a href="{{ url_for('obras_bp.medicoes_module') }}" class="cancel-link">Cancelar</a>
+            
+            <div class="btn-container">
+                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                <a href="{{ url_for('obras_bp.medicoes_module') }}" class="btn btn-secondary">Cancelar</a>
             </div>
         </form>
         <div class="back-link">

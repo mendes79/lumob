@@ -64,6 +64,15 @@
     <div class="container">
       <h1>Detalhes do Avanço Físico</h1>
 
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %}
+      <ul class="flash-messages">
+        {% for category, message in messages %}
+        <li class="{{ category }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %} {% endwith %}
+
       <div>
         <p>
           <strong>ID do Avanço Físico:</strong> {{ avanco.ID_Avancos_Fisicos }}
@@ -91,11 +100,27 @@
           avanco.Data_Modificacao.strftime('%d/%m/%Y %H:%M:%S') if
           avanco.Data_Modificacao else 'N/A' }}
         </p>
+
+        {# NOVO: EXIBIR AVANÇO ACUMULADO DA OBRA AQUI #}
+        <p
+          style="
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+          "
+        >
+          <strong>Avanço Acumulado Total da Obra:</strong>
+          <span style="font-weight: bold; color: #0056b3"
+            >{{ "%.2f"|format(avanco_acumulado_obra) }}%</span
+          >
+        </p>
+        {# FIM DO NOVO #}
       </div>
 
       <div class="actions">
         <a
           href="{{ url_for('obras_bp.edit_avanco_fisico', avanco_id=avanco.ID_Avancos_Fisicos) }}"
+          class="btn btn-primary"
           >Editar</a
         >
         <form
@@ -104,7 +129,7 @@
           style="display: inline"
           onsubmit="return confirm('Tem certeza que deseja excluir este Avanço Físico? Esta ação é irreversível.');"
         >
-          <button type="submit" class="delete">Excluir</button>
+          <button type="submit" class="btn btn-danger">Excluir</button>
         </form>
       </div>
 
