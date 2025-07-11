@@ -106,9 +106,11 @@
       </div>
 
       <div class="actions">
-        <a href="{{ url_for('edit_obra', obra_id=obra.ID_Obras) }}">Editar</a>
+        <a href="{{ url_for('obras_bp.edit_obra', obra_id=obra.ID_Obras) }}"
+          >Editar</a
+        >
         <form
-          action="{{ url_for('delete_obra', obra_id=obra.ID_Obras) }}"
+          action="{{ url_for('obras_bp.delete_obra', obra_id=obra.ID_Obras) }}"
           method="POST"
           style="display: inline"
           onsubmit="return confirm('Tem certeza que deseja excluir esta obra? Esta ação é irreversível.');"
@@ -119,7 +121,7 @@
 
       <div class="back-link">
         <p>
-          <a href="{{ url_for('gerenciar_obras_lista') }}"
+          <a href="{{ url_for('obras_bp.gerenciar_obras_lista') }}"
             >Voltar para a Lista de Obras</a
           >
         </p>

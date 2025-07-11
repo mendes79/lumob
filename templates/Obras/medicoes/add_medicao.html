@@ -42,7 +42,7 @@
             {% endif %}
         {% endwith %}
 
-        <form action="{{ url_for('add_medicao') }}" method="POST">
+        <form action="{{ url_for('obras_bp.add_medicao') }}" method="POST">
             <div>
                 <label for="id_obras">Obra:</label>
                 <select id="id_obras" name="id_obras" required>
@@ -89,11 +89,11 @@
             </div>
             <div>
                 <button type="submit">Adicionar Medição</button>
-                <a href="{{ url_for('medicoes_module') }}" class="cancel-link">Cancelar</a>
+                <a href="{{ url_for('obras_bp.medicoes_module') }}" class="cancel-link">Cancelar</a>
             </div>
         </form>
         <div class="back-link">
-            <p><a href="{{ url_for('medicoes_module') }}">Voltar para a Lista de Medições</a></p>
+            <p><a href="{{ url_for('obras_bp.medicoes_module') }}">Voltar para a Lista de Medições</a></p>
         </div>
     </div>
 </body>

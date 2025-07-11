@@ -42,7 +42,7 @@
             {% endif %}
         {% endwith %}
 
-        <form action="{{ url_for('add_reidi') }}" method="POST">
+        <form action="{{ url_for('obras_bp.add_reidi') }}" method="POST">
             <div>
                 <label for="id_obras">Obra:</label>
                 <select id="id_obras" name="id_obras" required>
@@ -85,11 +85,11 @@
             </div>
             <div>
                 <button type="submit">Adicionar REIDI</button>
-                <a href="{{ url_for('reidis_module') }}" class="cancel-link">Cancelar</a>
+                <a href="{{ url_for('obras_bp.reidis_module') }}" class="cancel-link">Cancelar</a>
             </div>
         </form>
         <div class="back-link">
-            <p><a href="{{ url_for('reidis_module') }}">Voltar para a Lista de REIDIs</a></p>
+            <p><a href="{{ url_for('obras_bp.reidis_module') }}">Voltar para a Lista de REIDIs</a></p>
         </div>
     </div>
 </body>

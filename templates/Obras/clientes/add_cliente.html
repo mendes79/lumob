@@ -97,7 +97,7 @@
       <div class="flash {{ category }}">{{ message }}</div>
       {% endfor %} {% endif %} {% endwith %}
 
-      <form action="{{ url_for('add_cliente') }}" method="POST">
+      <form action="{{ url_for('obras_bp.add_cliente') }}" method="POST">
         <div>
           <label for="nome_cliente">Nome do Cliente:</label>
           <input
@@ -162,7 +162,9 @@
         </div>
         <div>
           <button type="submit">Adicionar Cliente</button>
-          <a href="{{ url_for('clientes_module') }}" class="cancel-link"
+          <a
+            href="{{ url_for('obras_bp.clientes_module') }}"
+            class="cancel-link"
             >Cancelar</a
           >
           {# Aponta para a lista de clientes #}
@@ -170,7 +172,7 @@
       </form>
       <div class="back-link">
         <p>
-          <a href="{{ url_for('clientes_module') }}"
+          <a href="{{ url_for('obras_bp.clientes_module') }}"
             >Voltar para a Lista de Clientes</a
           >
         </p>

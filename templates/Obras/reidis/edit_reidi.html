@@ -32,7 +32,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Editar REIDI: {{ reidi.Numero_Portaria }} (Obra: {{ reidi.Nome_Obra }})</h1>
+        <h1>Editar REIDI: {{ reidi.Numero_Portaria }}</h1>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -42,7 +42,7 @@
             {% endif %}
         {% endwith %}
 
-        <form action="{{ url_for('edit_reidi', reidi_id=reidi.ID_Reidis) }}" method="POST">
+        <form action="{{ url_for('obras_bp.edit_reidi', reidi_id=reidi.ID_Reidis) }}" method="POST">
             <div>
                 <label for="reidi_id">ID do REIDI:</label>
                 <input type="text" id="reidi_id" name="reidi_id" value="{{ reidi.ID_Reidis }}" readonly>
@@ -52,48 +52,48 @@
                 <select id="id_obras" name="id_obras" required>
                     <option value="">Selecione uma Obra</option>
                     {% for obra in all_obras %}
-                        <option value="{{ obra.ID_Obras }}" {% if (form_data and form_data['id_obras']|default('')|int == obra.ID_Obras) or (not form_data and reidi.ID_Obras == obra.ID_Obras) %}selected{% endif %}>
-                            {{ obra.Numero_Obra }} - {{ obra.Nome_Obra }}
+                        <option value="{{ obra.ID_Obras }}" {% if reidi.ID_Obras == obra.ID_Obras %}selected{% endif %}>
+                            {{ obra.Nome_Obra }} ({{ obra.Numero_Obra }})
                         </option>
                     {% endfor %}
                 </select>
             </div>
             <div>
                 <label for="numero_portaria">Número da Portaria:</label>
-                <input type="text" id="numero_portaria" name="numero_portaria" value="{{ form_data['numero_portaria'] if form_data else reidi.Numero_Portaria }}" required>
+                <input type="text" id="numero_portaria" name="numero_portaria" value="{{ reidi.Numero_Portaria or '' }}" required>
             </div>
             <div>
                 <label for="numero_ato_declaratorio">Número do Ato Declaratório:</label>
-                <input type="text" id="numero_ato_declaratorio" name="numero_ato_declaratorio" value="{{ form_data['numero_ato_declaratorio'] if form_data else reidi.Numero_Ato_Declaratorio }}" required>
+                <input type="text" id="numero_ato_declaratorio" name="numero_ato_declaratorio" value="{{ reidi.Numero_Ato_Declaratorio or '' }}" required>
             </div>
             <div>
                 <label for="data_aprovacao_reidi">Data de Aprovação:</label>
-                <input type="date" id="data_aprovacao_reidi" name="data_aprovacao_reidi" value="{{ form_data['data_aprovacao_reidi'] if form_data else (reidi.Data_Aprovacao_Reidi.strftime('%Y-%m-%d') if reidi.Data_Aprovacao_Reidi else '') }}">
+                <input type="date" id="data_aprovacao_reidi" name="data_aprovacao_reidi" value="{{ reidi.Data_Aprovacao_Reidi or '' }}">
             </div>
             <div>
                 <label for="data_validade_reidi">Data de Validade:</label>
-                <input type="date" id="data_validade_reidi" name="data_validade_reidi" value="{{ form_data['data_validade_reidi'] if form_data else (reidi.Data_Validade_Reidi.strftime('%Y-%m-%d') if reidi.Data_Validade_Reidi else '') }}">
+                <input type="date" id="data_validade_reidi" name="data_validade_reidi" value="{{ reidi.Data_Validade_Reidi or '' }}">
             </div>
             <div>
                 <label for="status_reidi">Status do REIDI:</label>
-                <select id="status_reidi" name="status_reidi"> {# Removido 'required' #}
+                <select id="status_reidi" name="status_reidi">
                     <option value="">Selecione o Status</option>
                     {% for status in status_options %}
-                        <option value="{{ status }}" {% if (form_data and form_data['status_reidi'] == status) or (not form_data and reidi.Status_Reidi == status) %}selected{% endif %}>{{ status }}</option>
+                        <option value="{{ status }}" {% if reidi.Status_Reidi == status %}selected{% endif %}>{{ status }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div>
                 <label for="observacoes_reidi">Observações:</label>
-                <textarea id="observacoes_reidi" name="observacoes_reidi" rows="3">{{ form_data['observacoes_reidi'] if form_data else reidi.Observacoes_Reidi }}</textarea>
+                <textarea id="observacoes_reidi" name="observacoes_reidi" rows="5">{{ reidi.Observacoes_Reidi or '' }}</textarea>
             </div>
             <div>
                 <button type="submit">Salvar Alterações</button>
-                <a href="{{ url_for('reidis_module') }}" class="cancel-link">Cancelar</a>
+                <a href="{{ url_for('obras_bp.reidis_module') }}" class="cancel-link">Cancelar</a>
             </div>
         </form>
         <div class="back-link">
-            <p><a href="{{ url_for('reidis_module') }}">Voltar para a Lista de REIDIs</a></p>
+            <p><a href="{{ url_for('obras_bp.reidis_module') }}">Voltar para a Lista de REIDIs</a></p>
         </div>
     </div>
 </body>

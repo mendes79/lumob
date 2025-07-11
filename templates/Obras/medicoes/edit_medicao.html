@@ -42,7 +42,7 @@
             {% endif %}
         {% endwith %}
 
-        <form action="{{ url_for('edit_medicao', medicao_id=medicao.ID_Medicoes) }}" method="POST">
+        <form action="{{ url_for('obras_bp.edit_medicao', medicao_id=medicao.ID_Medicoes) }}" method="POST">
             <div>
                 <label for="medicao_id">ID da Medição:</label>
                 <input type="text" id="medicao_id" name="medicao_id" value="{{ medicao.ID_Medicoes }}" readonly>
@@ -93,11 +93,11 @@
             </div>
             <div>
                 <button type="submit">Salvar Alterações</button>
-                <a href="{{ url_for('medicoes_module') }}" class="cancel-link">Cancelar</a>
+                <a href="{{ url_for('obras_bp.medicoes_module') }}" class="cancel-link">Cancelar</a>
             </div>
         </form>
         <div class="back-link">
-            <p><a href="{{ url_for('medicoes_module') }}">Voltar para a Lista de Medições</a></p>
+            <p><a href="{{ url_for('obras_bp.medicoes_module') }}">Voltar para a Lista de Medições</a></p>
         </div>
     </div>
 </body>

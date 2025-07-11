@@ -118,11 +118,12 @@
         sem rota #} {# Mapeamento de Nome do Módulo para URL da Rota #} {% if
         module_name == 'Pessoal' %} {% set module_url =
         url_for('pessoal_bp.pessoal_module') %} {% elif module_name == 'Obras'
-        %} {% set module_url = url_for('obras_module') %} {% elif module_name ==
-        'Usuários' %} {% set module_url = url_for('users_bp.users_module') %} {%
-        elif module_name == 'Segurança' %} {% set module_url =
-        url_for('seguranca_module') %} {# Adicione mais elifs aqui para novos
-        módulos #} {% endif %} {% if user.can_access_module(module_name) %}
+        %} {% set module_url = url_for('obras_bp.obras_module') %} {% elif
+        module_name == 'Usuários' %} {% set module_url =
+        url_for('users_bp.users_module') %} {% elif module_name == 'Segurança'
+        %} {% set module_url = url_for('seguranca_module') %} {# Adicione mais
+        elifs aqui para novos módulos #} {% endif %} {% if
+        user.can_access_module(module_name) %}
         <li><a href="{{ module_url }}">{{ module_name }}</a></li>
         {% else %}
         <li class="disabled">{{ module_name }} (Acesso Restrito)</li>

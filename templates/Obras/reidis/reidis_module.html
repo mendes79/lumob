@@ -65,12 +65,12 @@
         {% endwith %}
 
         <div class="action-buttons">
-            <a href="{{ url_for('add_reidi') }}" class="add-button">Adicionar Novo REIDI</a>
+            <a href="{{ url_for('obras_bp.add_reidi') }}" class="add-button">Adicionar Novo REIDI</a>
             <button type="button" onclick="window.print()" class="print-button">Imprimir Relação</button>
-            <a href="{{ url_for('export_reidis_excel') }}" class="export-excel-button">Exportar para Excel</a>
+            <a href="{{ url_for('obras_bp.export_reidis_excel') }}" class="export-excel-button">Exportar para Excel</a>
         </div>
 
-        <form method="GET" class="filter-form" action="{{ url_for('reidis_module') }}">
+        <form method="GET" class="filter-form" action="{{ url_for('obras_bp.reidis_module') }}">
             <label for="numero_portaria">Número Portaria:</label>
             <input type="text" id="numero_portaria" name="numero_portaria" value="{{ selected_numero_portaria if selected_numero_portaria else '' }}" placeholder="Buscar por Nº Portaria">
 
@@ -94,7 +94,7 @@
             </select>
 
             <button type="submit">Filtrar</button>
-            <a href="{{ url_for('reidis_module') }}" class="button">Limpar Filtros</a>
+            <a href="{{ url_for('obras_bp.reidis_module') }}" class="button">Limpar Filtros</a>
         </form>
 
         {% if reidis %}
@@ -122,9 +122,9 @@
                     <td>{{ reidi.Data_Validade_Reidi.strftime('%d/%m/%Y') if reidi.Data_Validade_Reidi else 'N/A' }}</td>
                     <td>{{ reidi.Status_Reidi if reidi.Status_Reidi else 'N/A' }}</td>
                     <td class="actions">
-                        <a href="{{ url_for('reidi_details', reidi_id=reidi.ID_Reidis) }}" class="view">Detalhes</a>
-                        <a href="{{ url_for('edit_reidi', reidi_id=reidi.ID_Reidis) }}" class="edit">Editar</a>
-                        <form action="{{ url_for('delete_reidi', reidi_id=reidi.ID_Reidis) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir o REIDI {{ reidi.Numero_Portaria }}? Esta ação é irreversível.');">
+                        <a href="{{ url_for('obras_bp.reidi_details', reidi_id=reidi.ID_Reidis) }}" class="view">Detalhes</a>
+                        <a href="{{ url_for('obras_bp.edit_reidi', reidi_id=reidi.ID_Reidis) }}" class="edit">Editar</a>
+                        <form action="{{ url_for('obras_bp.delete_reidi', reidi_id=reidi.ID_Reidis) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir o REIDI {{ reidi.Numero_Portaria }}? Esta ação é irreversível.');">
                             <button type="submit" class="delete">Excluir</button>
                         </form>
                     </td>
@@ -137,7 +137,7 @@
         {% endif %}
 
         <div class="back-link">
-            <a href="{{ url_for('obras_module') }}">Voltar para o Módulo Obras</a>
+            <a href="{{ url_for('obras_bp.obras_module') }}">Voltar para o Módulo Obras</a>
         </div>
     </div>
 </body>

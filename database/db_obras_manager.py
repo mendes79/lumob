@@ -370,7 +370,7 @@ class ObrasManager:
         """
         result = self.db.execute_query(query, (contrato_id,), fetch_results=True)
         if result:
-            return self._format_date_fields(result[0])
+            return self._format_date_fields(result[0]) # <-- GARANTIR QUE ESTA LINHA ESTÁ PRESENTE E CORRETA
         return None
 
     def update_contrato(self, contrato_id, id_clientes, numero_contrato, valor_contrato, data_assinatura, data_ordem_inicio, prazo_contrato_dias, data_termino_previsto, status_contrato, observacoes):
@@ -651,7 +651,7 @@ class ObrasManager:
             SELECT
                 af.ID_Avancos_Fisicos,
                 af.ID_Obras,
-                af.Percentual_Avanco_Fisico,
+                af.Percentual_Avanco_Fisico, -- O campo problemático
                 af.Data_Avanco,
                 o.Numero_Obra,
                 o.Nome_Obra,
@@ -665,7 +665,16 @@ class ObrasManager:
         """
         result = self.db.execute_query(query, (avanco_id,), fetch_results=True)
         if result:
-            return self._format_date_fields(result[0])
+            item = result[0] # Pega o dicionário de resultado
+            # --- CORRIGIDO AQUI: TRATAMENTO EXPLÍCITO PARA PERCENTUAL_AVANCO_FISICO NO MANAGER ---
+            percentual = item.get('Percentual_Avanco_Fisico')
+            if percentual is not None:
+                try:
+                    item['Percentual_Avanco_Fisico'] = float(percentual)
+                except (ValueError, TypeError):
+                    item['Percentual_Avanco_Fisico'] = None # Se não puder ser float, define como None
+            # --- FIM DA CORREÇÃO ---
+            return self._format_date_fields(item) # Continua formatando as datas
         return None
 
     def update_avanco_fisico(self, avanco_id, id_obras, percentual_avanco_fisico, data_avanco):
@@ -684,6 +693,34 @@ class ObrasManager:
     def delete_avanco_fisico(self, avanco_id):
         query = "DELETE FROM avancos_fisicos WHERE ID_Avancos_Fisicos = %s"
         return self.db.execute_query(query, (avanco_id,), fetch_results=False)
+
+    # ----------------------------------------------------------------------------------------------------------------------------------
+    # --- NOVO MÉTODO: Avanço Físico Acumulado para uma Obra --------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------------------------------------------
+    def get_avanco_acumulado_para_obra(self, obra_id, avanco_id_excluir=None):
+        """
+        Retorna o percentual de avanço físico acumulado para uma obra específica,
+        somando todos os percentuais pontuais até a data mais recente.
+        Se avanco_id_excluir for fornecido, ele exclui o percentual desse avanço do cálculo (útil na edição).
+        """
+        query = """
+            SELECT
+                SUM(af.Percentual_Avanco_Fisico) AS Avanco_Acumulado
+            FROM
+                avancos_fisicos af
+            WHERE
+                af.ID_Obras = %s
+        """
+        params = [obra_id]
+        
+        if avanco_id_excluir:
+            query += " AND af.ID_Avancos_Fisicos != %s"
+            params.append(avanco_id_excluir)
+
+        result = self.db.execute_query(query, tuple(params), fetch_results=True)
+        
+        # Retorna a soma como float. Se não houver avanços, retorna 0.0
+        return float(result[0]['Avanco_Acumulado']) if result and result[0]['Avanco_Acumulado'] is not None else 0.0
 
     # --- Métodos REIDIS ---
     def get_all_reidis(self, search_numero_portaria=None, search_numero_ato=None, search_obra_id=None, search_status=None):

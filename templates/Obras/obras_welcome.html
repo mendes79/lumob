@@ -87,54 +87,66 @@
       <div class="module-grid">
         {# NOVO CARD PARA O DASHBOARD DE OBRAS #}
         <div class="module-card">
-          <a href="{{ url_for('obras_dashboard') }}">Dashboard de Obras</a>
+          <a href="{{ url_for('obras_bp.obras_dashboard') }}"
+            >Dashboard de Obras</a
+          >
           <p>Visão geral de indicadores chave e resumos do módulo de obras.</p>
         </div>
         {# FIM DO NOVO CARD #}
         <div class="module-card">
-          <a href="{{ url_for('obras_relatorio_andamento') }}"
+          <a href="{{ url_for('obras_bp.obras_relatorio_andamento') }}"
             >Relatório de Andamento</a
           >
           <p>Acompanhe o progresso físico atual de cada obra.</p>
         </div>
         {# CARD EXISTENTE PARA GERENCIAR OBRAS - LINK AJUSTADO #}
         <div class="module-card">
-          <a href="{{ url_for('gerenciar_obras_lista') }}">Gerenciar Obras</a>
+          <a href="{{ url_for('obras_bp.gerenciar_obras_lista') }}"
+            >Gerenciar Obras</a
+          >
           <p>Planejamento, acompanhamento e controle das obras em andamento.</p>
         </div>
         {# FIM DO CARD AJUSTADO #} {# Demais cards de submódulos - Mantenho sua
         ordem original #}
         <div class="module-card">
-          <a href="{{ url_for('clientes_module') }}">Gerenciar Clientes</a>
+          <a href="{{ url_for('obras_bp.clientes_module') }}"
+            >Gerenciar Clientes</a
+          >
           <p>Cadastro e controle de todos os clientes da LUMOB.</p>
         </div>
         <div class="module-card">
-          <a href="{{ url_for('contratos_module') }}">Gerenciar Contratos</a>
+          <a href="{{ url_for('obras_bp.contratos_module') }}"
+            >Gerenciar Contratos</a
+          >
           <p>Cadastro e gestão de contratos com clientes e subempreiteiros.</p>
         </div>
         <div class="module-card">
-          <a href="{{ url_for('arts_module') }}">Gerenciar ARTs</a>
+          <a href="{{ url_for('obras_bp.arts_module') }}">Gerenciar ARTs</a>
           <p>Controle de Anotações de Responsabilidade Técnica.</p>
         </div>
         <div class="module-card">
-          <a href="{{ url_for('medicoes_module') }}">Gerenciar Medições</a>
+          <a href="{{ url_for('obras_bp.medicoes_module') }}"
+            >Gerenciar Medições</a
+          >
           <p>Registro e acompanhamento das medições físicas e financeiras.</p>
         </div>
         <div class="module-card">
-          <a href="{{ url_for('avancos_fisicos_module') }}"
+          <a href="{{ url_for('obras_bp.avancos_fisicos_module') }}"
             >Gerenciar Avanços Físicos</a
           >
           <p>Registro e acompanhamento do progresso físico das obras.</p>
         </div>
         <div class="module-card">
-          <a href="{{ url_for('reidis_module') }}">Gerenciar REIDIs</a>
+          <a href="{{ url_for('obras_bp.reidis_module') }}">Gerenciar REIDIs</a>
           <p>
             Gestão dos Registros de Incentivo ao Desenvolvimento da
             Infraestrutura.
           </p>
         </div>
         <div class="module-card">
-          <a href="{{ url_for('seguros_module') }}">Gerenciar Seguros</a>
+          <a href="{{ url_for('obras_bp.seguros_module') }}"
+            >Gerenciar Seguros</a
+          >
           <p>Cadastro e acompanhamento de apólices de seguros para as obras.</p>
         </div>
         {# Comentários de cards futuros mantidos por sua preferência #} {#

@@ -42,7 +42,7 @@
             {% endif %}
         {% endwith %}
 
-        <form action="{{ url_for('add_obra') }}" method="POST">
+        <form action="{{ url_for('obras_bp.add_obra') }}" method="POST">
             <div>
                 <label for="id_contratos">Contrato:</label>
                 <select id="id_contratos" name="id_contratos" required>
@@ -97,11 +97,11 @@
             </div>
             <div>
                 <button type="submit">Adicionar Obra</button>
-                <a href="{{ url_for('gerenciar_obras_lista') }}" class="cancel-link">Cancelar</a>
+                <a href="{{ url_for('obras_bp.gerenciar_obras_lista') }}" class="cancel-link">Cancelar</a>
             </div>
         </form>
         <div class="back-link">
-            <p><a href="{{ url_for('gerenciar_obras_lista') }}">Voltar para a Lista de Obras</a></p>
+            <p><a href="{{ url_for('obras_bp.gerenciar_obras_lista') }}">Voltar para a Lista de Obras</a></p>
         </div>
     </div>
 </body>

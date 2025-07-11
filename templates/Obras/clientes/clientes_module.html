@@ -201,14 +201,14 @@
       {% endif %} {% endwith %}
 
       <div class="action-buttons">
-        <a href="{{ url_for('add_cliente') }}" class="add-button"
+        <a href="{{ url_for('obras_bp.add_cliente') }}" class="add-button"
           >Adicionar Novo Cliente</a
         >
         <button type="button" onclick="window.print()" class="print-button">
           Imprimir Relação
         </button>
         <a
-          href="{{ url_for('export_clientes_excel') }}"
+          href="{{ url_for('obras_bp.export_clientes_excel') }}"
           class="export-excel-button"
           >Exportar para Excel</a
         >
@@ -217,7 +217,7 @@
       <form
         method="GET"
         class="filter-form"
-        action="{{ url_for('clientes_module') }}"
+        action="{{ url_for('obras_bp.clientes_module') }}"
       >
         <label for="nome_cliente">Nome do Cliente:</label>
         <input
@@ -238,7 +238,7 @@
         />
 
         <button type="submit">Filtrar</button>
-        <a href="{{ url_for('clientes_module') }}" class="button"
+        <a href="{{ url_for('obras_bp.clientes_module') }}" class="button"
           >Limpar Filtros</a
         >
       </form>
@@ -265,17 +265,17 @@
             <td>{{ cliente.Email_Cliente }}</td>
             <td class="actions">
               <a
-                href="{{ url_for('cliente_details', cliente_id=cliente.ID_Clientes) }}"
+                href="{{ url_for('obras_bp.cliente_details', cliente_id=cliente.ID_Clientes) }}"
                 class="view"
                 >Detalhes</a
               >
               <a
-                href="{{ url_for('edit_cliente', cliente_id=cliente.ID_Clientes) }}"
+                href="{{ url_for('obras_bp.edit_cliente', cliente_id=cliente.ID_Clientes) }}"
                 class="edit"
                 >Editar</a
               >
               <form
-                action="{{ url_for('delete_cliente', cliente_id=cliente.ID_Clientes) }}"
+                action="{{ url_for('obras_bp.delete_cliente', cliente_id=cliente.ID_Clientes) }}"
                 method="POST"
                 style="display: inline"
                 onsubmit="return confirm('Tem certeza que deseja excluir o cliente {{ cliente.Nome_Cliente }}? Esta ação é irreversível.');"
@@ -292,7 +292,9 @@
       {% endif %}
 
       <div class="back-link">
-        <a href="{{ url_for('obras_module') }}">Voltar para o Módulo Obras</a>
+        <a href="{{ url_for('obras_bp.obras_module') }}"
+          >Voltar para o Módulo Obras</a
+        >
         {# Aponta para o hub obras_welcome.html #}
       </div>
     </div>

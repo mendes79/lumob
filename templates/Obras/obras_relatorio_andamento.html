@@ -124,7 +124,7 @@
                 Filtrar Relatório
             </div>
             <div class="card-body">
-                <form action="{{ url_for('obras_relatorio_andamento') }}" method="GET">
+                <form action="{{ url_for('obras_bp.obras_relatorio_andamento') }}" method="GET">
                     <div class="form-row">
                         <div>
                             <label for="numero_obra">Número da Obra:</label>
@@ -155,7 +155,7 @@
                     </div>
                     <div>
                         <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
-                        <a href="{{ url_for('obras_relatorio_andamento') }}" class="btn btn-secondary">Limpar Filtros</a>
+                        <a href="{{ url_for('obras_bp.obras_relatorio_andamento') }}" class="btn btn-secondary">Limpar Filtros</a>
                     </div>
                 </form>
             </div>
@@ -214,7 +214,7 @@
         </div>
 
         <div class="back-link">
-            <a href="{{ url_for('obras_module') }}">Voltar para o Módulo Obras</a>
+            <a href="{{ url_for('obras_bp.obras_module') }}">Voltar para o Módulo Obras</a>
         </div>
     </div>
 </body>

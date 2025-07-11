@@ -66,12 +66,12 @@
         {% endwith %}
 
         <div class="action-buttons">
-            <a href="{{ url_for('add_obra') }}" class="add-button">Adicionar Nova Obra</a>
+            <a href="{{ url_for('obras_bp.add_obra') }}" class="add-button">Adicionar Nova Obra</a>
             <button type="button" onclick="window.print()" class="print-button">Imprimir Relação</button>
-            <a href="{{ url_for('export_obras_excel') }}" class="export-excel-button">Exportar para Excel</a>
+            <a href="{{ url_for('obras_bp.export_obras_excel') }}" class="export-excel-button">Exportar para Excel</a>
         </div>
 
-        <form method="GET" class="filter-form" action="{{ url_for('gerenciar_obras_lista') }}">
+        <form method="GET" class="filter-form" action="{{ url_for('obras_bp.gerenciar_obras_lista') }}">
             <label for="numero_obra">Número da Obra:</label>
             <input type="text" id="numero_obra" name="numero_obra" value="{{ selected_numero if selected_numero else '' }}" placeholder="Buscar por Número">
 
@@ -95,7 +95,7 @@
             </select>
 
             <button type="submit">Filtrar</button>
-            <a href="{{ url_for('gerenciar_obras_lista') }}" class="button">Limpar Filtros</a>
+            <a href="{{ url_for('obras_bp.gerenciar_obras_lista') }}" class="button">Limpar Filtros</a>
         </form>
 
         {% if obras %}
@@ -129,9 +129,9 @@
                     <td>{{ obra.Data_Fim_Prevista.strftime('%d/%m/%Y') if obra.Data_Fim_Prevista else 'N/A' }}</td>
                     <td>R$ {{ "%.2f"|format(obra.Valor_Obra) }}</td>
                     <td class="actions">
-                        <a href="{{ url_for('obra_details', obra_id=obra.ID_Obras) }}" class="view">Detalhes</a>
-                        <a href="{{ url_for('edit_obra', obra_id=obra.ID_Obras) }}" class="edit">Editar</a>
-                        <form action="{{ url_for('delete_obra', obra_id=obra.ID_Obras) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir a obra {{ obra.Nome_Obra }}? Esta ação é irreversível.');">
+                        <a href="{{ url_for('obras_bp.obra_details', obra_id=obra.ID_Obras) }}" class="view">Detalhes</a>
+                        <a href="{{ url_for('obras_bp.edit_obra', obra_id=obra.ID_Obras) }}" class="edit">Editar</a>
+                        <form action="{{ url_for('obras_bp.delete_obra', obra_id=obra.ID_Obras) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir a obra {{ obra.Nome_Obra }}? Esta ação é irreversível.');">
                             <button type="submit" class="delete">Excluir</button>
                         </form>
                     </td>

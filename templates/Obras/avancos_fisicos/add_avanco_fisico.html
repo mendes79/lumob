@@ -32,44 +32,101 @@
 </head>
 <body>
     <div class="container">
-        <h1>Adicionar Novo Avanço Físico</h1>
+        <h1>Adicionar Avanço Físico</h1>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                {% for category, message in messages %}
-                    <div class="flash {{ category }}">{{ message }}</div>
-                {% endfor %}
+                <ul class="flash-messages">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
             {% endif %}
         {% endwith %}
 
-        <form action="{{ url_for('add_avanco_fisico') }}" method="POST">
-            <div>
+        <form action="{{ url_for('obras_bp.add_avanco_fisico') }}" method="POST">
+            {# CAMPOS DO FORMULÁRIO #}
+            <div class="form-group">
                 <label for="id_obras">Obra:</label>
-                <select id="id_obras" name="id_obras" required>
+                <select class="form-control" id="id_obras" name="id_obras" required>
                     <option value="">Selecione uma Obra</option>
                     {% for obra in all_obras %}
-                        <option value="{{ obra.ID_Obras }}" {% if form_data['id_obras']|default('')|int == obra.ID_Obras %}selected{% endif %}>
-                            {{ obra.Numero_Obra }} - {{ obra.Nome_Obra }}
+                        <option value="{{ obra.ID_Obras }}" {% if avanco.id_obras|string == obra.ID_Obras|string %}selected{% endif %}>
+                            {{ obra.Nome_Obra }} ({{ obra.Numero_Obra }})
                         </option>
                     {% endfor %}
                 </select>
             </div>
-            <div>
+            <div class="form-group">
                 <label for="percentual_avanco_fisico">Percentual de Avanço Físico (%):</label>
-                <input type="number" step="0.01" min="0" max="100" id="percentual_avanco_fisico" name="percentual_avanco_fisico" value="{{ form_data['percentual_avanco_fisico']|default('') }}" required>
+                <input type="number" step="0.01" class="form-control" id="percentual_avanco_fisico" name="percentual_avanco_fisico" value="{{ avanco.percentual_avanco_fisico|default('') }}" required>
             </div>
-            <div>
+            <div class="form-group">
                 <label for="data_avanco">Data do Avanço:</label>
-                <input type="date" id="data_avanco" name="data_avanco" value="{{ form_data['data_avanco']|default('') }}" required>
+                <input type="date" class="form-control" id="data_avanco" name="data_avanco" value="{{ avanco.data_avanco|default('') }}" required>
             </div>
-            <div>
-                <button type="submit">Adicionar Avanço Físico</button>
-                <a href="{{ url_for('avancos_fisicos_module') }}" class="cancel-link">Cancelar</a>
+            
+            {# CAMPO PARA EXIBIR AVANÇO ACUMULADO #}
+            <div class="form-group">
+                <label>Avanço Acumulado Atual da Obra:</label>
+                <p><strong id="avanco_acumulado_display">{{ "%.2f"|format(avanco.avanco_acumulado_obra)|default('0.00') }}%</strong></p>
+                <small>Considera o avanço físico já registrado para a obra selecionada.</small>
+            </div>
+
+            <div class="btn-container">
+                <button type="submit" class="btn btn-primary">Adicionar Avanço Físico</button>
+                <a href="{{ url_for('obras_bp.avancos_fisicos_module') }}" class="btn btn-secondary">Cancelar</a>
             </div>
         </form>
-        <div class="back-link">
-            <p><a href="{{ url_for('avancos_fisicos_module') }}">Voltar para a Lista de Avanços Físicos</a></p>
-        </div>
     </div>
+
+    {# BLOCO SCRIPT PARA AJAX #}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const obraSelect = document.getElementById('id_obras');
+            const avancoAcumuladoDisplay = document.getElementById('avanco_acumulado_display');
+
+            function updateAvancoAcumulado() {
+                const obraId = obraSelect.value;
+                if (obraId) {
+                    // Monta a URL para o endpoint AJAX
+                    const url = `{{ url_for('obras_bp.get_acumulado_obra', obra_id=0) }}`.replace('/0', `/${obraId}`);
+
+                    fetch(url)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Erro na rede ou servidor');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.error) {
+                                console.error('Erro na resposta do servidor:', data.error);
+                                avancoAcumuladoDisplay.textContent = 'Erro ao carregar';
+                            } else {
+                                avancoAcumuladoDisplay.textContent = `${data.avanco_acumulado.toFixed(2)}%`;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Erro ao buscar avanço acumulado:', error);
+                            avancoAcumuladoDisplay.textContent = 'Erro ao carregar';
+                        });
+                } else {
+                    avancoAcumuladoDisplay.textContent = '0.00%'; // Se nenhuma obra selecionada
+                }
+            }
+
+            // Listener para mudanças no select da obra
+            obraSelect.addEventListener('change', updateAvancoAcumulado);
+
+            // Chamar na carga inicial da página para obra já selecionada (se houver)
+            // Isso é importante caso o formulário seja recarregado após um POST com erro
+            if (obraSelect.value) {
+                updateAvancoAcumulado();
+            } else {
+                avancoAcumuladoDisplay.textContent = '0.00%'; // Garante que é 0 se nada selecionado
+            }
+        });
+    </script>
 </body>
 </html>

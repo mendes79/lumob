@@ -65,12 +65,12 @@
         {% endwith %}
 
         <div class="action-buttons">
-            <a href="{{ url_for('add_seguro') }}" class="add-button">Adicionar Novo Seguro</a>
+            <a href="{{ url_for('obras_bp.add_seguro') }}" class="add-button">Adicionar Novo Seguro</a>
             <button type="button" onclick="window.print()" class="print-button">Imprimir Relação</button>
-            <a href="{{ url_for('export_seguros_excel') }}" class="export-excel-button">Exportar para Excel</a>
+            <a href="{{ url_for('obras_bp.export_seguros_excel') }}" class="export-excel-button">Exportar para Excel</a>
         </div>
 
-        <form method="GET" class="filter-form" action="{{ url_for('seguros_module') }}">
+        <form method="GET" class="filter-form" action="{{ url_for('obras_bp.seguros_module') }}">
             <label for="numero_apolice">Número Apólice:</label>
             <input type="text" id="numero_apolice" name="numero_apolice" value="{{ selected_numero_apolice if selected_numero_apolice else '' }}" placeholder="Buscar por Nº Apólice">
 
@@ -99,7 +99,7 @@
             </select>
 
             <button type="submit">Filtrar</button>
-            <a href="{{ url_for('seguros_module') }}" class="button">Limpar Filtros</a>
+            <a href="{{ url_for('obras_bp.seguros_module') }}" class="button">Limpar Filtros</a>
         </form>
 
         {% if seguros %}
@@ -131,9 +131,9 @@
                     <td>{{ seguro.Data_Fim_Vigencia.strftime('%d/%m/%Y') if seguro.Data_Fim_Vigencia else 'N/A' }}</td>
                     <td>{{ seguro.Status_Seguro if seguro.Status_Seguro else 'N/A' }}</td>
                     <td class="actions">
-                        <a href="{{ url_for('seguro_details', seguro_id=seguro.ID_Seguros) }}" class="view">Detalhes</a>
-                        <a href="{{ url_for('edit_seguro', seguro_id=seguro.ID_Seguros) }}" class="edit">Editar</a>
-                        <form action="{{ url_for('delete_seguro', seguro_id=seguro.ID_Seguros) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir o seguro {{ seguro.Numero_Apolice }}? Esta ação é irreversível.');">
+                        <a href="{{ url_for('obras_bp.seguro_details', seguro_id=seguro.ID_Seguros) }}" class="view">Detalhes</a>
+                        <a href="{{ url_for('obras_bp.edit_seguro', seguro_id=seguro.ID_Seguros) }}" class="edit">Editar</a>
+                        <form action="{{ url_for('obras_bp.delete_seguro', seguro_id=seguro.ID_Seguros) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir o seguro {{ seguro.Numero_Apolice }}? Esta ação é irreversível.');">
                             <button type="submit" class="delete">Excluir</button>
                         </form>
                     </td>
@@ -146,7 +146,7 @@
         {% endif %}
 
         <div class="back-link">
-            <a href="{{ url_for('obras_module') }}">Voltar para o Módulo Obras</a>
+            <a href="{{ url_for('obras_bp.obras_module') }}">Voltar para o Módulo Obras</a>
         </div>
     </div>
 </body>

@@ -42,7 +42,7 @@
             {% endif %}
         {% endwith %}
 
-        <form action="{{ url_for('edit_art', art_id=art.ID_Arts) }}" method="POST">
+        <form action="{{ url_for('obras_bp.edit_art', art_id=art.ID_Arts) }}" method="POST">
             <div>
                 <label for="art_id">ID da ART:</label>
                 <input type="text" id="art_id" name="art_id" value="{{ art.ID_Arts }}" readonly>
@@ -81,11 +81,11 @@
             </div>
             <div>
                 <button type="submit">Salvar Alterações</button>
-                <a href="{{ url_for('arts_module') }}" class="cancel-link">Cancelar</a>
+                <a href="{{ url_for('obras_bp.arts_module') }}" class="cancel-link">Cancelar</a>
             </div>
         </form>
         <div class="back-link">
-            <p><a href="{{ url_for('arts_module') }}">Voltar para a Lista de ARTs</a></p>
+            <p><a href="{{ url_for('obras_bp.arts_module') }}">Voltar para a Lista de ARTs</a></p>
         </div>
     </div>
 </body>

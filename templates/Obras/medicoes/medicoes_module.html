@@ -65,12 +65,12 @@
         {% endwith %}
 
         <div class="action-buttons">
-            <a href="{{ url_for('add_medicao') }}" class="add-button">Adicionar Nova Medição</a>
+            <a href="{{ url_for('obras_bp.add_medicao') }}" class="add-button">Adicionar Nova Medição</a>
             <button type="button" onclick="window.print()" class="print-button">Imprimir Relação</button>
-            <a href="{{ url_for('export_medicoes_excel') }}" class="export-excel-button">Exportar para Excel</a>
+            <a href="{{ url_for('obras_bp.export_medicoes_excel') }}" class="export-excel-button">Exportar para Excel</a>
         </div>
 
-        <form method="GET" class="filter-form" action="{{ url_for('medicoes_module') }}">
+        <form method="GET" class="filter-form" action="{{ url_for('obras_bp.medicoes_module') }}">
             <label for="numero_medicao">Número Medição:</label>
             <input type="text" id="numero_medicao" name="numero_medicao" value="{{ selected_numero_medicao if selected_numero_medicao else '' }}" placeholder="Buscar por Número">
 
@@ -91,7 +91,7 @@
             </select>
 
             <button type="submit">Filtrar</button>
-            <a href="{{ url_for('medicoes_module') }}" class="button">Limpar Filtros</a>
+            <a href="{{ url_for('obras_bp.medicoes_module') }}" class="button">Limpar Filtros</a>
         </form>
 
         {% if medicoes %}
@@ -119,9 +119,9 @@
                     <td>{{ medicao.Mes_Referencia if medicao.Mes_Referencia else 'N/A' }}</td>
                     <td>{{ medicao.Status_Medicao }}</td>
                     <td class="actions">
-                        <a href="{{ url_for('medicao_details', medicao_id=medicao.ID_Medicoes) }}" class="view">Detalhes</a>
-                        <a href="{{ url_for('edit_medicao', medicao_id=medicao.ID_Medicoes) }}" class="edit">Editar</a>
-                        <form action="{{ url_for('delete_medicao', medicao_id=medicao.ID_Medicoes) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir a Medição {{ medicao.Numero_Medicao }} da obra {{ medicao.Nome_Obra }}? Esta ação é irreversível.');">
+                        <a href="{{ url_for('obras_bp.medicao_details', medicao_id=medicao.ID_Medicoes) }}" class="view">Detalhes</a>
+                        <a href="{{ url_for('obras_bp.edit_medicao', medicao_id=medicao.ID_Medicoes) }}" class="edit">Editar</a>
+                        <form action="{{ url_for('obras_bp.delete_medicao', medicao_id=medicao.ID_Medicoes) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir a Medição {{ medicao.Numero_Medicao }} da obra {{ medicao.Nome_Obra }}? Esta ação é irreversível.');">
                             <button type="submit" class="delete">Excluir</button>
                         </form>
                     </td>
@@ -134,7 +134,7 @@
         {% endif %}
 
         <div class="back-link">
-            <a href="{{ url_for('obras_module') }}">Voltar para o Módulo Obras</a>
+            <a href="{{ url_for('obras_bp.obras_module') }}">Voltar para o Módulo Obras</a>
         </div>
     </div>
 </body>
