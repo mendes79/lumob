@@ -1,36 +1,50 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LUMOB - Login</title>
-  </head>
-  <body>
-    <h2>Login</h2>
+{% extends 'base.html' %} {% block title %}Login - LUMOB{% endblock %} {% block
+content %}
+<div class="container login-container">
+  {# Adicionado container e login-container para manter o layout centralizado #}
+  <h1>Login</h1>
 
-    {% with messages = get_flashed_messages(with_categories=true) %} {% if
-    messages %}
-    <ul class="flash-messages">
-      {% for category, message in messages %}
-      <li class="{{ category }}">{{ message }}</li>
-      {% endfor %}
-    </ul>
-    {% endif %} {% endwith %}
+  {# Mensagens Flash são exibidas automaticamente pelo base.html, não precisam
+  mais estar aqui #} {# {% with messages =
+  get_flashed_messages(with_categories=true) %} #} {# {% if messages %} #} {#
+  <ul class="flash-messages">
+    #} {# {% for category, message in messages %} #} {#
+    <li class="{{ category }}">{{ message }}</li>
+    #} {# {% endfor %} #} {#
+  </ul>
+  #} {# {% endif %} #} {# {% endwith %} #}
 
-    <form action="{{ url_for('login') }}" method="POST">
-      <div>
-        <label for="username">Usuário:</label>
-        <input type="text" id="username" name="username" required />
-      </div>
+  <form method="POST" action="{{ url_for('login') }}">
+    <div class="form-group">
+      {# Adicionado form-group para alinhamento com estilos Bootstrap #}
+      <label for="username">Usuário:</label>
+      <input
+        type="text"
+        id="username"
+        name="username"
+        class="form-control"
+        required
+      />
+      {# Adicionado form-control #}
+    </div>
 
-      <div>
-        <label for="password">Senha:</label>
-        <input type="password" id="password" name="password" required />
-      </div>
+    <div class="form-group">
+      {# Adicionado form-group #}
+      <label for="password">Senha:</label>
+      <input
+        type="password"
+        id="password"
+        name="password"
+        class="form-control"
+        required
+      />
+      {# Adicionado form-control #}
+    </div>
 
-      <div>
-        <button type="submit">Entrar</button>
-      </div>
-    </form>
-  </body>
-</html>
+    <div>
+      <button type="submit" class="btn btn-primary">Entrar</button> {#
+      Adicionado btn e btn-primary #}
+    </div>
+  </form>
+</div>
+{% endblock %}

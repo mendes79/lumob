@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}LUMOB{% endblock %}</title>
+
+    {# Referência ao CSS do Bootstrap #}
+    <link
+      href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}"
+      rel="stylesheet"
+    />
+
+    {# Opcional: Seu CSS customizado, se houver #} {#
+    <link
+      href="{{ url_for('static', filename='css/custom.css') }}"
+      rel="stylesheet"
+    />
+    #}
+
+    <style>
+      /* Estilos globais ou de fallback que podem ser removidos após a migração para Bootstrap classes */
+      body {
+        font-family: sans-serif;
+        background-color: #f8f9fa; /* Cor de fundo padrão do Bootstrap light */
+        color: #212529; /* Cor de texto padrão do Bootstrap */
+      }
+      .container {
+        margin-top: 20px;
+        margin-bottom: 20px;
+      }
+      /* Estes estilos de flash messages serão usados quando o bloco for exibido */
+      .flash-messages {
+        list-style: none;
+        padding: 0;
+        margin-top: 20px;
+        margin-bottom: 20px;
+      }
+      .flash-messages li {
+        padding: 10px 15px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        font-weight: bold;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+      .flash-messages .success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .flash-messages .danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .flash-messages .warning {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeeba;
+      }
+    </style>
+  </head>
+  <body>
+    {# Mensagens Flash Globais (AGORA DENTRO DE UM BLOCO) #} {% block messages
+    %} {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
+    <div class="container">
+      <ul class="flash-messages">
+        {% for category, message in messages %}
+        <li class="{{ category }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %} {% endwith %} {% endblock %} {# Conteúdo Específico da Página #}
+    {% block content %}{% endblock %} {# Referência ao JS do Bootstrap (bundle
+    inclui Popper) #}
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+
+    {# Bloco para scripts JS específicos da página #} {% block scripts %}{%
+    endblock %}
+  </body>
+</html>
