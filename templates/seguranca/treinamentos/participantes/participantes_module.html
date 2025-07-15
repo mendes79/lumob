@@ -65,12 +65,12 @@
         {% endwith %}
 
         <div class="action-buttons">
-            <a href="{{ url_for('add_treinamento_participante') }}" class="add-button">Adicionar Novo Participante</a>
+            <a href="{{ url_for('seguranca_bp.add_treinamento_participante') }}" class="add-button">Adicionar Novo Participante</a>
             <button type="button" onclick="window.print()" class="print-button">Imprimir Relação</button>
-            <a href="{{ url_for('export_treinamentos_participantes_excel') }}" class="export-excel-button">Exportar para Excel</a>
+            <a href="{{ url_for('seguranca_bp.export_treinamentos_participantes_excel') }}" class="export-excel-button">Exportar para Excel</a>
         </div>
 
-        <form method="GET" class="filter-form" action="{{ url_for('treinamentos_participantes_module') }}">
+        <form method="GET" class="filter-form" action="{{ url_for('seguranca_bp.treinamentos_participantes_module') }}">
             <label for="agendamento_id">Agendamento:</label>
             <select id="agendamento_id" name="agendamento_id">
                 <option value="">Todos os Agendamentos</option>
@@ -100,7 +100,7 @@
             </select>
 
             <button type="submit">Filtrar</button>
-            <a href="{{ url_for('treinamentos_participantes_module') }}" class="button">Limpar Filtros</a>
+            <a href="{{ url_for('seguranca_bp.treinamentos_participantes_module') }}" class="button">Limpar Filtros</a>
         </form>
 
         {% if participantes %}
@@ -128,9 +128,9 @@
                     <td>{{ participante.Data_Conclusao.strftime('%d/%m/%Y') if participante.Data_Conclusao else 'N/A' }}</td>
                     <td>{{ 'Sim' if participante.Certificado_Emitido else 'Não' }}</td>
                     <td class="actions">
-                        <a href="{{ url_for('treinamento_participante_details', participante_id=participante.ID_Participante) }}" class="view">Detalhes</a>
-                        <a href="{{ url_for('edit_treinamento_participante', participante_id=participante.ID_Participante) }}" class="edit">Editar</a>
-                        <form action="{{ url_for('delete_treinamento_participante', participante_id=participante.ID_Participante) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este participante (ID: {{ participante.ID_Participante }})? Esta ação é irreversível.');">
+                        <a href="{{ url_for('seguranca_bp.treinamento_participante_details', participante_id=participante.ID_Participante) }}" class="view">Detalhes</a>
+                        <a href="{{ url_for('seguranca_bp.edit_treinamento_participante', participante_id=participante.ID_Participante) }}" class="edit">Editar</a>
+                        <form action="{{ url_for('seguranca_bp.delete_treinamento_participante', participante_id=participante.ID_Participante) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este participante (ID: {{ participante.ID_Participante }})? Esta ação é irreversível.');">
                             <button type="submit" class="delete">Excluir</button>
                         </form>
                     </td>
@@ -143,7 +143,7 @@
         {% endif %}
 
         <div class="back-link">
-            <a href="{{ url_for('seguranca_module') }}">Voltar para o Módulo Segurança</a>
+            <a href="{{ url_for('seguranca_bp.seguranca_module') }}">Voltar para o Módulo Segurança</a>
         </div>
     </div>
 </body>

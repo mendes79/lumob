@@ -144,7 +144,7 @@
 
       <div class="actions">
         <a
-          href="{{ url_for('edit_treinamento_agendamento', agendamento_id=agendamento.ID_Agendamento) }}"
+          href="{{ url_for('seguranca_bp.edit_treinamento_agendamento', agendamento_id=agendamento.ID_Agendamento) }}"
           >Editar</a
         >
         <button
@@ -155,7 +155,7 @@
           Imprimir
         </button>
         <form
-          action="{{ url_for('delete_treinamento_agendamento', agendamento_id=agendamento.ID_Agendamento) }}"
+          action="{{ url_for('seguranca_bp.delete_treinamento_agendamento', agendamento_id=agendamento.ID_Agendamento) }}"
           method="POST"
           style="display: inline"
           onsubmit="return confirm('Tem certeza que deseja excluir este agendamento? Esta ação é irreversível.');"
@@ -168,7 +168,7 @@
         <h2>Participantes Deste Agendamento</h2>
         <div style="text-align: right; margin-bottom: 10px">
           <a
-            href="{{ url_for('add_treinamento_participante', agendamento_id_prefill=agendamento.ID_Agendamento) }}"
+            href="{{ url_for('seguranca_bp.add_treinamento_participante', agendamento_id_prefill=agendamento.ID_Agendamento) }}"
             class="add-button"
             style="background-color: #28a745"
             >Adicionar Participante</a
@@ -207,13 +207,13 @@
               </td>
               <td class="actions" style="text-align: left">
                 <a
-                  href="{{ url_for('edit_treinamento_participante', participante_id=participante.ID_Participante) }}"
+                  href="{{ url_for('seguranca_bp.edit_treinamento_participante', participante_id=participante.ID_Participante) }}"
                   class="edit"
                   style="background-color: #ffc107; color: #333"
                   >Editar</a
                 >
                 <form
-                  action="{{ url_for('delete_treinamento_participante', participante_id=participante.ID_Participante) }}"
+                  action="{{ url_for('seguranca_bp.delete_treinamento_participante', participante_id=participante.ID_Participante) }}"
                   method="POST"
                   style="display: inline"
                   onsubmit="return confirm('Tem certeza que deseja remover este participante?');"
@@ -238,7 +238,8 @@
 
       <div class="back-link">
         <p>
-          <a href="{{ url_for('treinamentos_agendamentos_module') }}"
+          <a
+            href="{{ url_for('seguranca_bp.treinamentos_agendamentos_module') }}"
             >Voltar para a Lista de Agendamentos</a
           >
         </p>

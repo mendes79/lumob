@@ -151,7 +151,7 @@
 
       <div class="actions">
         <a
-          href="{{ url_for('edit_incidente_acidente', incidente_id=incidente.ID_Incidente_Acidente) }}"
+          href="{{ url_for('seguranca_bp.edit_incidente_acidente', incidente_id=incidente.ID_Incidente_Acidente) }}"
           >Editar</a
         >
         <button
@@ -163,7 +163,7 @@
         </button>
         {# NOVO BOTÃO IMPRIMIR #}
         <form
-          action="{{ url_for('delete_incidente_acidente', incidente_id=incidente.ID_Incidente_Acidente) }}"
+          action="{{ url_for('seguranca_bp.delete_incidente_acidente', incidente_id=incidente.ID_Incidente_Acidente) }}"
           method="POST"
           style="display: inline"
           onsubmit="return confirm('Tem certeza que deseja excluir este registro? Esta ação é irreversível.');"
@@ -174,7 +174,7 @@
 
       <div class="back-link">
         <p>
-          <a href="{{ url_for('incidentes_acidentes_module') }}"
+          <a href="{{ url_for('seguranca_bp.incidentes_acidentes_module') }}"
             >Voltar para a Lista de Registros</a
           >
         </p>

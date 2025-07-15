@@ -42,7 +42,7 @@
             {% endif %}
         {% endwith %}
 
-        <form action="{{ url_for('add_treinamento_agendamento') }}" method="POST">
+        <form action="{{ url_for('seguranca_bp.add_treinamento_agendamento') }}" method="POST">
             <div>
                 <label for="id_treinamento">Treinamento:</label>
                 <select id="id_treinamento" name="id_treinamento" required>
@@ -81,11 +81,11 @@
             </div>
             <div>
                 <button type="submit">Adicionar Agendamento</button>
-                <a href="{{ url_for('treinamentos_agendamentos_module') }}" class="cancel-link">Cancelar</a>
+                <a href="{{ url_for('seguranca_bp.treinamentos_agendamentos_module') }}" class="cancel-link">Cancelar</a>
             </div>
         </form>
         <div class="back-link">
-            <p><a href="{{ url_for('treinamentos_agendamentos_module') }}">Voltar para a Lista de Agendamentos</a></p>
+            <p><a href="{{ url_for('seguranca_bp.treinamentos_agendamentos_module') }}">Voltar para a Lista de Agendamentos</a></p>
         </div>
     </div>
 </body>

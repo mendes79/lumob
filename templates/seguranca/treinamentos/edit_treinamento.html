@@ -36,53 +36,56 @@
 
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                {% for category, message in messages %}
-                    <div class="flash {{ category }}">{{ message }}</div>
-                {% endfor %}
+                <ul class="flash-messages">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
             {% endif %}
         {% endwith %}
 
-        <form action="{{ url_for('edit_treinamento', treinamento_id=treinamento.ID_Treinamento) }}" method="POST">
-            <div>
+        <form action="{{ url_for('seguranca_bp.edit_treinamento', treinamento_id=treinamento.ID_Treinamento) }}" method="POST">
+            <div class="form-group">
                 <label for="treinamento_id">ID do Treinamento:</label>
                 <input type="text" id="treinamento_id" name="treinamento_id" value="{{ treinamento.ID_Treinamento }}" readonly>
             </div>
-            <div>
+            <div class="form-group">
                 <label for="nome_treinamento">Nome do Treinamento:</label>
-                <input type="text" id="nome_treinamento" name="nome_treinamento" value="{{ form_data['nome_treinamento'] if form_data else treinamento.Nome_Treinamento }}" required>
+                <input type="text" id="nome_treinamento" name="nome_treinamento" value="{{ treinamento.Nome_Treinamento|default('') }}" required>
             </div>
-            <div>
+            <div class="form-group">
                 <label for="descricao">Descrição:</label>
-                <textarea id="descricao" name="descricao" rows="4">{{ form_data['descricao'] if form_data else treinamento.Descricao }}</textarea>
+                <textarea id="descricao" name="descricao" rows="5">{{ treinamento.Descricao|default('') }}</textarea>
             </div>
-            <div>
-                <label for="carga_horaria_horas">Carga Horária (horas):</label>
-                <input type="number" step="0.01" id="carga_horaria_horas" name="carga_horaria_horas" value="{{ form_data['carga_horaria_horas'] if form_data else '%.2f'|format(treinamento.Carga_Horaria_Horas) }}" required>
+            <div class="form-group">
+                <label for="carga_horaria_horas">Carga Horária (h):</label>
+                <input type="number" step="0.01" id="carga_horaria_horas" name="carga_horaria_horas" value="{{ treinamento.Carga_Horaria_Horas|default('') }}" required>
             </div>
-            <div>
+            <div class="form-group">
                 <label for="tipo_treinamento">Tipo de Treinamento:</label>
                 <select id="tipo_treinamento" name="tipo_treinamento" required>
                     <option value="">Selecione o Tipo</option>
                     {% for tipo in tipo_treinamento_options %}
-                        <option value="{{ tipo }}" {% if (form_data and form_data['tipo_treinamento']|default('') == tipo) or (not form_data and treinamento.Tipo_Treinamento == tipo) %}selected{% endif %}>{{ tipo }}</option>
+                        <option value="{{ tipo }}" {% if treinamento.Tipo_Treinamento == tipo %}selected{% endif %}>{{ tipo }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div>
-                <label for="validade_dias">Validade (dias, opcional):</label>
-                <input type="number" id="validade_dias" name="validade_dias" value="{{ form_data['validade_dias'] if form_data else treinamento.Validade_Dias }}">
+            <div class="form-group">
+                <label for="validade_dias">Validade (dias - Opcional):</label>
+                <input type="number" step="1" id="validade_dias" name="validade_dias" value="{{ treinamento.Validade_Dias|default('') }}">
             </div>
-            <div>
+            <div class="form-group">
                 <label for="instrutor_responsavel">Instrutor Responsável:</label>
-                <input type="text" id="instrutor_responsavel" name="instrutor_responsavel" value="{{ form_data['instrutor_responsavel'] if form_data else treinamento.Instrutor_Responsavel }}">
+                <input type="text" id="instrutor_responsavel" name="instrutor_responsavel" value="{{ treinamento.Instrutor_Responsavel|default('') }}">
             </div>
-            <div>
+            
+            <div class="btn-container">
                 <button type="submit">Salvar Alterações</button>
-                <a href="{{ url_for('treinamentos_module') }}" class="cancel-link">Cancelar</a>
+                <a href="{{ url_for('seguranca_bp.treinamentos_module') }}" class="cancel-link">Cancelar</a>
             </div>
         </form>
         <div class="back-link">
-            <p><a href="{{ url_for('treinamentos_module') }}">Voltar para o Catálogo de Treinamentos</a></p>
+            <p><a href="{{ url_for('seguranca_bp.treinamentos_module') }}">Voltar para a Lista de Treinamentos</a></p>
         </div>
     </div>
 </body>

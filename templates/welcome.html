@@ -121,8 +121,8 @@
         %} {% set module_url = url_for('obras_bp.obras_module') %} {% elif
         module_name == 'Usuários' %} {% set module_url =
         url_for('users_bp.users_module') %} {% elif module_name == 'Segurança'
-        %} {% set module_url = url_for('seguranca_module') %} {# Adicione mais
-        elifs aqui para novos módulos #} {% endif %} {% if
+        %} {% set module_url = url_for('seguranca_bp.seguranca_module') %} {#
+        Adicione mais elifs aqui para novos módulos #} {% endif %} {% if
         user.can_access_module(module_name) %}
         <li><a href="{{ module_url }}">{{ module_name }}</a></li>
         {% else %}

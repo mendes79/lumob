@@ -128,7 +128,7 @@
 
       <div class="actions">
         <a
-          href="{{ url_for('edit_treinamento_participante', participante_id=participante.ID_Participante) }}"
+          href="{{ url_for('seguranca_bp.edit_treinamento_participante', participante_id=participante.ID_Participante) }}"
           >Editar</a
         >
         <button
@@ -139,7 +139,7 @@
           Imprimir
         </button>
         <form
-          action="{{ url_for('delete_treinamento_participante', participante_id=participante.ID_Participante) }}"
+          action="{{ url_for('seguranca_bp.delete_treinamento_participante', participante_id=participante.ID_Participante) }}"
           method="POST"
           style="display: inline"
           onsubmit="return confirm('Tem certeza que deseja excluir este participante? Esta ação é irreversível.');"
@@ -150,7 +150,8 @@
 
       <div class="back-link">
         <p>
-          <a href="{{ url_for('treinamentos_participantes_module') }}"
+          <a
+            href="{{ url_for('seguranca_bp.treinamentos_participantes_module') }}"
             >Voltar para a Lista de Participantes</a
           >
         </p>

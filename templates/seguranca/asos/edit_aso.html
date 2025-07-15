@@ -42,7 +42,7 @@
             {% endif %}
         {% endwith %}
 
-        <form action="{{ url_for('edit_aso', aso_id=aso.ID_ASO) }}" method="POST">
+        <form action="{{ url_for('seguranca_bp.edit_aso', aso_id=aso.ID_ASO) }}" method="POST">
             <div>
                 <label for="aso_id">ID do ASO:</label>
                 <input type="text" id="aso_id" name="aso_id" value="{{ aso.ID_ASO }}" readonly>
@@ -94,11 +94,11 @@
             </div>
             <div>
                 <button type="submit">Salvar Alterações</button>
-                <a href="{{ url_for('asos_module') }}" class="cancel-link">Cancelar</a>
+                <a href="{{ url_for('seguranca_bp.asos_module') }}" class="cancel-link">Cancelar</a>
             </div>
         </form>
         <div class="back-link">
-            <p><a href="{{ url_for('asos_module') }}">Voltar para a Lista de ASOs</a></p>
+            <p><a href="{{ url_for('seguranca_bp.asos_module') }}">Voltar para a Lista de ASOs</a></p>
         </div>
     </div>
 </body>

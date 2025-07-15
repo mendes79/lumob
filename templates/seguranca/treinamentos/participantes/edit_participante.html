@@ -50,7 +50,7 @@
             {% endif %}
         {% endwith %}
 
-        <form action="{{ url_for('edit_treinamento_participante', participante_id=participante.ID_Participante) }}" method="POST">
+        <form action="{{ url_for('seguranca_bp.edit_treinamento_participante', participante_id=participante.ID_Participante) }}" method="POST">
             <div>
                 <label for="participante_id">ID do Participante:</label>
                 <input type="text" id="participante_id" name="participante_id" value="{{ participante.ID_Participante }}" readonly>
@@ -95,11 +95,11 @@
             </div>
             <div>
                 <button type="submit">Salvar Alterações</button>
-                <a href="{{ url_for('treinamentos_participantes_module') }}" class="cancel-link">Cancelar</a>
+                <a href="{{ url_for('seguranca_bp.treinamentos_participantes_module') }}" class="cancel-link">Cancelar</a>
             </div>
         </form>
         <div class="back-link">
-            <p><a href="{{ url_for('treinamentos_participantes_module') }}">Voltar para a Lista de Participantes</a></p>
+            <p><a href="{{ url_for('seguranca_bp.treinamentos_participantes_module') }}">Voltar para a Lista de Participantes</a></p>
         </div>
     </div>
 </body>

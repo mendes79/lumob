@@ -65,12 +65,12 @@
         {% endwith %}
 
         <div class="action-buttons">
-            <a href="{{ url_for('add_treinamento_agendamento') }}" class="add-button">Adicionar Novo Agendamento</a>
+            <a href="{{ url_for('seguranca_bp.add_treinamento_agendamento') }}" class="add-button">Adicionar Novo Agendamento</a>
             <button type="button" onclick="window.print()" class="print-button">Imprimir Relação</button>
-            <a href="{{ url_for('export_treinamentos_agendamentos_excel') }}" class="export-excel-button">Exportar para Excel</a>
+            <a href="{{ url_for('seguranca_bp.export_treinamentos_agendamentos_excel') }}" class="export-excel-button">Exportar para Excel</a>
         </div>
 
-        <form method="GET" class="filter-form" action="{{ url_for('treinamentos_agendamentos_module') }}">
+        <form method="GET" class="filter-form" action="{{ url_for('seguranca_bp.treinamentos_agendamentos_module') }}">
             <label for="treinamento_id">Treinamento:</label>
             <select id="treinamento_id" name="treinamento_id">
                 <option value="">Todos os Treinamentos</option>
@@ -94,7 +94,7 @@
             <input type="date" id="data_fim" name="data_fim" value="{{ selected_data_fim if selected_data_fim else '' }}">
 
             <button type="submit">Filtrar</button>
-            <a href="{{ url_for('treinamentos_agendamentos_module') }}" class="button">Limpar Filtros</a>
+            <a href="{{ url_for('seguranca_bp.treinamentos_agendamentos_module') }}" class="button">Limpar Filtros</a>
         </form>
 
         {% if agendamentos %}
@@ -120,9 +120,9 @@
                     <td>{{ agendamento.Local_Treinamento if agendamento.Local_Treinamento else 'N/A' }}</td>
                     <td>{{ agendamento.Status_Agendamento }}</td>
                     <td class="actions">
-                        <a href="{{ url_for('treinamento_agendamento_details', agendamento_id=agendamento.ID_Agendamento) }}" class="view">Detalhes</a>
-                        <a href="{{ url_for('edit_treinamento_agendamento', agendamento_id=agendamento.ID_Agendamento) }}" class="edit">Editar</a>
-                        <form action="{{ url_for('delete_treinamento_agendamento', agendamento_id=agendamento.ID_Agendamento) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este agendamento (ID: {{ agendamento.ID_Agendamento }})? Esta ação é irreversível e impedirá a exclusão se houver participantes associados.');">
+                        <a href="{{ url_for('seguranca_bp.treinamento_agendamento_details', agendamento_id=agendamento.ID_Agendamento) }}" class="view">Detalhes</a>
+                        <a href="{{ url_for('seguranca_bp.edit_treinamento_agendamento', agendamento_id=agendamento.ID_Agendamento) }}" class="edit">Editar</a>
+                        <form action="{{ url_for('seguranca_bp.delete_treinamento_agendamento', agendamento_id=agendamento.ID_Agendamento) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este agendamento (ID: {{ agendamento.ID_Agendamento }})? Esta ação é irreversível e impedirá a exclusão se houver participantes associados.');">
                             <button type="submit" class="delete">Excluir</button>
                         </form>
                     </td>
@@ -135,7 +135,7 @@
         {% endif %}
 
         <div class="back-link">
-            <a href="{{ url_for('seguranca_module') }}">Voltar para o Módulo Segurança</a>
+            <a href="{{ url_for('seguranca_bp.seguranca_module') }}">Voltar para o Módulo Segurança</a>
         </div>
     </div>
 </body>

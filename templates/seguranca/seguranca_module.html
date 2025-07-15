@@ -130,7 +130,7 @@
 
       <div class="module-grid">
         <div class="module-card">
-          <a href="{{ url_for('incidentes_acidentes_module') }}"
+          <a href="{{ url_for('seguranca_bp.incidentes_acidentes_module') }}"
             >Gestão de Incidentes e Acidentes</a
           >
           <p>
@@ -139,14 +139,16 @@
           </p>
         </div>
         <div class="module-card">
-          <a href="{{ url_for('asos_module') }}">Saúde Ocupacional (ASOs)</a>
+          <a href="{{ url_for('seguranca_bp.asos_module') }}"
+            >Saúde Ocupacional (ASOs)</a
+          >
           <p>
             Controle de ASOs, exames médicos e histórico de saúde dos
             funcionários.
           </p>
         </div>
         <div class="module-card">
-          <a href="{{ url_for('treinamentos_module') }}"
+          <a href="{{ url_for('seguranca_bp.treinamentos_module') }}"
             >Treinamentos e Capacitação</a
           >
           {# NOVO LINK #}
@@ -155,7 +157,7 @@
         {# Você pode adicionar mais cards aqui para outras funcionalidades
         futuras: #}
         <div class="module-card">
-          <a href="{{ url_for('seguranca_dashboard') }}"
+          <a href="{{ url_for('seguranca_bp.seguranca_dashboard') }}"
             >Dashboard de Segurança</a
           >
           <p>
@@ -164,14 +166,16 @@
         </div>
         {# NOVO CARD PARA O RELATÓRIO DE TREINAMENTOS DE SEGURANÇA #}
         <div class="module-card">
-          <a href="{{ url_for('seguranca_relatorio_treinamentos') }}"
+          <a
+            href="{{ url_for('seguranca_bp.seguranca_relatorio_treinamentos') }}"
             >Relatório de Treinamentos</a
           >
           <p>Acompanhe o histórico de treinamentos e participantes.</p>
         </div>
         {# NOVO CARD PARA GERENCIAR AGENDAMENTOS DE TREINAMENTOS #}
         <div class="module-card">
-          <a href="{{ url_for('treinamentos_agendamentos_module') }}"
+          <a
+            href="{{ url_for('seguranca_bp.treinamentos_agendamentos_module') }}"
             >Gerenciar Agendamentos de Treinamentos</a
           >
           <p>Gerencie datas, locais e status de treinamentos agendados.</p>
@@ -179,7 +183,8 @@
         {# FIM DO NOVO CARD #} {# NOVO CARD PARA GERENCIAR PARTICIPANTES DE
         TREINAMENTOS #}
         <div class="module-card">
-          <a href="{{ url_for('treinamentos_participantes_module') }}"
+          <a
+            href="{{ url_for('seguranca_bp.treinamentos_participantes_module') }}"
             >Gerenciar Participantes de Treinamentos</a
           >
           <p>

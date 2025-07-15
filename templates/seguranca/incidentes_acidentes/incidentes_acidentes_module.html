@@ -65,12 +65,12 @@
         {% endwith %}
 
         <div class="action-buttons">
-            <a href="{{ url_for('add_incidente_acidente') }}" class="add-button">Adicionar Novo Registro</a>
+            <a href="{{ url_for('seguranca_bp.add_incidente_acidente') }}" class="add-button">Adicionar Novo Registro</a>
             <button type="button" onclick="window.print()" class="print-button">Imprimir Relação</button>
-            <a href="{{ url_for('export_incidentes_acidentes_excel') }}" class="export-excel-button">Exportar para Excel</a>
+            <a href="{{ url_for('seguranca_bp.export_incidentes_acidentes_excel') }}" class="export-excel-button">Exportar para Excel</a>
         </div>
 
-        <form method="GET" class="filter-form" action="{{ url_for('incidentes_acidentes_module') }}">
+        <form method="GET" class="filter-form" action="{{ url_for('seguranca_bp.incidentes_acidentes_module') }}">
             <label for="tipo_registro">Tipo de Registro:</label>
             <select id="tipo_registro" name="tipo_registro">
                 <option value="">Todos os Tipos</option>
@@ -104,7 +104,7 @@
             </select>
 
             <button type="submit">Filtrar</button>
-            <a href="{{ url_for('incidentes_acidentes_module') }}" class="button">Limpar Filtros</a>
+            <a href="{{ url_for('seguranca_bp.incidentes_acidentes_module') }}" class="button">Limpar Filtros</a>
         </form>
 
         {% if incidentes %}
@@ -134,9 +134,9 @@
                     <td>{{ incidente.Status_Registro }}</td>
                     <td>{{ incidente.Nome_Responsavel_Investigacao if incidente.Nome_Responsavel_Investigacao else 'N/A' }}</td>
                     <td class="actions">
-                        <a href="{{ url_for('incidente_acidente_details', incidente_id=incidente.ID_Incidente_Acidente) }}" class="view">Detalhes</a>
-                        <a href="{{ url_for('edit_incidente_acidente', incidente_id=incidente.ID_Incidente_Acidente) }}" class="edit">Editar</a>
-                        <form action="{{ url_for('delete_incidente_acidente', incidente_id=incidente.ID_Incidente_Acidente) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este registro (ID: {{ incidente.ID_Incidente_Acidente }})? Esta ação é irreversível.');">
+                        <a href="{{ url_for('seguranca_bp.incidente_acidente_details', incidente_id=incidente.ID_Incidente_Acidente) }}" class="view">Detalhes</a>
+                        <a href="{{ url_for('seguranca_bp.edit_incidente_acidente', incidente_id=incidente.ID_Incidente_Acidente) }}" class="edit">Editar</a>
+                        <form action="{{ url_for('seguranca_bp.delete_incidente_acidente', incidente_id=incidente.ID_Incidente_Acidente) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este registro (ID: {{ incidente.ID_Incidente_Acidente }})? Esta ação é irreversível.');">
                             <button type="submit" class="delete">Excluir</button>
                         </form>
                     </td>
@@ -149,7 +149,7 @@
         {% endif %}
 
         <div class="back-link">
-            <a href="{{ url_for('seguranca_module') }}">Voltar para o Módulo Segurança</a>
+            <a href="{{ url_for('seguranca_bp.seguranca_module') }}">Voltar para o Módulo Segurança</a>
         </div>
     </div>
 </body>

@@ -65,12 +65,12 @@
         {% endwith %}
 
         <div class="action-buttons">
-            <a href="{{ url_for('add_aso') }}" class="add-button">Adicionar Novo ASO</a>
+            <a href="{{ url_for('seguranca_bp.add_aso') }}" class="add-button">Adicionar Novo ASO</a>
             <button type="button" onclick="window.print()" class="print-button">Imprimir Relação</button>
-            <a href="{{ url_for('export_asos_excel') }}" class="export-excel-button">Exportar para Excel</a>
+            <a href="{{ url_for('seguranca_bp.export_asos_excel') }}" class="export-excel-button">Exportar para Excel</a>
         </div>
 
-        <form method="GET" class="filter-form" action="{{ url_for('asos_module') }}">
+        <form method="GET" class="filter-form" action="{{ url_for('seguranca_bp.asos_module') }}">
             <label for="matricula">Funcionário (Matrícula):</label>
             <select id="matricula" name="matricula">
                 <option value="">Todos os Funcionários</option>
@@ -104,7 +104,7 @@
             <input type="date" id="data_emissao_fim" name="data_emissao_fim" value="{{ selected_data_emissao_fim if selected_data_emissao_fim else '' }}">
 
             <button type="submit">Filtrar</button>
-            <a href="{{ url_for('asos_module') }}" class="button">Limpar Filtros</a>
+            <a href="{{ url_for('seguranca_bp.asos_module') }}" class="button">Limpar Filtros</a>
         </form>
 
         {% if asos %}
@@ -132,9 +132,9 @@
                     <td>{{ aso.Resultado }}</td>
                     <td>{{ aso.Medico_Responsavel if aso.Medico_Responsavel else 'N/A' }}</td>
                     <td class="actions">
-                        <a href="{{ url_for('aso_details', aso_id=aso.ID_ASO) }}" class="view">Detalhes</a>
-                        <a href="{{ url_for('edit_aso', aso_id=aso.ID_ASO) }}" class="edit">Editar</a>
-                        <form action="{{ url_for('delete_aso', aso_id=aso.ID_ASO) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este ASO (ID: {{ aso.ID_ASO }})? Esta ação é irreversível.');">
+                        <a href="{{ url_for('seguranca_bp.aso_details', aso_id=aso.ID_ASO) }}" class="view">Detalhes</a>
+                        <a href="{{ url_for('seguranca_bp.edit_aso', aso_id=aso.ID_ASO) }}" class="edit">Editar</a>
+                        <form action="{{ url_for('seguranca_bp.delete_aso', aso_id=aso.ID_ASO) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este ASO (ID: {{ aso.ID_ASO }})? Esta ação é irreversível.');">
                             <button type="submit" class="delete">Excluir</button>
                         </form>
                     </td>
@@ -147,7 +147,7 @@
         {% endif %}
 
         <div class="back-link">
-            <a href="{{ url_for('seguranca_module') }}">Voltar para o Módulo Segurança</a>
+            <a href="{{ url_for('seguranca_bp.seguranca_module') }}">Voltar para o Módulo Segurança</a>
         </div>
     </div>
 </body>

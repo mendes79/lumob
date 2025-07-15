@@ -42,7 +42,7 @@
             {% endif %}
         {% endwith %}
 
-        <form action="{{ url_for('add_treinamento') }}" method="POST">
+        <form action="{{ url_for('seguranca_bp.add_treinamento') }}" method="POST">
             <div>
                 <label for="nome_treinamento">Nome do Treinamento:</label>
                 <input type="text" id="nome_treinamento" name="nome_treinamento" value="{{ form_data['nome_treinamento']|default('') }}" required>
@@ -74,11 +74,11 @@
             </div>
             <div>
                 <button type="submit">Adicionar Treinamento</button>
-                <a href="{{ url_for('treinamentos_module') }}" class="cancel-link">Cancelar</a>
+                <a href="{{ url_for('seguranca_bp.treinamentos_module') }}" class="cancel-link">Cancelar</a>
             </div>
         </form>
         <div class="back-link">
-            <p><a href="{{ url_for('treinamentos_module') }}">Voltar para o Catálogo de Treinamentos</a></p>
+            <p><a href="{{ url_for('seguranca_bp.treinamentos_module') }}">Voltar para o Catálogo de Treinamentos</a></p>
         </div>
     </div>
 </body>

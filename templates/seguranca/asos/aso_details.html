@@ -121,7 +121,9 @@
       </div>
 
       <div class="actions">
-        <a href="{{ url_for('edit_aso', aso_id=aso.ID_ASO) }}">Editar</a>
+        <a href="{{ url_for('seguranca_bp.edit_aso', aso_id=aso.ID_ASO) }}"
+          >Editar</a
+        >
         <button
           type="button"
           onclick="window.print()"
@@ -131,7 +133,7 @@
         </button>
         {# NOVO BOTÃO IMPRIMIR #}
         <form
-          action="{{ url_for('delete_aso', aso_id=aso.ID_ASO) }}"
+          action="{{ url_for('seguranca_bp.delete_aso', aso_id=aso.ID_ASO) }}"
           method="POST"
           style="display: inline"
           onsubmit="return confirm('Tem certeza que deseja excluir este ASO? Esta ação é irreversível.');"
@@ -142,7 +144,9 @@
 
       <div class="back-link">
         <p>
-          <a href="{{ url_for('asos_module') }}">Voltar para a Lista de ASOs</a>
+          <a href="{{ url_for('seguranca_bp.asos_module') }}"
+            >Voltar para a Lista de ASOs</a
+          >
         </p>
       </div>
     </div>

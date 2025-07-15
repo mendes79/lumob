@@ -42,7 +42,7 @@
             {% endif %}
         {% endwith %}
 
-        <form action="{{ url_for('add_incidente_acidente') }}" method="POST">
+        <form action="{{ url_for('seguranca_bp.add_incidente_acidente') }}" method="POST">
             <div>
                 <label for="tipo_registro">Tipo de Registro:</label>
                 <select id="tipo_registro" name="tipo_registro" required>
@@ -117,11 +117,11 @@
             </div>
             <div>
                 <button type="submit">Adicionar Registro</button>
-                <a href="{{ url_for('incidentes_acidentes_module') }}" class="cancel-link">Cancelar</a>
+                <a href="{{ url_for('seguranca_bp.incidentes_acidentes_module') }}" class="cancel-link">Cancelar</a>
             </div>
         </form>
         <div class="back-link">
-            <p><a href="{{ url_for('incidentes_acidentes_module') }}">Voltar para a Lista de Registros</a></p>
+            <p><a href="{{ url_for('seguranca_bp.incidentes_acidentes_module') }}">Voltar para a Lista de Registros</a></p>
         </div>
     </div>
 </body>

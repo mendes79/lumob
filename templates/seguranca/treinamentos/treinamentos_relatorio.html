@@ -137,7 +137,7 @@
                 Filtrar Relatório
             </div>
             <div class="card-body">
-                <form action="{{ url_for('seguranca_relatorio_treinamentos') }}" method="GET">
+                <form action="{{ url_for('seguranca_bp.seguranca_relatorio_treinamentos') }}" method="GET">
                     <div class="form-row">
                         <div>
                             <label for="nome_treinamento">Nome do Treinamento:</label>
@@ -168,7 +168,7 @@
                     </div>
                     <div>
                         <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
-                        <a href="{{ url_for('seguranca_relatorio_treinamentos') }}" class="btn btn-secondary">Limpar Filtros</a>
+                        <a href="{{ url_for('seguranca_bp.seguranca_relatorio_treinamentos') }}" class="btn btn-secondary">Limpar Filtros</a>
                     </div>
                 </form>
             </div>
@@ -227,7 +227,7 @@
         </div>
 
         <div class="back-link">
-            <a href="{{ url_for('seguranca_module') }}">Voltar para o Módulo Segurança</a>
+            <a href="{{ url_for('seguranca_bp.seguranca_module') }}">Voltar para o Módulo Segurança</a>
         </div>
     </div>
 </body>
