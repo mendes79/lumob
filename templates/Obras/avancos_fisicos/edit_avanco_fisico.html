@@ -1,208 +1,288 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editar Avanço Físico - LUMOB</title>
-    <style>
-        /* Estilos básicos para o container e cabeçalho, copiados de outros templates */
-        body {
-            font-family: sans-serif;
-            background-color: #f4f4f4;
-            color: #333;
-            margin: 20px;
-        }
-        .container {
-            max-width: 800px;
-            margin: 50px auto;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            text-align: center;
-            color: #0056b3;
-            margin-bottom: 30px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        .form-control {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        .btn-container {
-            text-align: right;
-            margin-top: 20px;
-        }
-        .btn {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            text-decoration: none;
-            display: inline-block;
-            margin-left: 10px;
-        }
-        .btn-primary {
-            background-color: #007bff;
-            color: white;
-        }
-        .btn-primary:hover {
-            background-color: #0056b3;
-        }
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-        }
-        .btn-secondary:hover {
-            background-color: #5a6268;
-        }
-        .flash-messages {
-            list-style: none;
-            padding: 0;
-            margin-bottom: 20px;
-        }
-        .flash-messages li {
-            padding: 10px 15px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-            font-weight: bold;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .flash-messages .success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .flash-messages .danger {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .flash-messages .warning {
-            background-color: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeeba;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Editar Avanço Físico: {{ avanco['id_avancos_fisicos'] }}</h1> {# Acesso por colchetes, minúscula #}
+{% extends 'base.html' %}
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <ul class="flash-messages">
-                    {% for category, message in messages %}
-                        <li class="{{ category }}">{{ message }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        {% endwith %}
+{% block title %}Editar Avanço Físico - LUMOB{% endblock %}
 
-        <form action="{{ url_for('obras_bp.edit_avanco_fisico', avanco_id=avanco['id_avancos_fisicos']) }}" method="POST"> {# Acesso por colchetes, minúscula #}
-            <div class="form-group">
-                <label for="avanco_id">ID do Avanço:</label>
-                <input type="text" id="avanco_id" name="avanco_id" value="{{ avanco['id_avancos_fisicos'] }}" readonly class="form-control"> {# Acesso por colchetes, minúscula #}
-            </div>
-            <div class="form-group">
-                <label for="id_obras">Obra:</label>
-                <select class="form-control" id="id_obras" name="id_obras" required>
-                    <option value="">Selecione uma Obra</option>
-                    {% for obra in all_obras %}
-                        <option value="{{ obra.ID_Obras }}" {% if avanco['id_obras']|string == obra.ID_Obras|string %}selected{% endif %}> {# Acesso por colchetes, minúscula #}
-                            {{ obra.Nome_Obra }} ({{ obra.Numero_Obra }})
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="percentual_avanco_fisico">Percentual de Avanço Físico (%):</label>
-                <input type="number" step="0.01" class="form-control" id="percentual_avanco_fisico" name="percentual_avanco_fisico" value="{{ avanco['percentual_avanco_fisico']|default('') }}" required> {# Acesso por colchetes, minúscula #}
-            </div>
-            <div class="form-group">
-                <label for="data_avanco">Data do Avanço:</label>
-                <input type="date" class="form-control" id="data_avanco" name="data_avanco" value="{{ avanco['data_avanco']|default('') }}" required> {# Acesso por colchetes, minúscula #}
-            </div>
-            
-            {# CAMPO PARA EXIBIR AVANÇO ACUMULADO #}
-            <div class="form-group">
-                <label>Avanço Acumulado Atual da Obra:</label>
-                <p><strong id="avanco_acumulado_display">{{ "%.2f"|format(avanco['avanco_acumulado_obra'])|default('0.00') }}%</strong></p> {# Acesso por colchetes, minúscula #}
-                <small>Considera o avanço físico já registrado para a obra selecionada (sem esta edição).</small>
-            </div>
+{% block messages %}{% endblock %} 
 
-            <div class="btn-container">
-                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-                <a href="{{ url_for('obras_bp.avancos_fisicos_module') }}" class="btn btn-secondary">Cancelar</a>
-            </div>
-        </form>
-        <div class="back-link">
-            <p><a href="{{ url_for('obras_bp.avancos_fisicos_module') }}">Voltar para a Lista de Avanços Físicos</a></p>
-        </div>
+{% block content %}
+<div class="container custom-form-container mt-4 mb-4 p-4"> {# Container customizado, margens e padding #}
+    {# Título dentro da faixa preta #}
+    <div class="title-band mb-2"> {# mb-2 para margem inferior menor #}
+        <h1 class="text-white text-center mb-0"><i class="fas fa-chart-line me-3"></i>Editar Avanço Físico: {{ avanco['id_avancos_fisicos'] }}</h1> {# Ícone de gráfico de linha #}
     </div>
 
-    {# BLOCO SCRIPT PARA AJAX #}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const obraSelect = document.getElementById('id_obras');
-            const avancoAcumuladoDisplay = document.getElementById('avanco_acumulado_display');
-            const avancoId = {{ avanco['id_avancos_fisicos'] }}; // Acesso por colchetes, minúscula
+    {# Bloco para Flash Messages - Mantido dentro do content, igual aos outros formulários #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class="flash-messages">
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
 
-            function updateAvancoAcumulado() {
-                const obraId = obraSelect.value;
-                if (obraId) {
-                    // Monta a URL para o endpoint AJAX, incluindo o avanco_id_excluir
-                    const url = `{{ url_for('obras_bp.get_acumulado_obra', obra_id=0, avanco_id_excluir=0) }}`
-                                .replace('/0/', `/${obraId}/`)
-                                .replace('/0', `/${avancoId}`); // Substitui o placeholder do avanco_id_excluir
+    <form action="{{ url_for('obras_bp.edit_avanco_fisico', avanco_id=avanco['id_avancos_fisicos']) }}" method="POST">
+        <div class="mb-3"> {# mb-3 para Bootstrap spacing #}
+            <label for="avanco_id" class="form-label custom-form-label">ID do Avanço:</label>
+            <input type="text" id="avanco_id" name="avanco_id" value="{{ avanco['id_avancos_fisicos'] }}" readonly class="form-control custom-form-control">
+        </div>
+        <div class="mb-3">
+            <label for="id_obras" class="form-label custom-form-label">Obra:</label>
+            <select id="id_obras" name="id_obras" class="form-select custom-form-control" required>
+                <option value="">Selecione uma Obra</option>
+                {% for obra in all_obras %}
+                    <option value="{{ obra.ID_Obras }}" {% if avanco['id_obras']|string == obra.ID_Obras|string %}selected{% endif %}>
+                        {{ obra.Nome_Obra }} ({{ obra.Numero_Obra }})
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="percentual_avanco_fisico" class="form-label custom-form-label">Percentual de Avanço Físico (%):</label>
+            <input type="number" step="0.01" id="percentual_avanco_fisico" name="percentual_avanco_fisico" class="form-control custom-form-control" value="{{ avanco['percentual_avanco_fisico']|default('') }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="data_avanco" class="form-label custom-form-label">Data do Avanço:</label>
+            <input type="date" id="data_avanco" name="data_avanco" class="form-control custom-form-control" value="{{ avanco['data_avanco']|default('') }}" required>
+        </div>
+        
+        {# CAMPO PARA EXIBIR AVANÇO ACUMULADO #}
+        <div class="mb-3">
+            <label class="form-label custom-form-label">Avanço Acumulado Atual da Obra:</label>
+            <p class="custom-details-value"><strong id="avanco_acumulado_display">{{ "%.2f"|format(avanco['avanco_acumulado_obra'])|default('0.00') }}%</strong></p>
+            <small class="text-muted">Considera o avanço físico já registrado para a obra selecionada (sem esta edição).</small>
+        </div>
 
-                    fetch(url)
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Erro na rede ou servidor');
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            if (data.error) {
-                                console.error('Erro na resposta do servidor:', data.error);
-                                avancoAcumuladoDisplay.textContent = 'Erro ao carregar';
-                            } else {
-                                avancoAcumuladoDisplay.textContent = `${data.avanco_acumulado.toFixed(2)}%`;
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Erro ao buscar avanço acumulado:', error);
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end"> {# Botões Salvar/Cancelar #}
+            <button type="submit" class="btn btn-primary custom-submit-btn">Salvar Alterações</button>
+            <a href="{{ url_for('obras_bp.avancos_fisicos_module') }}" class="btn btn-secondary custom-cancel-btn">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+{# BLOCO SCRIPT PARA AJAX #}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const obraSelect = document.getElementById('id_obras');
+        const avancoAcumuladoDisplay = document.getElementById('avanco_acumulado_display');
+        const avancoId = {{ avanco['id_avancos_fisicos'] }}; // ID do avanço físico atual sendo editado
+
+        function updateAvancoAcumulado() {
+            const obraId = obraSelect.value;
+            if (obraId) {
+                // A URL base agora é gerada com placeholders válidos no Jinja.
+                // O JavaScript então substitui esses placeholders pelos valores reais.
+                const baseUrl = "{{ url_for('obras_bp.get_acumulado_obra', obra_id=123, avanco_id_excluir=456)|string }}"; 
+                // Remove os IDs dummies e adiciona os IDs reais
+                const url = baseUrl.replace('/123', `/${obraId}`).replace('/456', `/${avancoId}`); 
+
+                fetch(url)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.error) {
+                            console.error('Erro na resposta do servidor:', data.error);
                             avancoAcumuladoDisplay.textContent = 'Erro ao carregar';
-                        });
-                } else {
-                    avancoAcumuladoDisplay.textContent = '0.00%'; // Se nenhuma obra selecionada
-                }
-            }
-
-            // Listener para mudanças no select da obra
-            obraSelect.addEventListener('change', updateAvancoAcumulado);
-
-            // Chamar na carga inicial da página para obra já selecionada
-            // Isso é importante caso o formulário seja recarregado após um POST com erro
-            if (obraSelect.value) {
-                updateAvancoAcumulado();
+                        } else {
+                            avancoAcumuladoDisplay.textContent = `${parseFloat(data.avanco_acumulado).toFixed(2)}%`;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao buscar avanço acumulado:', error);
+                        avancoAcumuladoDisplay.textContent = 'Erro ao carregar';
+                    });
             } else {
-                avancoAcumuladoDisplay.textContent = '0.00%'; // Garante que é 0 se nada selecionado
+                avancoAcumuladoDisplay.textContent = '0.00%'; // Se nenhuma obra selecionada
             }
-        });
-    </script>
-</body>
-</html>
+        }
+
+        // Listener para mudanças no select da obra
+        obraSelect.addEventListener('change', updateAvancoAcumulado);
+
+        // Chamar na carga inicial da página para obra já selecionada
+        if (obraSelect.value) {
+            updateAvancoAcumulado();
+        } else {
+            // Garante que o avanço acumulado inicial da obra (sem a edição atual) seja exibido corretamente.
+            // Se a obraId não estiver selecionada, ou se o script não conseguir buscar, exibe o valor padrão.
+            avancoAcumuladoDisplay.textContent = "{{ '%.2f'|format(avanco['avanco_acumulado_obra'])|default('0.00') }}%";
+        }
+    });
+</script>
+
+<style>
+    /* Estilos Customizados para o Título como Faixa */
+    .title-band {
+        background-color: #212529; /* Preto ou cinza escuro */
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .title-band h1 {
+        color: white;
+        margin-bottom: 0;
+        font-size: 1.5rem; /* Título menor para design minimalista */
+    }
+
+    /* Estilos para o Container Principal do Formulário (Fumê, Estreito, 3D) */
+    .custom-form-container {
+        max-width: 500px; /* Mais estreito para design minimalista */
+        margin-left: auto;
+        margin-right: auto; /* Centralizado */
+        background-color: rgba(33, 37, 41, 0.85); /* Fundo preto com transparência (vidro fumê) */
+        border: 1px solid #000000; /* Borda preta fina */
+        border-radius: 0.75rem; /* Cantos arredondados */
+        box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.3), 
+                    0 0.25rem 0.5rem rgba(0, 0, 0, 0.2); /* Efeito 3D mais pronunciado */
+        padding: 1.5rem; /* Padding interno reduzido */
+        position: relative;
+        transform: translateY(-3px); /* Leve elevação */
+    }
+
+    /* Estilos para Labels e Inputs/Selects (Design Minimalista, Letras Menores) */
+    .custom-form-label {
+        color: #f8f9fa; /* Labels brancas */
+        font-size: 0.8rem; /* Letras menores para design minimalista */
+        font-weight: 500; /* Peso da fonte um pouco maior */
+        margin-bottom: 0.25rem; /* Menor margem */
+    }
+    .custom-form-control {
+        font-size: 0.85rem; /* Letras menores para inputs/selects */
+        background-color: rgba(255, 255, 255, 0.95); /* Fundo semi-transparente */
+        border: 1px solid rgba(255, 255, 255, 0.2); /* Borda suave */
+        color: #212529; /* Cor do texto */
+        padding: 0.5rem; /* Padding menor */
+        border-radius: 0.375rem; /* Cantos levemente arredondados */
+        transition: all 0.2s ease-in-out; /* Transição suave */
+    }
+    .custom-form-control:focus {
+        background-color: rgba(255, 255, 255, 1); /* Fundo opaco no focus */
+        border-color: #86b7fe; /* Cor de borda do Bootstrap no focus */
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        transform: translateY(-1px); /* Leve elevação no focus */
+    }
+    textarea.custom-form-control {
+        resize: vertical; /* Permite redimensionar apenas verticalmente */
+        min-height: 80px; /* Altura mínima menor */
+    }
+
+    /* Estilos para os Botões "Adicionar Obra" e "Cancelar" (Mais Sofisticados) */
+    .custom-submit-btn, .custom-cancel-btn {
+        padding: 0.6rem 1.2rem; /* Padding reduzido */
+        border-radius: 0.5rem; /* Cantos arredondados */
+        font-size: 0.9rem; /* Tamanho de fonte menor */
+        font-weight: 600; /* Peso da fonte maior */
+        transition: all 0.3s ease-in-out; /* Transição suave */
+        border: none; /* Remove borda padrão */
+        cursor: pointer; /* Cursor de pointer */
+        position: relative; /* Para efeitos de posicionamento */
+        overflow: hidden; /* Para efeitos de animação */
+    }
+
+    .custom-submit-btn {
+        background: linear-gradient(135deg, #198754, #157347); /* Gradiente verde */
+        color: white;
+        box-shadow: 0 0.25rem 0.5rem rgba(25, 135, 84, 0.3);
+    }
+    .custom-submit-btn:hover {
+        background: linear-gradient(135deg, #157347, #146c43); /* Gradiente mais escuro */
+        transform: translateY(-3px); /* Elevação no hover */
+        box-shadow: 0 0.5rem 1rem rgba(25, 135, 84, 0.4); /* Sombra mais pronunciada */
+    }
+    .custom-submit-btn:active {
+        transform: translateY(-1px); /* Menos elevação no click */
+    }
+
+    .custom-cancel-btn {
+        background: linear-gradient(135deg, #6c757d, #5c636a); /* Gradiente cinza */
+        color: white;
+        box-shadow: 0 0.25rem 0.5rem rgba(108, 117, 125, 0.3);
+    }
+    .custom-cancel-btn:hover {
+        background: linear-gradient(135deg, #5c636a, #565e64); /* Gradiente mais escuro */
+        transform: translateY(-3px); /* Elevação no hover */
+        box-shadow: 0 0.5rem 1rem rgba(108, 117, 125, 0.4); /* Sombra mais pronunciada */
+    }
+    .custom-cancel-btn:active {
+        transform: translateY(-1px); /* Menos elevação no click */
+    }
+
+    /* Efeito adicional de brilho nos botões */
+    .custom-submit-btn::before, .custom-cancel-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.5s ease-in-out;
+    }
+    .custom-submit-btn:hover::before, .custom-cancel-btn:hover::before {
+        left: 100%;
+    }
+
+    /* Estilos para o texto de avanço acumulado */
+    .custom-details-value {
+        color: #f8f9fa; /* Cor branca para o valor */
+        font-size: 1rem; /* Tamanho da fonte um pouco maior */
+        margin-top: 0.5rem;
+    }
+    .text-muted { /* Para a tag <small> */
+        color: #adb5bd !important; /* Cor mais clara para o texto auxiliar */
+        font-size: 0.75rem;
+    }
+
+    /* Ajustes para responsividade */
+    @media (max-width: 576px) {
+        .custom-form-container {
+            max-width: 95%;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        .title-band h1 {
+            font-size: 1.3rem;
+        }
+        .custom-form-label {
+            font-size: 0.75rem;
+        }
+        .custom-form-control {
+            font-size: 0.8rem;
+        }
+    }
+
+    /* Estilos para flash messages */
+    .flash-messages {
+        list-style: none;
+        padding: 0;
+        margin-bottom: 1rem;
+    }
+    .flash-messages li {
+        padding: 0.75rem 1.25rem;
+        margin-bottom: 1rem;
+        border: 1px solid transparent;
+        border-radius: 0.25rem;
+        font-weight: bold;
+    }
+    .flash-messages li.success {
+        color: #155724;
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+    }
+    .flash-messages li.danger {
+        color: #721c24;
+        background-color: #f8d7da;
+        border-color: #f5c6cb; 
+    }
+    .flash-messages li.info {
+        color: #0c5460;
+        background-color: #d1ecf1;
+        border-color: #bee5eb;
+    }
+</style>
+{% endblock %}

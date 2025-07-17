@@ -1,22 +1,14 @@
 {% extends 'base.html' %} {% block title %}Login - LUMOB{% endblock %} {% block
 content %}
 <div class="container login-container">
-  {# Adicionado container e login-container para manter o layout centralizado #}
   <h1>Login</h1>
 
-  {# Mensagens Flash são exibidas automaticamente pelo base.html, não precisam
-  mais estar aqui #} {# {% with messages =
-  get_flashed_messages(with_categories=true) %} #} {# {% if messages %} #} {#
-  <ul class="flash-messages">
-    #} {# {% for category, message in messages %} #} {#
-    <li class="{{ category }}">{{ message }}</li>
-    #} {# {% endfor %} #} {#
-  </ul>
-  #} {# {% endif %} #} {# {% endwith %} #}
+  {# REMOVIDO: O bloco de mensagens flash foi removido daqui pois já é exibido
+  pelo base.html #} {# {% with messages =
+  get_flashed_messages(with_categories=true) %} ... {% endwith %} #}
 
   <form method="POST" action="{{ url_for('login') }}">
     <div class="form-group">
-      {# Adicionado form-group para alinhamento com estilos Bootstrap #}
       <label for="username">Usuário:</label>
       <input
         type="text"
@@ -25,11 +17,9 @@ content %}
         class="form-control"
         required
       />
-      {# Adicionado form-control #}
     </div>
 
     <div class="form-group">
-      {# Adicionado form-group #}
       <label for="password">Senha:</label>
       <input
         type="password"
@@ -38,12 +28,10 @@ content %}
         class="form-control"
         required
       />
-      {# Adicionado form-control #}
     </div>
 
     <div>
-      <button type="submit" class="btn btn-primary">Entrar</button> {#
-      Adicionado btn e btn-primary #}
+      <button type="submit" class="btn btn-primary">Entrar</button>
     </div>
   </form>
 </div>

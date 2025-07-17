@@ -27,9 +27,9 @@ from io import BytesIO      # Adicione este import no topo do seu app.py
 from database.db_base import DatabaseManager
 from database.db_user_manager import UserManager
 # from database.db_hr_manager import HrManager # Para o módulo de RH/DP (mantido para estrutura) <<< ver se ainda precisa! Pode apagar!!!
-# from database.db_obras_manager import ObrasManager # Para o módulo Obras
+from database.db_obras_manager import ObrasManager # Para o módulo Obras
 from database.db_seguranca_manager import SegurancaManager # Para o módulo Segurança
-# from database.db_pessoal_manager import PessoalManager
+from database.db_pessoal_manager import PessoalManager
 
 # Imaportações para Blueprint
 from modulos.users_bp import users_bp
@@ -131,12 +131,10 @@ def login():
                 user_record = user_manager.authenticate_user(username, password) # Passa a senha em texto puro para autenticação
 
                 if user_record:
-                    # Ao logar, carregamos o user_permissions e o email para o objeto User
                     user_permissions = user_manager.get_user_permissions(user_record['id'])
-                    # ALTERAÇÃO: Passando user_record['email'] para o construtor do User
                     user = User(user_record['id'], user_record['username'], user_record['role'], user_record.get('email'), user_permissions)
                     login_user(user)
-                    flash('Login bem-sucedido!', 'success')
+                    # --- REMOVIDO: flash('Login bem-sucedido!', 'success') para evitar redundância ---
                     return redirect(url_for('welcome'))
                 else:
                     flash('Usuário ou senha inválidos.', 'danger')
@@ -153,6 +151,9 @@ def login():
 @login_required
 def logout():
     logout_user()
+    # --- NOVO: Limpar mensagens flash da sessão antes de redirecionar ---
+    session.pop('_flashes', None) # Remove todas as mensagens flash da sessão
+    # --- FIM NOVO ---
     flash('Você foi desconectado.', 'info')
     return redirect(url_for('login'))
 
@@ -162,34 +163,27 @@ def logout():
 @app.route('/welcome')
 @login_required
 def welcome():
-    # Isso garante que as permissões do usuário logado estejam atualizadas
-    # no objeto current_user antes de renderizar welcome.html
-    # É importante após o gerenciamento de permissões.
     try:
         with DatabaseManager(**db_config) as db_base:
             user_manager = UserManager(db_base)
-            # Atualiza o atributo permissions do objeto current_user
             current_user.permissions = user_manager.get_user_permissions(current_user.id)
-            # Recarrega o email para garantir que current_user esteja atualizado
             updated_user_data = user_manager.find_user_by_id(current_user.id)
             if updated_user_data:
                 current_user.email = updated_user_data.get('email')
     except Exception as e:
         print(f"Erro ao carregar permissões e/ou email para current_user em welcome: {e}")
-        current_user.permissions = []   # Garante que seja uma lista vazia em caso de erro
-        current_user.email = None       # Garante que seja None em caso de erro
+        current_user.permissions = []
+        current_user.email = None
 
-    flash(f"Bem-vindo(a) ao sistema LUMOB, {current_user.username}!", "info")
+    # --- REMOVIDO: flash(f"Bem-vindo(a) ao sistema LUMOB, {current_user.username}!", "info") para evitar redundância ---
 
-    # Obter todos os módulos para enviar ao template e renderizar a lista
     all_modules_db = []
     try:
         with DatabaseManager(**db_config) as db_base:
             user_manager = UserManager(db_base)
-            all_modules_db = user_manager.get_all_modules() # Retorna Nome_Modulo e ID_Modulo
+            all_modules_db = user_manager.get_all_modules()
     except Exception as e:
         print(f"Erro ao obter todos os módulos para welcome.html: {e}")
-        # all_modules_db permanece vazio
 
     return render_template('welcome.html', user=current_user, all_modules_db=all_modules_db)
 

@@ -1,104 +1,240 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adicionar Contrato - LUMOB</title>
-    <style>
-        body { font-family: sans-serif; margin: 20px; }
-        .container { max-width: 800px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
-        h1 { text-align: center; color: #333; }
-        form div { margin-bottom: 10px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"], input[type="date"], input[type="number"], select, textarea {
-            width: calc(100% - 22px); padding: 10px; border: 1px solid #ddd; border-radius: 4px;
-            box-sizing: border-box;
-        }
-        button {
-            padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px;
-            cursor: pointer; font-size: 16px; margin-right: 10px;
-        }
-        button:hover { background-color: #0056b3; }
-        .flash { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
-        .flash.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .flash.danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6fb; }
-        .cancel-link {
-            padding: 10px 15px; background-color: #6c757d; color: white; border: none; border-radius: 4px;
-            cursor: pointer; font-size: 16px; text-decoration: none; display: inline-block; vertical-align: middle;
-        }
-        .cancel-link:hover { background-color: #5a6268; }
-        .back-link { display: block; text-align: center; margin-top: 20px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Adicionar Novo Contrato</h1>
+{% extends 'base.html' %}
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="flash {{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+{% block title %}Adicionar Contrato - LUMOB{% endblock %}
 
-        <form action="{{ url_for('obras_bp.add_contrato') }}" method="POST">
-            <div>
-                <label for="id_clientes">Cliente:</label>
-                <select id="id_clientes" name="id_clientes" required>
-                    <option value="">Selecione um Cliente</option>
-                    {% for cliente in all_clientes %}
-                        <option value="{{ cliente.ID_Clientes }}" {% if form_data['id_clientes']|default('')|int == cliente.ID_Clientes %}selected{% endif %}>
-                            {{ cliente.Nome_Cliente }} ({{ cliente.CNPJ_Cliente }})
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div>
-                <label for="numero_contrato">Número do Contrato:</label>
-                <input type="text" id="numero_contrato" name="numero_contrato" value="{{ form_data['numero_contrato']|default('') }}" required>
-            </div>
-            <div>
-                <label for="valor_contrato">Valor do Contrato (R$):</label>
-                <input type="number" step="0.01" id="valor_contrato" name="valor_contrato" value="{{ form_data['valor_contrato']|default('') }}" required>
-            </div>
-            <div>
-                <label for="data_assinatura">Data de Assinatura:</label>
-                <input type="date" id="data_assinatura" name="data_assinatura" value="{{ form_data['data_assinatura']|default('') }}" required>
-            </div>
-            <div>
-                <label for="data_ordem_inicio">Data da Ordem de Início:</label>
-                <input type="date" id="data_ordem_inicio" name="data_ordem_inicio" value="{{ form_data['data_ordem_inicio']|default('') }}">
-            </div>
-            <div>
-                <label for="prazo_contrato_dias">Prazo do Contrato (dias):</label>
-                <input type="number" id="prazo_contrato_dias" name="prazo_contrato_dias" value="{{ form_data['prazo_contrato_dias']|default('0') }}">
-            </div>
-            <div>
-                <label for="data_termino_previsto">Data de Término Previsto:</label>
-                <input type="date" id="data_termino_previsto" name="data_termino_previsto" value="{{ form_data['data_termino_previsto']|default('') }}">
-            </div>
-            <div>
-                <label for="status_contrato">Status do Contrato:</label>
-                <select id="status_contrato" name="status_contrato" required>
-                    <option value="">Selecione o Status</option>
-                    {% for status in status_options %}
-                        <option value="{{ status }}" {% if form_data['status_contrato']|default('') == status %}selected{% endif %}>{{ status }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div>
-                <label for="observacoes">Observações:</label>
-                <textarea id="observacoes" name="observacoes" rows="5">{{ form_data['observacoes']|default('') }}</textarea>
-            </div>
-            <div>
-                <button type="submit">Adicionar Contrato</button>
-                <a href="{{ url_for('obras_bp.contratos_module') }}" class="cancel-link">Cancelar</a>
-            </div>
-        </form>
-        <div class="back-link">
-            <p><a href="{{ url_for('obras_bp.contratos_module') }}">Voltar para a Lista de Contratos</a></p>
-        </div>
+{% block messages %}{% endblock %} 
+
+{% block content %}
+<div class="container custom-form-container mt-4 mb-4 p-4"> {# Container customizado, margens e padding #}
+    {# Título dentro da faixa preta #}
+    <div class="title-band mb-2"> {# mb-2 para margem inferior menor para o botão Voltar #}
+        <h1 class="text-white text-center mb-0"><i class="fas fa-file-signature me-3"></i>Adicionar Novo Contrato</h1> {# Ícone de contrato #}
     </div>
-</body>
-</html>
+
+    {# Bloco para Flash Messages - Mantido dentro do content, igual aos outros formulários #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class="flash-messages">
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <form action="{{ url_for('obras_bp.add_contrato') }}" method="POST">
+        <div class="mb-3"> {# mb-3 para Bootstrap spacing #}
+            <label for="id_clientes" class="form-label custom-form-label">Cliente:</label>
+            <select id="id_clientes" name="id_clientes" class="form-select custom-form-control" required>
+                <option value="">Selecione um Cliente</option>
+                {% for cliente in all_clientes %}
+                    <option value="{{ cliente.ID_Clientes }}" {% if form_data['id_clientes']|default('')|int == cliente.ID_Clientes %}selected{% endif %}>
+                        {{ cliente.Nome_Cliente }} ({{ cliente.CNPJ_Cliente }})
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="numero_contrato" class="form-label custom-form-label">Número do Contrato:</label>
+            <input type="text" id="numero_contrato" name="numero_contrato" class="form-control custom-form-control" value="{{ form_data['numero_contrato']|default('') }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="valor_contrato" class="form-label custom-form-label">Valor do Contrato (R$):</label>
+            <input type="number" step="0.01" id="valor_contrato" name="valor_contrato" class="form-control custom-form-control" value="{{ form_data['valor_contrato']|default('') }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="data_assinatura" class="form-label custom-form-label">Data de Assinatura:</label>
+            <input type="date" id="data_assinatura" name="data_assinatura" class="form-control custom-form-control" value="{{ form_data['data_assinatura']|default('') }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="data_ordem_inicio" class="form-label custom-form-label">Data da Ordem de Início:</label>
+            <input type="date" id="data_ordem_inicio" name="data_ordem_inicio" class="form-control custom-form-control" value="{{ form_data['data_ordem_inicio']|default('') }}">
+        </div>
+        <div class="mb-3">
+            <label for="prazo_contrato_dias" class="form-label custom-form-label">Prazo do Contrato (dias):</label>
+            <input type="number" id="prazo_contrato_dias" name="prazo_contrato_dias" class="form-control custom-form-control" value="{{ form_data['prazo_contrato_dias']|default('0') }}">
+        </div>
+        <div class="mb-3">
+            <label for="data_termino_previsto" class="form-label custom-form-label">Data de Término Previsto:</label>
+            <input type="date" id="data_termino_previsto" name="data_termino_previsto" class="form-control custom-form-control" value="{{ form_data['data_termino_previsto']|default('') }}">
+        </div>
+        <div class="mb-3">
+            <label for="status_contrato" class="form-label custom-form-label">Status do Contrato:</label>
+            <select id="status_contrato" name="status_contrato" class="form-select custom-form-control" required>
+                <option value="">Selecione o Status</option>
+                {% for status in status_options %}
+                    <option value="{{ status }}" {% if form_data['status_contrato']|default('') == status %}selected{% endif %}>{{ status }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="observacoes" class="form-label custom-form-label">Observações:</label>
+            <textarea id="observacoes" name="observacoes" rows="5" class="form-control custom-form-control">{{ form_data['observacoes']|default('') }}</textarea>
+        </div>
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end"> {# Botões Adicionar/Cancelar #}
+            <button type="submit" class="btn btn-primary custom-submit-btn">Adicionar Contrato</button>
+            <a href="{{ url_for('obras_bp.contratos_module') }}" class="btn btn-secondary custom-cancel-btn">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<style>
+    /* Estilos Customizados para o Título como Faixa */
+    .title-band {
+        background-color: #212529; /* Preto ou cinza escuro */
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .title-band h1 {
+        color: white;
+        margin-bottom: 0;
+        font-size: 1.5rem; /* Título menor para design minimalista */
+    }
+
+    /* Estilos para o Container Principal do Formulário (Fumê, Estreito, 3D) */
+    .custom-form-container {
+        max-width: 500px; /* Mais estreito para design minimalista */
+        margin-left: auto;
+        margin-right: auto; /* Centralizado */
+        background-color: rgba(33, 37, 41, 0.85); /* Fundo preto com transparência (vidro fumê) */
+        border: 1px solid #000000; /* Borda preta fina */
+        border-radius: 0.75rem; /* Cantos arredondados */
+        box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.3), 
+                    0 0.25rem 0.5rem rgba(0, 0, 0, 0.2); /* Efeito 3D mais pronunciado */
+        padding: 1.5rem; /* Padding interno reduzido */
+        position: relative;
+        transform: translateY(-3px); /* Leve elevação */
+    }
+
+    /* Estilos para Labels e Inputs/Selects (Design Minimalista, Letras Menores) */
+    .custom-form-label {
+        color: #f8f9fa; /* Labels brancas */
+        font-size: 0.8rem; /* Letras menores para design minimalista */
+        font-weight: 500; /* Peso da fonte um pouco maior */
+        margin-bottom: 0.25rem; /* Menor margem */
+    }
+    .custom-form-control {
+        font-size: 0.85rem; /* Letras menores para inputs/selects */
+        background-color: rgba(255, 255, 255, 0.95); /* Fundo semi-transparente */
+        border: 1px solid rgba(255, 255, 255, 0.2); /* Borda suave */
+        color: #212529; /* Cor do texto */
+        padding: 0.5rem; /* Padding menor */
+        border-radius: 0.375rem; /* Cantos levemente arredondados */
+        transition: all 0.2s ease-in-out; /* Transição suave */
+    }
+    .custom-form-control:focus {
+        background-color: rgba(255, 255, 255, 1); /* Fundo opaco no focus */
+        border-color: #86b7fe; /* Cor de borda do Bootstrap no focus */
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        transform: translateY(-1px); /* Leve elevação no focus */
+    }
+    textarea.custom-form-control {
+        resize: vertical; /* Permite redimensionar apenas verticalmente */
+        min-height: 80px; /* Altura mínima menor */
+    }
+
+    /* Estilos para os Botões "Adicionar Obra" e "Cancelar" (Mais Sofisticados) */
+    .custom-submit-btn, .custom-cancel-btn {
+        padding: 0.6rem 1.2rem; /* Padding reduzido */
+        border-radius: 0.5rem; /* Cantos arredondados */
+        font-size: 0.9rem; /* Tamanho de fonte menor */
+        font-weight: 600; /* Peso da fonte maior */
+        transition: all 0.3s ease-in-out; /* Transição suave */
+        border: none; /* Remove borda padrão */
+        cursor: pointer; /* Cursor de pointer */
+        position: relative; /* Para efeitos de posicionamento */
+        overflow: hidden; /* Para efeitos de animação */
+    }
+
+    .custom-submit-btn {
+        background: linear-gradient(135deg, #198754, #157347); /* Gradiente verde */
+        color: white;
+        box-shadow: 0 0.25rem 0.5rem rgba(25, 135, 84, 0.3);
+    }
+    .custom-submit-btn:hover {
+        background: linear-gradient(135deg, #157347, #146c43); /* Gradiente mais escuro */
+        transform: translateY(-3px); /* Elevação no hover */
+        box-shadow: 0 0.5rem 1rem rgba(25, 135, 84, 0.4); /* Sombra mais pronunciada */
+    }
+    .custom-submit-btn:active {
+        transform: translateY(-1px); /* Menos elevação no click */
+    }
+
+    .custom-cancel-btn {
+        background: linear-gradient(135deg, #6c757d, #5c636a); /* Gradiente cinza */
+        color: white;
+        box-shadow: 0 0.25rem 0.5rem rgba(108, 117, 125, 0.3);
+    }
+    .custom-cancel-btn:hover {
+        background: linear-gradient(135deg, #5c636a, #565e64); /* Gradiente mais escuro */
+        transform: translateY(-3px); /* Elevação no hover */
+        box-shadow: 0 0.5rem 1rem rgba(108, 117, 125, 0.4); /* Sombra mais pronunciada */
+    }
+    .custom-cancel-btn:active {
+        transform: translateY(-1px); /* Menos elevação no click */
+    }
+
+    /* Efeito adicional de brilho nos botões */
+    .custom-submit-btn::before, .custom-cancel-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.5s ease-in-out;
+    }
+    .custom-submit-btn:hover::before, .custom-cancel-btn:hover::before {
+        left: 100%;
+    }
+
+    /* Ajustes para responsividade */
+    @media (max-width: 576px) {
+        .custom-form-container {
+            max-width: 95%;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        .title-band h1 {
+            font-size: 1.3rem;
+        }
+        .custom-form-label {
+            font-size: 0.75rem;
+        }
+        .custom-form-control {
+            font-size: 0.8rem;
+        }
+    }
+
+    /* Estilos para flash messages */
+    .flash-messages {
+        list-style: none;
+        padding: 0;
+        margin-bottom: 1rem;
+    }
+    .flash-messages li {
+        padding: 0.75rem 1.25rem;
+        margin-bottom: 1rem;
+        border: 1px solid transparent;
+        border-radius: 0.25rem;
+        font-weight: bold;
+    }
+    .flash-messages li.success {
+        color: #155724;
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+    }
+    .flash-messages li.danger {
+        color: #721c24;
+        background-color: #f8d7da;
+        border-color: #f5c6fb; 
+    }
+    .flash-messages li.info {
+        color: #0c5460;
+        background-color: #d1ecf1;
+        border-color: #bee5eb;
+    }
+</style>
+{% endblock %}

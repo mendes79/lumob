@@ -1,146 +1,161 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LUMOB - Adicionar Usuário</title>
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/style_welcome.css') }}"
-    />
-    <style>
-      body {
-        font-family: sans-serif;
-        background-color: #f4f4f4;
-        color: #333;
-      }
-      .container {
-        max-width: 600px;
-        margin: 50px auto;
-        padding: 20px;
-        background-color: #fff;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      }
-      h1 {
-        text-align: center;
-        color: #0056b3;
-        margin-bottom: 20px;
-      }
-      .form-group {
-        margin-bottom: 15px;
-      }
-      label {
-        display: block;
-        margin-bottom: 5px;
-        font-weight: bold;
-      }
-      input[type="text"],
-      input[type="email"], /* NOVO: Estilo para input de email */
-      input[type="password"],
-      select {
-        width: calc(100% - 22px); /* Ajuste para o padding */
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        box-sizing: border-box; /* Inclui padding e borda na largura */
-      }
-      .button-group {
-        text-align: right;
-        margin-top: 20px;
-      }
-      .button-group button {
-        padding: 10px 20px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 16px;
-      }
-      .button-group button[type="submit"] {
-        background-color: #28a745;
-        color: white;
-        margin-right: 10px;
-      }
-      .button-group button.cancel {
-        background-color: #6c757d;
-        color: white;
-      }
-      .flash-messages {
-        list-style: none;
-        padding: 0;
-        margin-bottom: 20px;
-      }
-      .flash-messages li {
-        padding: 10px;
-        margin-bottom: 10px;
-        border-radius: 5px;
-      }
-      .flash-messages li.danger {
-        background-color: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <h1>Adicionar Novo Usuário</h1>
+{% extends 'base.html' %}
 
-      {% with messages = get_flashed_messages(with_categories=true) %} {% if
-      messages %}
-      <ul class="flash-messages">
-        {% for category, message in messages %}
-        <li class="{{ category }}">{{ message }}</li>
-        {% endfor %}
-      </ul>
-      {% endif %} {% endwith %}
+{% block title %}Adicionar Usuário - LUMOB{% endblock %}
 
-      <form method="POST">
-        <div class="form-group">
-          <label for="username">Nome de Usuário:</label>
-          <input
-            type="text"
-            id="username"
-            name="username"
-            value="{{ old_username | default('') }}"
-            required
-          />
-        </div>
-        <div class="form-group">
-          <label for="email">Email:</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value="{{ old_email | default('') }}"
-            required
-          />
-        </div>
-        <div class="form-group">
-          <label for="password">Senha:</label>
-          <input type="password" id="password" name="password" required />
-        </div>
-        <div class="form-group">
-          <label for="role">Papel (Role):</label>
-          <select id="role" name="role" required>
-            {% for r in available_roles %}
-            <option value="{{ r }}" {% if r == old_role %} selected {% endif %}>
-              {{ r | capitalize }}
-            </option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="button-group">
-          <button type="submit">Adicionar Usuário</button>
-          <button
-            type="button"
-            class="cancel"
-            onclick="window.location.href='{{ url_for('users_bp.users_module') }}';"
-          >
-            Cancelar
-          </button>
-        </div>
-      </form>
+{% block messages %}{% endblock %} 
+
+{% block content %}
+<div class="container custom-form-container mt-4 mb-4 p-4">
+    <div class="title-band mb-2">
+        <h1 class="text-white text-center mb-0"><i class="fas fa-user-plus me-3"></i>Adicionar Novo Usuário</h1>
     </div>
-  </body>
-</html>
+
+    <form method="POST" action="{{ url_for('users_bp.add_user') }}">
+        <div class="mb-3">
+            <label for="username" class="form-label custom-form-label">Nome de Usuário:</label>
+            <input type="text" id="username" name="username" class="form-control custom-form-control" value="{{ old_username | default('') }}" required />
+        </div>
+        <div class="mb-3">
+            <label for="email" class="form-label custom-form-label">Email:</label>
+            <input type="email" id="email" name="email" class="form-control custom-form-control" value="{{ old_email | default('') }}" required />
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label custom-form-label">Senha:</label>
+            <input type="password" id="password" name="password" class="form-control custom-form-control" required>
+        </div>
+        <div class="mb-3">
+            <label for="role" class="form-label custom-form-label">Papel (Role):</label>
+            <select id="role" name="role" class="form-select custom-form-control" required>
+                <option value="">Selecione um Papel</option>
+                {% for r in available_roles %}
+                <option value="{{ r }}" {% if r == old_role %} selected {% endif %}>{{ r | capitalize }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <button type="submit" class="btn btn-primary custom-submit-btn">Adicionar Usuário</button>
+            <a href="{{ url_for('users_bp.users_module') }}" class="btn btn-secondary custom-cancel-btn">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<style>
+    .title-band {
+        background-color: #212529;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .title-band h1 {
+        color: white;
+        margin-bottom: 0;
+        font-size: 1.5rem;
+    }
+
+    .custom-form-container {
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+        background-color: rgba(33, 37, 41, 0.85);
+        border: 1px solid #000000;
+        border-radius: 0.75rem;
+        box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.3), 
+                    0 0.25rem 0.5rem rgba(0, 0, 0, 0.2);
+        padding: 1.5rem;
+        position: relative;
+        transform: translateY(-3px);
+    }
+
+    .custom-form-label {
+        color: #f8f9fa;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+    }
+    .custom-form-control {
+        font-size: 0.85rem;
+        background-color: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #212529;
+        padding: 0.5rem;
+        border-radius: 0.375rem;
+        transition: all 0.2s ease-in-out;
+    }
+    .custom-form-control:focus {
+        background-color: rgba(255, 255, 255, 1);
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        transform: translateY(-1px);
+    }
+
+    .custom-submit-btn, .custom-cancel-btn {
+        padding: 0.6rem 1.2rem;
+        border-radius: 0.5rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        transition: all 0.3s ease-in-out;
+        border: none;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .custom-submit-btn {
+        background: linear-gradient(135deg, #198754, #157347);
+        color: white;
+        box-shadow: 0 0.25rem 0.5rem rgba(25, 135, 84, 0.3);
+    }
+    .custom-submit-btn:hover {
+        background: linear-gradient(135deg, #157347, #146c43);
+        transform: translateY(-3px);
+        box-shadow: 0 0.5rem 1rem rgba(25, 135, 84, 0.4);
+    }
+    .custom-submit-btn:active {
+        transform: translateY(-1px);
+    }
+
+    .custom-cancel-btn {
+        background: linear-gradient(135deg, #6c757d, #5c636a);
+        color: white;
+        box-shadow: 0 0.25rem 0.5rem rgba(108, 117, 125, 0.3);
+    }
+    .custom-cancel-btn:hover {
+        background: linear-gradient(135deg, #5c636a, #565e64);
+        transform: translateY(-3px);
+        box-shadow: 0 0.5rem 1rem rgba(108, 117, 125, 0.4);
+    }
+    .custom-cancel-btn:active {
+        transform: translateY(-1px);
+    }
+
+    .custom-submit-btn::before, .custom-cancel-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.5s ease-in-out;
+    }
+    .custom-submit-btn:hover::before, .custom-cancel-btn:hover::before {
+        left: 100%;
+    }
+
+    @media (max-width: 576px) {
+        .custom-form-container {
+            max-width: 95%;
+            padding: 1rem;
+        }
+        .title-band h1 {
+            font-size: 1.3rem;
+        }
+        .custom-form-label {
+            font-size: 0.75rem;
+        }
+        .custom-form-control {
+            font-size: 0.8rem;
+        }
+    }
+</style>
+{% endblock %}
