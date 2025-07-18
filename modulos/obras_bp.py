@@ -3195,105 +3195,115 @@ def edit_seguro(seguro_id):
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
-            seguro = obras_manager.get_seguro_by_id(seguro_id)
+            seguro_from_db = obras_manager.get_seguro_by_id(seguro_id)
 
-            if not seguro:
+            if not seguro_from_db:
                 flash('Seguro não encontrado.', 'danger')
                 return redirect(url_for('obras_bp.seguros_module'))
 
-            print(f"DEBUG (Seguro ID {seguro_id}) - Objeto seguro recebido de db_obras_manager: {seguro}")
-            print(f"DEBUG (Seguro ID {seguro_id}) - Tipo Data_Inicio_Vigencia antes: {type(seguro.get('Data_Inicio_Vigencia'))}, Valor: {seguro.get('Data_Inicio_Vigencia')}")
-            print(f"DEBUG (Seguro ID {seguro_id}) - Tipo Data_Fim_Vigencia antes: {type(seguro.get('Data_Fim_Vigencia'))}, Valor: {seguro.get('Data_Fim_Vigencia')}")
+            all_obras = obras_manager.get_all_obras_for_dropdown()
+            status_options = ['Ativo', 'Vencido', 'Cancelado', 'Em Renovação']
+            tipo_seguro_options = ['Responsabilidade Civil', 'Riscos de Engenharia', 'Garantia', 'Frota', 'Outros']
+
+            form_data = {} # Inicializa o dicionário de dados do formulário
 
             if request.method == 'POST':
-                id_obras = int(request.form['id_obras'])
-                numero_apolice = request.form['numero_apolice'].strip()
-                seguradora = request.form['seguradora'].strip()
-                tipo_seguro = request.form['tipo_seguro'].strip()
-                valor_segurado = float(request.form.get('valor_segurado', '0').replace(',', '.'))
-                data_inicio_vigencia_str = request.form.get('data_inicio_vigencia', '').strip()
-                data_fim_vigencia_str = request.form.get('data_fim_vigencia', '').strip()
-                status_seguro = request.form.get('status_seguro', '').strip()
-                observacoes_seguro = request.form.get('observacoes_seguro', '').strip()
+                form_data = request.form.to_dict() # Pega os dados brutos do formulário
+                is_valid = True
 
-                if not all([id_obras, numero_apolice, seguradora, tipo_seguro, data_inicio_vigencia_str]):
-                    flash('Campos obrigatórios (Obra, Número da Apólice, Seguradora, Tipo, Data Início Vigência) não podem ser vazios.', 'danger')
-                    all_obras = obras_manager.get_all_obras_for_dropdown()
-                    status_options = ['Ativo', 'Vencido', 'Cancelado', 'Em Renovação']
-                    tipo_seguro_options = ['Responsabilidade Civil', 'Riscos de Engenharia', 'Garantia', 'Frota', 'Outros']
-                    return render_template(
-                        'obras/seguros/edit_seguro.html',
-                        user=current_user,
-                        seguro=seguro,
-                        all_obras=all_obras,
-                        status_options=status_options,
-                        tipo_seguro_options=tipo_seguro_options,
-                        form_data=request.form
-                    )
+                id_obras_str = form_data.get('id_obras')
+                numero_apolice = form_data.get('numero_apolice', '').strip()
+                seguradora = form_data.get('seguradora', '').strip()
+                tipo_seguro = form_data.get('tipo_seguro', '').strip()
+                valor_segurado_str = form_data.get('valor_segurado', '0').strip()
+                data_inicio_vigencia_str = form_data.get('data_inicio_vigencia', '').strip()
+                data_fim_vigencia_str = form_data.get('data_fim_vigencia', '').strip()
+                status_seguro = form_data.get('status_seguro', '').strip()
+                observacoes_seguro = form_data.get('observacoes_seguro', '').strip()
+
+                # --- VALIDAÇÕES ---
+                if not all([id_obras_str, numero_apolice, seguradora, tipo_seguro, data_inicio_vigencia_str]):
+                    flash('Campos obrigatórios (Obra, Apólice, Seguradora, Tipo, Início Vigência) não podem ser vazios.', 'danger')
+                    is_valid = False
+
+                id_obras = int(id_obras_str) if id_obras_str else None
+                
+                try:
+                    valor_segurado = float(valor_segurado_str.replace(',', '.')) if valor_segurado_str else 0.0
+                except ValueError:
+                    flash('Valor Segurado inválido. Use apenas números.', 'danger')
+                    is_valid = False
+                    valor_segurado = 0.0
 
                 data_inicio_vigencia = None
+                try:
+                    if data_inicio_vigencia_str:
+                        data_inicio_vigencia = datetime.strptime(data_inicio_vigencia_str, '%Y-%m-%d').date()
+                except ValueError:
+                    flash('Formato da Data de Início de Vigência inválido. Use AAAA-MM-DD.', 'danger')
+                    is_valid = False
+
                 data_fim_vigencia = None
                 try:
-                    data_inicio_vigencia = datetime.strptime(data_inicio_vigencia_str, '%Y-%m-%d').date() if data_inicio_vigencia_str else None
-                    data_fim_vigencia = datetime.strptime(data_fim_vigencia_str, '%Y-%m-%d').date() if data_fim_vigencia_str else None
+                    if data_fim_vigencia_str:
+                        data_fim_vigencia = datetime.strptime(data_fim_vigencia_str, '%Y-%m-%d').date()
                 except ValueError:
-                    flash('Formato de data inválido. Use AAAA-MM-DD.', 'danger')
-                    all_obras = obras_manager.get_all_obras_for_dropdown()
-                    status_options = ['Ativo', 'Vencido', 'Cancelado', 'Em Renovação']
-                    tipo_seguro_options = ['Responsabilidade Civil', 'Riscos de Engenharia', 'Garantia', 'Frota', 'Outros']
+                    flash('Formato da Data de Fim de Vigência inválido. Use AAAA-MM-DD.', 'danger')
+                    is_valid = False
+
+                existing_seguro = obras_manager.get_seguro_by_numero_apolice(numero_apolice)
+                if existing_seguro and existing_seguro['ID_Seguros'] != seguro_id:
+                    flash('Número da Apólice já pertence a outro seguro.', 'danger')
+                    is_valid = False
+
+                if not is_valid:
+                    # Se a validação falhar, renderiza o template novamente,
+                    # passando os dados que o usuário já tinha inserido em 'form_data'
                     return render_template(
                         'obras/seguros/edit_seguro.html',
                         user=current_user,
-                        seguro=seguro,
+                        seguro=seguro_from_db, # Os dados originais para o título, etc.
+                        form_data=form_data, # Os dados do formulário com erro para repopular os campos
                         all_obras=all_obras,
                         status_options=status_options,
-                        tipo_seguro_options=tipo_seguro_options,
-                        form_data=request.form
+                        tipo_seguro_options=tipo_seguro_options
                     )
 
-                if obras_manager.get_seguro_by_numero_apolice(numero_apolice):
-                    flash('Número da Apólice já existe. Por favor, use um número único.', 'danger')
-                    all_obras = obras_manager.get_all_obras_for_dropdown()
-                    status_options = ['Ativo', 'Vencido', 'Cancelado', 'Em Renovação']
-                    tipo_seguro_options = ['Responsabilidade Civil', 'Riscos de Engenharia', 'Garantia', 'Frota', 'Outros']
-                    return render_template(
-                        'obras/seguros/edit_seguro.html',
-                        user=current_user,
-                        seguro=seguro,
-                        all_obras=all_obras,
-                        status_options=status_options,
-                        tipo_seguro_options=tipo_seguro_options,
-                        form_data=request.form
-                    )
-
+                # --- ATUALIZAÇÃO NO BANCO ---
                 success = obras_manager.update_seguro(
-                    seguro_id, id_obras, numero_apolice, seguradora, tipo_seguro, valor_segurado, data_inicio_vigencia, data_fim_vigencia, status_seguro, observacoes_seguro
+                    seguro_id, id_obras, numero_apolice, seguradora, tipo_seguro, valor_segurado, 
+                    data_inicio_vigencia, data_fim_vigencia, status_seguro, observacoes_seguro
                 )
                 if success:
                     flash('Seguro atualizado com sucesso!', 'success')
                     return redirect(url_for('obras_bp.seguros_module'))
                 else:
                     flash('Erro ao atualizar seguro.', 'danger')
-
-            else: # GET request
-                all_obras = obras_manager.get_all_obras_for_dropdown()
-                status_options = ['Ativo', 'Vencido', 'Cancelado', 'Em Renovação']
-                tipo_seguro_options = ['Responsabilidade Civil', 'Riscos de Engenharia', 'Garantia', 'Frota', 'Outros']
-
-                seguro['Data_Inicio_Vigencia'] = seguro['Data_Inicio_Vigencia'].strftime('%Y-%m-%d') if seguro['Data_Inicio_Vigencia'] else ''
-                seguro['Data_Fim_Vigencia'] = seguro['Data_Fim_Vigencia'].strftime('%Y-%m-%d') if seguro['Data_Fim_Vigencia'] else ''
-
-                print(f"DEBUG (Seguro ID {seguro_id}) - Tipo Data_Inicio_Vigencia depois: {type(seguro.get('Data_Inicio_Vigencia'))}, Valor: {seguro.get('Data_Inicio_Vigencia')}")
-                print(f"DEBUG (Seguro ID {seguro_id}) - Tipo Data_Fim_Vigencia depois: {type(seguro.get('Data_Fim_Vigencia'))}, Valor: {seguro.get('Data_Fim_Vigencia')}")
+            
+            # --- LÓGICA PARA GET REQUEST ---
+            # Preenche o 'form_data' com os dados do banco para a primeira exibição
+            form_data = {
+                'id_obras': seguro_from_db.get('ID_Obras'),
+                'numero_apolice': seguro_from_db.get('Numero_Apolice', ''),
+                'seguradora': seguro_from_db.get('Seguradora', ''),
+                'tipo_seguro': seguro_from_db.get('Tipo_Seguro', ''),
+                'valor_segurado': seguro_from_db.get('Valor_Segurado'),
+                'data_inicio_vigencia': seguro_from_db.get('Data_Inicio_Vigencia').strftime('%Y-%m-%d') if seguro_from_db.get('Data_Inicio_Vigencia') else '',
+                'data_fim_vigencia': seguro_from_db.get('Data_Fim_Vigencia').strftime('%Y-%m-%d') if seguro_from_db.get('Data_Fim_Vigencia') else '',
+                'status_seguro': seguro_from_db.get('Status_Seguro', ''),
+                'observacoes_seguro': seguro_from_db.get('Observacoes_Seguro', '')
+            }
 
             return render_template(
                 'obras/seguros/edit_seguro.html',
                 user=current_user,
-                seguro=seguro,
+                seguro=seguro_from_db, # Dados originais para o título, etc.
+                form_data=form_data,   # Dados para popular os campos do formulário
                 all_obras=all_obras,
                 status_options=status_options,
                 tipo_seguro_options=tipo_seguro_options
             )
+
     except mysql.connector.Error as e:
         flash(f"Erro de banco de dados: {e}", 'danger')
         print(f"Erro de banco de dados em edit_seguro: {e}")

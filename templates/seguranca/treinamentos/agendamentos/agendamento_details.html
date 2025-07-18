@@ -1,249 +1,662 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Detalhes do Agendamento - LUMOB</title>
-    <style>
-      body {
-        font-family: sans-serif;
-        margin: 20px;
-      }
-      .container {
-        max-width: 800px;
-        margin: auto;
-        padding: 20px;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-      }
-      h1 {
-        text-align: center;
-        color: #333;
-      }
-      p {
-        margin-bottom: 8px;
-      }
-      strong {
-        display: inline-block;
-        width: 220px;
-      }
-      .actions {
-        text-align: center;
-        margin-top: 20px;
-      }
-      .actions button,
-      .actions a {
-        padding: 10px 15px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 16px;
-        margin: 0 5px;
-        text-decoration: none;
-        display: inline-block;
-      }
-      .actions button.delete {
-        background-color: #dc3545;
-      }
-      .actions button:hover {
-        background-color: #0056b3;
-      }
-      .actions button.delete:hover {
-        background-color: #c82333;
-      }
-      .back-link {
-        display: block;
-        text-align: center;
-        margin-top: 20px;
-      }
+{% extends 'base.html' %} {% block title %}Detalhes do Agendamento - LUMOB{%
+endblock %} {% block messages %}{% endblock %} {% block content %}
+<div class="container custom-form-container mt-4 mb-4 p-4">
+  {# Container customizado, margens e padding #} {# Título dentro da faixa preta
+  #}
+  <div class="title-band mb-2">
+    <h1 class="text-white text-center mb-0">
+      <i class="fas fa-calendar-alt me-3"></i>Detalhes do Agendamento (ID: {{
+      agendamento.ID_Agendamento }})
+    </h1>
+  </div>
 
-      /* Estilo para impressão */
-      @media print {
-        .actions,
-        .back-link,
-        .participantes-section .add-button {
-          display: none;
-        }
-        .container {
-          box-shadow: none;
-          border: none;
-          margin: 0;
-          padding: 0;
-        }
-        body {
-          margin: 0;
-          padding: 0;
-        }
-        /* Estilo para a tabela de participantes na impressão */
-        .participantes-section table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 15px;
-        }
-        .participantes-section th,
-        .participantes-section td {
-          border: 1px solid #ddd;
-          padding: 8px;
-          text-align: left;
-        }
-        .participantes-section th {
-          background-color: #f2f2f2;
-          color: #333;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <h1>Detalhes do Agendamento (ID: {{ agendamento.ID_Agendamento }})</h1>
-
-      <div>
-        <p>
-          <strong>ID do Agendamento:</strong> {{ agendamento.ID_Agendamento }}
-        </p>
-        <p>
-          <strong>Treinamento:</strong> {{ agendamento.Nome_Treinamento }} ({{
-          agendamento.Tipo_Treinamento }})
-        </p>
-        <p>
-          <strong>Data e Hora de Início:</strong> {{
-          agendamento.Data_Hora_Inicio.strftime('%d/%m/%Y %H:%M') if
-          agendamento.Data_Hora_Inicio else 'N/A' }}
-        </p>
-        <p>
-          <strong>Data e Hora de Fim:</strong> {{
-          agendamento.Data_Hora_Fim.strftime('%d/%m/%Y %H:%M') if
-          agendamento.Data_Hora_Fim else 'N/A' }}
-        </p>
-        <p>
-          <strong>Local do Treinamento:</strong> {{
-          agendamento.Local_Treinamento if agendamento.Local_Treinamento else
-          'N/A' }}
-        </p>
-        <p>
-          <strong>Status do Agendamento:</strong> {{
-          agendamento.Status_Agendamento }}
-        </p>
-        <p>
-          <strong>Observações:</strong> {{ agendamento.Observacoes if
-          agendamento.Observacoes else 'N/A' }}
-        </p>
-        <p>
-          <strong>Data de Criação:</strong> {{
-          agendamento.Data_Criacao.strftime('%d/%m/%Y %H:%M:%S') if
-          agendamento.Data_Criacao else 'N/A' }}
-        </p>
-        <p>
-          <strong>Última Modificação:</strong> {{
-          agendamento.Data_Modificacao.strftime('%d/%m/%Y %H:%M:%S') if
-          agendamento.Data_Modificacao else 'N/A' }}
-        </p>
+  {# Área de Detalhes do Agendamento #}
+  <div class="card card-body shadow-sm mb-4 custom-details-card">
+    {# Adicionada classe customizada para o card #}
+    <h4 class="mb-3 custom-details-title">Informações Principais</h4>
+    {# Classe customizada para o título #}
+    <div class="row mb-2">
+      <div class="col-md-6">
+        <p class="mb-0 fw-bold custom-details-label">ID do Agendamento:</p>
       </div>
-
-      <div class="actions">
-        <a
-          href="{{ url_for('seguranca_bp.edit_treinamento_agendamento', agendamento_id=agendamento.ID_Agendamento) }}"
-          >Editar</a
-        >
-        <button
-          type="button"
-          onclick="window.print()"
-          style="background-color: #007bff"
-        >
-          Imprimir
-        </button>
-        <form
-          action="{{ url_for('seguranca_bp.delete_treinamento_agendamento', agendamento_id=agendamento.ID_Agendamento) }}"
-          method="POST"
-          style="display: inline"
-          onsubmit="return confirm('Tem certeza que deseja excluir este agendamento? Esta ação é irreversível.');"
-        >
-          <button type="submit" class="delete">Excluir</button>
-        </form>
-      </div>
-
-      <div class="participantes-section" style="margin-top: 30px">
-        <h2>Participantes Deste Agendamento</h2>
-        <div style="text-align: right; margin-bottom: 10px">
-          <a
-            href="{{ url_for('seguranca_bp.add_treinamento_participante', agendamento_id_prefill=agendamento.ID_Agendamento) }}"
-            class="add-button"
-            style="background-color: #28a745"
-            >Adicionar Participante</a
-          >
-        </div>
-        {% if participantes %}
-        <table style="width: 100%; border-collapse: collapse">
-          <thead>
-            <tr>
-              <th>Funcionário</th>
-              <th>Presença</th>
-              <th>Nota</th>
-              <th>Data Conclusão</th>
-              <th>Certificado</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for participante in participantes %}
-            <tr>
-              <td>
-                {{ participante.Nome_Funcionario }} ({{
-                participante.Matricula_Funcionario }})
-              </td>
-              <td>{{ 'Sim' if participante.Presenca else 'Não' }}</td>
-              <td>
-                {{ "%.2f"|format(participante.Nota_Avaliacao) if
-                participante.Nota_Avaliacao is not none else 'N/A' }}
-              </td>
-              <td>
-                {{ participante.Data_Conclusao.strftime('%d/%m/%Y') if
-                participante.Data_Conclusao else 'N/A' }}
-              </td>
-              <td>
-                {{ 'Sim' if participante.Certificado_Emitido else 'Não' }}
-              </td>
-              <td class="actions" style="text-align: left">
-                <a
-                  href="{{ url_for('seguranca_bp.edit_treinamento_participante', participante_id=participante.ID_Participante) }}"
-                  class="edit"
-                  style="background-color: #ffc107; color: #333"
-                  >Editar</a
-                >
-                <form
-                  action="{{ url_for('seguranca_bp.delete_treinamento_participante', participante_id=participante.ID_Participante) }}"
-                  method="POST"
-                  style="display: inline"
-                  onsubmit="return confirm('Tem certeza que deseja remover este participante?');"
-                >
-                  <button
-                    type="submit"
-                    class="delete"
-                    style="background-color: #dc3545; color: white"
-                  >
-                    Remover
-                  </button>
-                </form>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-        {% else %}
-        <p>Nenhum participante registrado para este agendamento.</p>
-        {% endif %}
-      </div>
-
-      <div class="back-link">
-        <p>
-          <a
-            href="{{ url_for('seguranca_bp.treinamentos_agendamentos_module') }}"
-            >Voltar para a Lista de Agendamentos</a
-          >
+      <div class="col-md-6">
+        <p class="mb-0 custom-details-value">
+          {{ agendamento.ID_Agendamento }}
         </p>
       </div>
     </div>
-  </body>
-</html>
+    <div class="row mb-2">
+      <div class="col-md-6">
+        <p class="mb-0 fw-bold custom-details-label">Treinamento:</p>
+      </div>
+      <div class="col-md-6">
+        <p class="mb-0 custom-details-value">
+          {{ agendamento.Nome_Treinamento }} ({{ agendamento.Tipo_Treinamento
+          }})
+        </p>
+      </div>
+    </div>
+    <div class="row mb-2">
+      <div class="col-md-6">
+        <p class="mb-0 fw-bold custom-details-label">Data e Hora de Início:</p>
+      </div>
+      <div class="col-md-6">
+        <p class="mb-0 custom-details-value">
+          {{ agendamento.Data_Hora_Inicio.strftime('%d/%m/%Y %H:%M') if
+          agendamento.Data_Hora_Inicio else 'N/A' }}
+        </p>
+      </div>
+    </div>
+    <div class="row mb-2">
+      <div class="col-md-6">
+        <p class="mb-0 fw-bold custom-details-label">Data e Hora de Fim:</p>
+      </div>
+      <div class="col-md-6">
+        <p class="mb-0 custom-details-value">
+          {{ agendamento.Data_Hora_Fim.strftime('%d/%m/%Y %H:%M') if
+          agendamento.Data_Hora_Fim else 'N/A' }}
+        </p>
+      </div>
+    </div>
+    <div class="row mb-2">
+      <div class="col-md-6">
+        <p class="mb-0 fw-bold custom-details-label">Local do Treinamento:</p>
+      </div>
+      <div class="col-md-6">
+        <p class="mb-0 custom-details-value">
+          {{ agendamento.Local_Treinamento if agendamento.Local_Treinamento else
+          'N/A' }}
+        </p>
+      </div>
+    </div>
+    <div class="row mb-2">
+      <div class="col-md-6">
+        <p class="mb-0 fw-bold custom-details-label">Status do Agendamento:</p>
+      </div>
+      <div class="col-md-6">
+        <p class="mb-0 custom-details-value">
+          {{ agendamento.Status_Agendamento }}
+        </p>
+      </div>
+    </div>
+    <div class="row mb-2">
+      <div class="col-md-6">
+        <p class="mb-0 fw-bold custom-details-label">Observações:</p>
+      </div>
+      <div class="col-md-6">
+        <p class="mb-0 custom-details-value">
+          {{ agendamento.Observacoes if agendamento.Observacoes else 'N/A' }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  {# Botões de Ação Principais #}
+  <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4">
+    {# Alinha os botões à direita, mb-4 para espaçamento #}
+    <a
+      href="{{ url_for('seguranca_bp.edit_treinamento_agendamento', agendamento_id=agendamento.ID_Agendamento) }}"
+      class="btn btn-info custom-submit-btn"
+      {#
+      Usando
+      custom-submit-btn
+      para
+      o
+      Editar
+      #}
+      >Editar</a
+    >
+    <button
+      type="button"
+      onclick="window.print()"
+      class="btn btn-primary custom-print-btn"
+      {#
+      Nova
+      classe
+      para
+      o
+      botão
+      Imprimir
+      #}
+    >
+      Imprimir
+    </button>
+    <form
+      action="{{ url_for('seguranca_bp.delete_treinamento_agendamento', agendamento_id=agendamento.ID_Agendamento) }}"
+      method="POST"
+      class="d-inline"
+    >
+      <button
+        type="submit"
+        class="btn btn-danger custom-delete-btn"
+        {#
+        Nova
+        classe
+        para
+        o
+        botão
+        Excluir
+        #}
+        onclick="return confirm('Tem certeza que deseja excluir este agendamento? Esta ação é irreversível.');"
+      >
+        Excluir
+      </button>
+    </form>
+    <a
+      href="{{ url_for('seguranca_bp.treinamentos_agendamentos_module') }}"
+      class="btn btn-secondary custom-cancel-btn"
+      >Cancelar</a
+    >
+    {# Botão Cancelar que retorna à lista #}
+  </div>
+
+  {# Seção de Participantes #}
+  <div class="card card-body shadow-sm mb-4 custom-details-card">
+    <h4 class="mb-3 custom-details-title">Participantes Deste Agendamento</h4>
+    <div class="d-flex justify-content-end mb-3">
+      {# Alinha o botão de adicionar participante à direita #}
+      <a
+        href="{{ url_for('seguranca_bp.add_treinamento_participante', agendamento_id_prefill=agendamento.ID_Agendamento) }}"
+        class="btn btn-success custom-add-participant-btn"
+        {#
+        Nova
+        classe
+        para
+        o
+        botão
+        Adicionar
+        Participante
+        #}
+        >Adicionar Participante</a
+      >
+    </div>
+    {% if participantes %}
+    <div class="table-responsive">
+      {# Adicionado para responsividade da tabela #}
+      <table class="table table-hover custom-details-table">
+        {# Novas classes para a tabela #}
+        <thead>
+          <tr>
+            <th>Funcionário</th>
+            <th>Presença</th>
+            <th>Nota</th>
+            <th>Data Conclusão</th>
+            <th>Certificado</th>
+            <th class="text-center">Ações</th>
+            {# Centraliza o cabeçalho Ações #}
+          </tr>
+        </thead>
+        <tbody>
+          {% for participante in participantes %}
+          <tr>
+            <td>
+              {{ participante.Nome_Funcionario }} ({{
+              participante.Matricula_Funcionario }})
+            </td>
+            <td>
+              <span
+                class="badge bg-{{ 'success' if participante.Presenca else 'danger' }}"
+                >{{ 'Sim' if participante.Presenca else 'Não' }}</span
+              >
+            </td>
+            {# Badges para Presença #}
+            <td>
+              {{ "%.2f"|format(participante.Nota_Avaliacao) if
+              participante.Nota_Avaliacao is not none else 'N/A' }}
+            </td>
+            <td>
+              {{ participante.Data_Conclusao.strftime('%d/%m/%Y') if
+              participante.Data_Conclusao else 'N/A' }}
+            </td>
+            <td>
+              <span
+                class="badge bg-{{ 'success' if participante.Certificado_Emitido else 'warning' }}"
+                >{{ 'Sim' if participante.Certificado_Emitido else 'Não'
+                }}</span
+              >
+            </td>
+            {# Badges para Certificado #}
+            <td class="text-center">
+              {# Centraliza o conteúdo da célula Ações #}
+              <a
+                href="{{ url_for('seguranca_bp.edit_treinamento_participante', participante_id=participante.ID_Participante) }}"
+                class="btn btn-sm btn-warning custom-table-edit-btn me-1"
+                {#
+                btn-sm
+                para
+                botões
+                menores
+                na
+                tabela
+                #}
+                >Editar</a
+              >
+              <form
+                action="{{ url_for('seguranca_bp.delete_treinamento_participante', participante_id=participante.ID_Participante) }}"
+                method="POST"
+                class="d-inline"
+                onsubmit="return confirm('Tem certeza que deseja remover este participante?');"
+              >
+                <button
+                  type="submit"
+                  class="btn btn-sm btn-danger custom-table-delete-btn"
+                  {#
+                  btn-sm
+                  para
+                  botões
+                  menores
+                  na
+                  tabela
+                  #}
+                >
+                  Remover
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-center text-muted">
+      Nenhum participante registrado para este agendamento.
+    </p>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+  /* Estilos Customizados para o Título como Faixa */
+  .title-band {
+    background-color: #212529; /* Preto ou cinza escuro */
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .title-band h1 {
+    color: white;
+    margin-bottom: 0;
+    font-size: 1.5rem; /* Título menor para design minimalista */
+  }
+
+  /* Estilos para o Container Principal do Formulário (Fumê, Estreito, 3D) */
+  .custom-form-container {
+    max-width: 900px; /* Mais largo para acomodar a tabela */
+    margin-left: auto;
+    margin-right: auto; /* Centralizado */
+    background-color: rgba(
+      33,
+      37,
+      41,
+      0.85
+    ); /* Fundo preto com transparência (vidro fumê) */
+    border: 1px solid #000000; /* Borda preta fina */
+    border-radius: 0.75rem; /* Cantos arredondados */
+    box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.3),
+      0 0.25rem 0.5rem rgba(0, 0, 0, 0.2); /* Efeito 3D mais pronunciado */
+    padding: 1.5rem; /* Padding interno reduzido */
+    position: relative;
+    transform: translateY(-3px); /* Leve elevação */
+  }
+
+  /* Estilos para o Card de Detalhes dentro do container */
+  .custom-details-card {
+    background-color: rgba(
+      255,
+      255,
+      255,
+      0.9
+    ); /* Fundo branco semi-transparente para o card */
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: #212529; /* Cor do texto padrão para o card */
+  }
+
+  /* Estilos para o título dentro do card de detalhes */
+  .custom-details-title {
+    color: #212529; /* Cor do título dentro do card */
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding-bottom: 0.5rem;
+  }
+
+  /* Estilos para as labels (negrito) e valores dos detalhes */
+  .custom-details-label {
+    color: #343a40; /* Cor para as labels dos detalhes */
+    font-size: 0.9rem;
+  }
+
+  .custom-details-value {
+    color: #495057; /* Cor para os valores dos detalhes */
+    font-size: 0.9rem;
+  }
+
+  /* Estilos para Tabela de Participantes */
+  .custom-details-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    background-color: white; /* Fundo branco para a tabela */
+    border-radius: 0.375rem; /* Cantos arredondados */
+    overflow: hidden; /* Garante que os cantos arredondados funcionem com bordas */
+  }
+  .custom-details-table th,
+  .custom-details-table td {
+    border: 1px solid #dee2e6; /* Borda da tabela Bootstrap */
+    padding: 0.75rem; /* Padding padrão Bootstrap */
+    vertical-align: middle; /* Alinhamento vertical */
+    color: #212529; /* Cor do texto */
+    font-size: 0.85rem; /* Tamanho da fonte */
+  }
+  .custom-details-table thead th {
+    background-color: #e9ecef; /* Fundo do cabeçalho da tabela */
+    color: #495057; /* Cor do texto do cabeçalho */
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+  }
+  .custom-details-table tbody tr:hover {
+    background-color: #f2f2f2; /* Efeito hover na linha */
+  }
+  .custom-details-table .badge {
+    /* Estilo para os badges de Sim/Não */
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+    vertical-align: middle;
+  }
+
+  /* Estilos para os Botões "Salvar/Editar" e "Cancelar" (Mais Sofisticados) */
+  .custom-submit-btn,
+  .custom-cancel-btn,
+  .custom-delete-btn,
+  .custom-print-btn,
+  .custom-add-participant-btn,
+  .custom-table-edit-btn,
+  .custom-table-delete-btn {
+    /* Incluindo todos os botões */
+    padding: 0.6rem 1.2rem; /* Padding reduzido */
+    border-radius: 0.5rem; /* Cantos arredondados */
+    font-size: 0.9rem; /* Tamanho de fonte menor */
+    font-weight: 600; /* Peso da fonte maior */
+    transition: all 0.3s ease-in-out; /* Transição suave */
+    border: none; /* Remove borda padrão */
+    cursor: pointer; /* Cursor de pointer */
+    position: relative; /* Para efeitos de posicionamento */
+    overflow: hidden; /* Para efeitos de animação */
+    margin-left: 0.5rem; /* Margem entre botões, para botões principais */
+  }
+
+  /* Remover margem esquerda para botões dentro da tabela */
+  .custom-table-edit-btn,
+  .custom-table-delete-btn {
+    margin-left: 0 !important;
+  }
+  .custom-table-edit-btn {
+    padding: 0.3rem 0.6rem; /* Botões menores na tabela */
+    font-size: 0.8rem;
+  }
+  .custom-table-delete-btn {
+    padding: 0.3rem 0.6rem; /* Botões menores na tabela */
+    font-size: 0.8rem;
+  }
+
+  .custom-submit-btn {
+    background: linear-gradient(135deg, #198754, #157347); /* Gradiente verde */
+    color: white;
+    box-shadow: 0 0.25rem 0.5rem rgba(25, 135, 84, 0.3);
+  }
+  .custom-submit-btn:hover {
+    background: linear-gradient(
+      135deg,
+      #157347,
+      #146c43
+    ); /* Gradiente mais escuro */
+    transform: translateY(-3px); /* Elevação no hover */
+    box-shadow: 0 0.5rem 1rem rgba(25, 135, 84, 0.4); /* Sombra mais pronunciada */
+  }
+  .custom-submit-btn:active {
+    transform: translateY(-1px); /* Menos elevação no click */
+  }
+
+  .custom-cancel-btn {
+    background: linear-gradient(135deg, #6c757d, #5c636a); /* Gradiente cinza */
+    color: white;
+    box-shadow: 0 0.25rem 0.5rem rgba(108, 117, 125, 0.3);
+  }
+  .custom-cancel-btn:hover {
+    background: linear-gradient(
+      135deg,
+      #5c636a,
+      #565e64
+    ); /* Gradiente mais escuro */
+    transform: translateY(-3px); /* Elevação no hover */
+    box-shadow: 0 0.5rem 1rem rgba(108, 117, 125, 0.4); /* Sombra mais pronunciada */
+  }
+  .custom-cancel-btn:active {
+    transform: translateY(-1px); /* Menos elevação no click */
+  }
+
+  /* Novo estilo para o botão Excluir */
+  .custom-delete-btn,
+  .custom-table-delete-btn {
+    background: linear-gradient(
+      135deg,
+      #dc3545,
+      #c82333
+    ); /* Gradiente vermelho */
+    color: white;
+    box-shadow: 0 0.25rem 0.5rem rgba(220, 53, 69, 0.3);
+  }
+  .custom-delete-btn:hover,
+  .custom-table-delete-btn:hover {
+    background: linear-gradient(
+      135deg,
+      #c82333,
+      #bd2130
+    ); /* Gradiente vermelho mais escuro */
+    transform: translateY(-3px); /* Elevação no hover */
+    box-shadow: 0 0.5rem 1rem rgba(220, 53, 69, 0.4); /* Sombra mais pronunciada */
+  }
+  .custom-delete-btn:active,
+  .custom-table-delete-btn:active {
+    transform: translateY(-1px); /* Menos elevação no click */
+  }
+
+  /* Novo estilo para o botão Imprimir */
+  .custom-print-btn {
+    background: linear-gradient(135deg, #0d6efd, #0b5ed7); /* Azul Bootstrap */
+    color: white;
+    box-shadow: 0 0.25rem 0.5rem rgba(13, 110, 253, 0.3);
+  }
+  .custom-print-btn:hover {
+    background: linear-gradient(135deg, #0b5ed7, #0a58ca);
+    transform: translateY(-3px);
+    box-shadow: 0 0.5rem 1rem rgba(13, 110, 253, 0.4);
+  }
+  .custom-print-btn:active {
+    transform: translateY(-1px);
+  }
+
+  /* Novo estilo para o botão Adicionar Participante */
+  .custom-add-participant-btn,
+  .custom-table-edit-btn {
+    background: linear-gradient(
+      135deg,
+      #28a745,
+      #218838
+    ); /* Gradiente verde mais claro */
+    color: white;
+    box-shadow: 0 0.25rem 0.5rem rgba(40, 167, 69, 0.3);
+  }
+  .custom-add-participant-btn:hover,
+  .custom-table-edit-btn:hover {
+    background: linear-gradient(135deg, #218838, #1e7e34);
+    transform: translateY(-3px);
+    box-shadow: 0 0.5rem 1rem rgba(40, 167, 69, 0.4);
+  }
+  .custom-add-participant-btn:active,
+  .custom-table-edit-btn:active {
+    transform: translateY(-1px);
+  }
+
+  /* Efeito adicional de brilho nos botões */
+  .custom-submit-btn::before,
+  .custom-cancel-btn::before,
+  .custom-delete-btn::before,
+  .custom-print-btn::before,
+  .custom-add-participant-btn::before,
+  .custom-table-edit-btn::before,
+  .custom-table-delete-btn::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent
+    );
+    transition: left 0.5s ease-in-out;
+  }
+  .custom-submit-btn:hover::before,
+  .custom-cancel-btn:hover::before,
+  .custom-delete-btn:hover::before,
+  .custom-print-btn:hover::before,
+  .custom-add-participant-btn:hover::before,
+  .custom-table-edit-btn:hover::before,
+  .custom-table-delete-btn:hover::before {
+    left: 100%;
+  }
+
+  /* Ajustes para responsividade */
+  @media (max-width: 768px) {
+    .custom-form-container {
+      max-width: 95%;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+    .title-band h1 {
+      font-size: 1.3rem;
+    }
+    .custom-details-label,
+    .custom-details-value {
+      font-size: 0.85rem;
+    }
+    .d-md-flex {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .custom-submit-btn,
+    .custom-cancel-btn,
+    .custom-delete-btn,
+    .custom-print-btn,
+    .custom-add-participant-btn {
+      margin-left: 0 !important;
+      margin-bottom: 0.5rem; /* Espaçamento entre botões empilhados */
+      width: 100%; /* Botões ocupam 100% da largura em telas pequenas */
+    }
+    /* Ajuste para botões dentro da tabela em mobile */
+    .custom-details-table .btn-sm {
+      width: auto; /* Deixa o botão decidir sua largura */
+      display: inline-block; /* Garante que fiquem lado a lado se houver espaço */
+      margin-bottom: 0.25rem;
+    }
+    .custom-details-table td .d-inline {
+      /* Para o form de delete */
+      display: inline-block !important; /* Força inline para botões de remover na tabela */
+    }
+  }
+
+  /* Estilos para impressão */
+  @media print {
+    .actions,
+    .back-link,
+    .main-header,
+    .main-footer,
+    .navbar,
+    .custom-add-participant-btn {
+      /* Esconder elementos de navegação e botões */
+      display: none !important;
+    }
+    .container.custom-form-container {
+      box-shadow: none !important;
+      border: none !important;
+      background-color: transparent !important;
+      transform: none !important;
+      padding: 0 !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      color: #000; /* Texto preto para impressão */
+    }
+    h1,
+    h4,
+    h6,
+    p,
+    .custom-details-label,
+    .custom-details-value {
+      color: #000 !important; /* Forçar cor preta para textos */
+    }
+    .custom-details-card {
+      background-color: transparent !important;
+      box-shadow: none !important;
+      border: 1px solid #ccc !important; /* Adicionar borda leve para separar seções impressas */
+    }
+    .custom-details-title {
+      border-bottom-color: #ccc !important; /* Borda mais clara na impressão */
+    }
+    .custom-details-table {
+      border-color: #ccc !important;
+    }
+    .custom-details-table th,
+    .custom-details-table td {
+      border-color: #ccc !important;
+    }
+    .custom-details-table thead th {
+      background-color: #f2f2f2 !important;
+      color: #333 !important;
+    }
+    .custom-details-table tbody tr:hover {
+      background-color: transparent !important;
+    }
+  }
+
+  /* Adaptação dos estilos flash messages se já não estiverem no base.html */
+  .flash-messages {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 1rem;
+  }
+  .flash-messages li {
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+    border-radius: 0.25rem;
+    font-weight: bold;
+  }
+  .flash-messages li.success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+  }
+  .flash-messages li.danger {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+  }
+  .flash-messages li.info {
+    color: #0c5460;
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+  }
+</style>
+{% endblock %}

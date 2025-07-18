@@ -1,707 +1,800 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUMOB - Gerenciamento de Obras</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Reset e variáveis CSS do pessoal_welcome.html */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-{% block title %}Gerenciar Obras - LUMOB{% endblock %}
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12; /* Amarelo */
+            --danger-color: #e74c3c;
+            --light-gray: #ecf0f1;
+            --medium-gray: #bdc3c7;
+            --dark-gray: #7f8c8d;
+            --text-dark: #2c3e50;
+            --text-light: #ffffff;
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --shadow-light: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.12);
+            --shadow-heavy: 0 16px 48px rgba(0, 0, 0, 0.15);
+            --shadow-intense: 0 20px 60px rgba(0, 0, 0, 0.25);
+            --glow-accent: 0 0 20px rgba(52, 152, 219, 0.3);
+            --glow-intense: 0 0 40px rgba(52, 152, 219, 0.5);
+            --orange-yellow: #f1c40f; /* Um tom entre amarelo e alaranjado */
+        }
 
-{% block messages %}{% endblock %} 
+        /* Estilos globais do pessoal_welcome.html */
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: var(--text-dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
 
-{% block content %}
-<div class="modern-layout">
-    {# Header Section com Imagem de Fundo #}
-    <div class="header-section">
-        <div class="header-bg-image"></div>
-        <div class="header-overlay"></div>
-        <div class="container-fluid">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <h1 class="page-title">
-                        <i class="fas fa-building me-3"></i>
-                        Gerenciamento de Obras
+        /* Container principal do pessoal_welcome.html */
+        .main-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem 0.5rem;
+            position: relative;
+        }
+
+        /* Efeito de partículas de fundo do pessoal_welcome.html */
+        .main-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: radial-gradient(
+                circle at 20% 20%,
+                rgba(255, 255, 255, 0.3) 0%,
+                transparent 50%
+            ),
+            radial-gradient(
+                circle at 80% 80%,
+                rgba(255, 255, 255, 0.3) 0%,
+                transparent 50%
+            ),
+            radial-gradient(
+                circle at 40% 60%,
+                rgba(255, 255, 255, 0.15) 0%,
+                transparent 50%
+            );
+            pointer-events: none;
+        }
+
+        /* Container de conteúdo do pessoal_welcome.html */
+        .content-container {
+            max-width: 1700px; /* Aumentado de 1500px para 1700px */
+            width: 100%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: var(--shadow-heavy);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 2.5rem;
+            position: relative;
+            z-index: 1;
+            animation: fadeInUp 0.5s ease-out;
+            min-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* Animações (tempos mais curtos) */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Cabeçalho */
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .title-band {
+            background: linear-gradient(
+                135deg,
+                var(--primary-color),
+                var(--secondary-color)
+            );
+            padding: 1.2rem;
+            border-radius: 16px;
+            margin-bottom: 0;
+            box-shadow: var(--shadow-medium);
+            animation: slideInLeft 0.5s ease-out 0.1s both;
+        }
+
+        .title-band h1 {
+            color: var(--text-light);
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+        }
+
+        .title-band h1 i {
+            font-size: 1.8rem;
+            opacity: 0.9;
+        }
+
+        /* Mensagens flash (adaptadas do pessoal_welcome.html) */
+        .flash-messages {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 1.5rem 0;
+            animation: scaleIn 0.4s ease-out 0.4s both;
+        }
+
+        .flash-messages li {
+            padding: 0.8rem 1.2rem;
+            margin-bottom: 0.8rem;
+            border-radius: 10px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            box-shadow: var(--shadow-light);
+            border-left: 4px solid;
+            backdrop-filter: blur(10px);
+            animation: slideInLeft 0.4s ease-out;
+        }
+
+        .flash-messages li.success {
+            background: rgba(39, 174, 96, 0.1);
+            color: var(--success-color);
+            border-left-color: var(--success-color);
+        }
+
+        .flash-messages li.danger {
+            background: rgba(231, 76, 60, 0.1);
+            color: var(--danger-color);
+            border-left-color: var(--danger-color);
+        }
+
+        .flash-messages li.info {
+            background: rgba(52, 152, 219, 0.1);
+            color: var(--accent-color);
+            border-left-color: var(--accent-color);
+        }
+
+        .flash-messages li.warning {
+            background: rgba(243, 156, 18, 0.1);
+            color: var(--warning-color);
+            border-left-color: var(--warning-color);
+        }
+
+        /* Botões de Ação */
+        .action-buttons {
+            display: flex;
+            justify-content: flex-end; /* Alinha os botões à direita */
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .add-button, .print-button, .export-excel-button, .back-to-module-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.6rem 1.0rem;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: var(--shadow-light);
+            transition: all 0.2s ease-in-out;
+        }
+
+        /* Cor do botão Novo Funcionário */
+        .add-button { background-color: var(--orange-yellow); color: var(--text-dark); }
+        .print-button { background-color: var(--accent-color); }
+        .export-excel-button { background-color: #1e7e34; }
+        .back-to-module-button { background-color: var(--dark-gray); } /* Nova classe para o botão voltar */
+
+        .add-button:hover { background-color: #e6b10a; transform: translateY(-1px); box-shadow: var(--shadow-medium); }
+        .print-button:hover { background-color: #0056b3; transform: translateY(-1px); box-shadow: var(--shadow-medium); }
+        .export-excel-button:hover { background-color: #17642a; transform: translateY(-1px); box-shadow: var(--shadow-medium); }
+        .back-to-module-button:hover { background-color: #5a6268; transform: translateY(-1px); box-shadow: var(--shadow-medium); } /* Efeito de destaque */
+
+        /* Formulário de Filtro - Organização Aprimorada */
+        .filter-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px 25px;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.7);
+            box-shadow: var(--shadow-light);
+            backdrop-filter: blur(10px);
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-form label {
+            white-space: nowrap;
+            font-weight: 500;
+            color: var(--primary-color);
+            margin-right: 0;
+            align-self: flex-start;
+            font-size: 0.95rem;
+        }
+        .filter-form input,
+        .filter-form select {
+            padding: 9px;
+            border: 1px solid var(--medium-gray);
+            border-radius: 6px;
+            background-color: var(--light-gray);
+            color: var(--text-dark);
+            width: 100%;
+            font-size: 0.95rem;
+        }
+
+        /* Botões de Filtro e Limpar Filtros como Ícones */
+        .filter-buttons-group {
+            grid-column: span 1;
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            padding-top: 10px;
+        }
+
+        .filter-form button[type="submit"],
+        .filter-form .button-icon {
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+            box-shadow: var(--shadow-light);
+            transition: all 0.2s ease-in-out;
+            position: relative;
+        }
+
+        .filter-form button[type="submit"] {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        .filter-form button[type="submit"]:hover { background-color: #0056b3; transform: translateY(-1px); box-shadow: var(--shadow-medium); }
+
+        .filter-form .button-icon {
+            background-color: var(--dark-gray);
+            color: white;
+        }
+        .filter-form .button-icon:hover { background-color: #5a6268; transform: translateY(-1px); box-shadow: var(--shadow-medium); }
+
+        /* Tooltip para botões de filtro */
+        .filter-form .button-icon::after,
+        .filter-form button[type="submit"]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 120%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            padding: 6px 10px;
+            border-radius: 6px;
+            white-space: nowrap;
+            font-size: 0.75rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+            z-index: 2;
+            box-shadow: var(--shadow-light);
+        }
+
+        .filter-form .button-icon:hover::after,
+        .filter-form button[type="submit"]:hover::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-5px);
+        }
+
+
+        /* Tabela de Dados */
+        .table-container {
+            flex-grow: 1;
+            overflow-x: auto;
+            margin-bottom: 1.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-medium);
+            animation: scaleIn 0.6s ease-out 0.4s both;
+            min-width: 800px; /* Ajustado de 900px para 800px para permitir mais compressão */
+        }
+
+        th, td {
+            border: 1px solid rgba(var(--medium-gray), 0.3);
+            padding: 7px 10px; /* Reduzido o padding */
+            text-align: left;
+            white-space: nowrap;
+            font-size: 0.85rem; /* Diminuído o tamanho da fonte */
+        }
+
+        th {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: var(--text-light);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.6);
+        }
+        tbody tr:hover {
+            background-color: rgba(52, 152, 219, 0.15);
+            cursor: pointer;
+        }
+
+        /* Coluna de Ações - Ícones Quadrados e Destaque Aprimorado */
+        .actions {
+            display: flex;
+            gap: 6px;
+            justify-content: flex-start;
+        }
+
+        .actions a, .actions button {
+            position: relative;
+            width: 34px; /* Levemente reduzido */
+            height: 34px; /* Levemente reduzido */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+            font-size: 0.9rem; /* Levemente reduzido */
+            color: white;
+            box-shadow: var(--shadow-light);
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            overflow: hidden;
+        }
+
+        .actions a.view { background-color: var(--accent-color); }
+        .actions a.edit { background-color: var(--warning-color); color: var(--text-dark); }
+        .actions button.delete { background-color: var(--danger-color); }
+
+        /* Efeito de destaque aprimorado */
+        .actions a::before, .actions button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transition: width 0.3s ease, height 0.3s ease, opacity 0.3s ease;
+            opacity: 0;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+        }
+
+        .actions a:hover::before, .actions button:hover::before {
+            width: 150%;
+            height: 150%;
+            opacity: 1;
+        }
+
+        .actions a:hover, .actions button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium), 0 0 20px rgba(52, 152, 219, 0.7);
+            z-index: 1;
+        }
+
+        /* Tooltip para os botões de ação */
+        .actions a::after, .actions button::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 120%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            padding: 5px 9px;
+            border-radius: 5px;
+            white-space: nowrap;
+            font-size: 0.7rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+            z-index: 2;
+            box-shadow: var(--shadow-light);
+        }
+
+        .actions a:hover::after, .actions button:hover::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-3px);
+        }
+
+
+        /* Nenhum funcionário encontrado */
+        .no-results-message {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 1.1rem;
+            color: var(--dark-gray);
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Botão Voltar (REMOVIDO da parte inferior) */
+        .back-button-container {
+            display: none; /* Esconde o container antigo */
+        }
+
+
+        /* Responsividade */
+        @media (max-width: 1200px) {
+            .content-container {
+                max-width: 95%;
+                padding: 2rem;
+            }
+            table {
+                min-width: 750px; /* Ajustado */
+            }
+        }
+
+        @media (max-width: 992px) {
+            .content-container {
+                max-width: 98%;
+                padding: 1.8rem;
+            }
+            .filter-form {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 15px;
+            }
+            table {
+                min-width: 650px; /* Ajustado */
+                font-size: 0.8rem; /* Ajustado */
+            }
+            th, td {
+                padding: 6px 8px; /* Ajustado */
+            }
+            .actions a, .actions button {
+                width: 30px; /* Levemente reduzido */
+                height: 30px; /* Levemente reduzido */
+                font-size: 0.85rem; /* Levemente reduzido */
+            }
+            .actions a::after, .actions button::after {
+                font-size: 0.65rem;
+                padding: 4px 8px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem 0.5rem;
+            }
+            .content-container {
+                padding: 1.5rem 1rem;
+                border-radius: 16px;
+                min-height: auto;
+            }
+
+            .title-band h1 {
+                font-size: 1.6rem;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .action-buttons {
+                justify-content: center;
+                gap: 6px;
+            }
+            .add-button, .print-button, .export-excel-button, .back-to-module-button { /* Incluído o novo botão */
+                padding: 0.5rem 0.8rem;
+                font-size: 0.8rem;
+            }
+
+            .filter-form {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                padding: 1rem;
+            }
+            .filter-group {
+                gap: 3px;
+            }
+            .filter-form label {
+                font-size: 0.9rem;
+            }
+            .filter-form input, .filter-form select {
+                padding: 8px;
+                font-size: 0.9rem;
+            }
+            .filter-buttons-group {
+                justify-content: center;
+                gap: 8px;
+            }
+            .filter-form button[type="submit"], .filter-form .button-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 0.9rem;
+            }
+
+            table {
+                font-size: 0.75em; /* Ajustado */
+                min-width: 480px; /* Ajustado */
+            }
+            th, td {
+                padding: 5px 7px; /* Ajustado */
+            }
+
+            .actions {
+                justify-content: center;
+                gap: 4px;
+            }
+            .actions a, .actions button {
+                width: 28px; /* Levemente reduzido */
+                height: 28px; /* Levemente reduzido */
+                font-size: 0.8rem; /* Levemente reduzido */
+            }
+            .actions a::after, .actions button::after {
+                font-size: 0.6rem;
+                padding: 3px 6px;
+            }
+
+            .no-results-message {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-container {
+                padding: 0.8rem 0.5rem;
+                align-items: flex-start;
+            }
+            .content-container {
+                padding: 1.2rem 0.8rem;
+            }
+            .title-band {
+                padding: 0.8rem;
+            }
+            .title-band h1 {
+                font-size: 1.4rem;
+            }
+            .action-buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .action-buttons > * {
+                margin: 4px 0;
+            }
+
+            .filter-form {
+                padding: 0.8rem;
+            }
+            .filter-form label, .filter-form input, .filter-form select {
+                font-size: 0.85rem;
+            }
+            .filter-form button[type="submit"], .filter-form .button-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 0.8rem;
+            }
+
+            table {
+                min-width: 340px; /* Ajustado para telas muito pequenas */
+                font-size: 0.7em; /* Ajustado */
+            }
+            th, td {
+                padding: 4px 6px; /* Ajustado */
+            }
+
+            .actions a, .actions button {
+                width: 24px; /* Levemente reduzido */
+                height: 24px; /* Levemente reduzido */
+                font-size: 0.7rem; /* Levemente reduzido */
+            }
+            .actions a::after, .actions button::after {
+                font-size: 0.55rem;
+                padding: 2px 5px;
+                bottom: 110%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="content-container">
+            <div class="header">
+                <div class="title-band">
+                    <h1>
+                        <i class="fas fa-building"></i>
+                        Gestão de Obras
                     </h1>
-                    <p class="page-subtitle">Controle completo dos seus projetos e empreendimentos</p>
-                </div>
-                <div class="col-md-4 text-end">
-                    <div class="stats-mini">
-                        <span class="stat-item">
-                            <i class="fas fa-hammer text-warning"></i>
-                            <span class="stat-number">{{ obras|length }}</span>
-                            <span class="stat-label">Obras</span>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {# Action Buttons Section - Retangular #}
-    <div class="actions-section">
-        <div class="container-fluid">
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <a href="{{ url_for('obras_bp.add_obra') }}" class="action-btn-rect primary" data-bs-toggle="tooltip" title="Adicionar Nova Obra">
-                        <div class="btn-icon">
-                            <i class="fas fa-plus"></i>
-                        </div>
-                        <span class="btn-text">Nova Obra</span>
-                    </a>
-                </div>
-                <div class="col-md-3">
-                    <button type="button" onclick="window.print()" class="action-btn-rect secondary" data-bs-toggle="tooltip" title="Imprimir Relatório">
-                        <div class="btn-icon">
-                            <i class="fas fa-print"></i>
-                        </div>
-                        <span class="btn-text">Imprimir</span>
-                    </button>
-                </div>
-                <div class="col-md-3">
-                    <a href="{{ url_for('obras_bp.export_obras_excel') }}" class="action-btn-rect success" data-bs-toggle="tooltip" title="Exportar para Excel">
-                        <div class="btn-icon">
-                            <i class="fas fa-file-excel"></i>
-                        </div>
-                        <span class="btn-text">Excel</span>
-                    </a>
-                </div>
-                <div class="col-md-3">
-                    <a href="{{ url_for('welcome') }}" class="action-btn-rect neutral" data-bs-toggle="tooltip" title="Voltar ao Dashboard">
-                        <div class="btn-icon">
-                            <i class="fas fa-arrow-left"></i>
-                        </div>
-                        <span class="btn-text">Voltar</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {# Content Section #}
-    <div class="content-section">
-        <div class="container-fluid">
-            {# Filtros em Card Moderno com Botões no Header #}
-            <div class="filter-card modern-card">
-                <div class="card-header">
-                    <h5 class="card-title">
-                        <i class="fas fa-filter me-2"></i>
-                        Filtros de Pesquisa
-                    </h5>
-                    <div class="filter-buttons">
-                        <button type="submit" form="filter-form" class="btn btn-primary btn-modern">
-                            <i class="fas fa-search me-2"></i>Filtrar
-                        </button>
-                        <a href="{{ url_for('obras_bp.gerenciar_obras_lista') }}" class="btn btn-outline-secondary btn-modern">
-                            <i class="fas fa-times me-2"></i>Limpar
-                        </a>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <form id="filter-form" method="GET" action="{{ url_for('obras_bp.gerenciar_obras_lista') }}">
-                        <div class="row g-3">
-                            <div class="col-md-6 col-lg-3">
-                                <div class="form-floating">
-                                    <input type="text" id="numero_obra" name="numero_obra" class="form-control" 
-                                           value="{{ selected_numero|default('') }}" placeholder="Número da Obra">
-                                    <label for="numero_obra">Número da Obra</label>
-                                </div>
-                            </div>
-                            <div class="col-md-6 col-lg-3">
-                                <div class="form-floating">
-                                    <input type="text" id="nome_obra" name="nome_obra" class="form-control" 
-                                           value="{{ selected_nome|default('') }}" placeholder="Nome da Obra">
-                                    <label for="nome_obra">Nome da Obra</label>
-                                </div>
-                            </div>
-                            <div class="col-md-6 col-lg-3">
-                                <div class="form-floating">
-                                    <select id="status_obra" name="status_obra" class="form-select">
-                                        <option value="">Todos os Status</option>
-                                        {% for status in status_options %}
-                                            <option value="{{ status }}" {% if selected_status == status %}selected{% endif %}>{{ status }}</option>
-                                        {% endfor %}
-                                    </select>
-                                    <label for="status_obra">Status da Obra</label>
-                                </div>
-                            </div>
-                            <div class="col-md-6 col-lg-3">
-                                <div class="form-floating">
-                                    <select id="cliente_id" name="cliente_id" class="form-select">
-                                        <option value="">Todos os Clientes</option>
-                                        {% for cliente in clientes %}
-                                            <option value="{{ cliente.ID_Clientes|string }}" 
-                                                    {% if selected_cliente_id|string == cliente.ID_Clientes|string %}selected{% endif %}>
-                                                {{ cliente.Nome_Cliente }}
-                                            </option>
-                                        {% endfor %}
-                                    </select>
-                                    <label for="cliente_id">Cliente</label>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
                 </div>
             </div>
 
-            {# Tabela de Obras em Card Moderno #}
-            {% if obras %}
-            <div class="table-card modern-card">
-                <div class="card-header">
-                    <h5 class="card-title">
-                        <i class="fas fa-list me-2"></i>
-                        Lista de Obras
-                    </h5>
-                    <div class="card-tools">
-                        <span class="badge bg-primary">{{ obras|length }} obra(s)</span>
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover modern-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Número</th>
-                                    <th>Nome da Obra</th>
-                                    <th>Contrato</th>
-                                    <th>Status</th>
-                                    <th>Início</th>
-                                    <th>Fim</th>
-                                    <th>Valor</th>
-                                    <th class="text-center">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for obra_item in obras %}
-                                <tr>
-                                    <td><span class="id-badge">#{{ obra_item.ID_Obras }}</span></td>
-                                    <td><strong>{{ obra_item.Numero_Obra }}</strong></td>
-                                    <td>
-                                        <div class="obra-info">
-                                            <div class="obra-name">{{ obra_item.Nome_Obra }}</div>
-                                            <div class="obra-address">{{ obra_item.Endereco_Obra }}</div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="obra-contrato">
-                                            <div class="obra-contract">{{ obra_item.Numero_Contrato }}</div>
-                                            <div class="obra-client">{{ obra_item.Nome_Cliente }}</div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="status-badge status-{{ obra_item.Status_Obra.lower().replace(' ', '-') }}">
-                                            {{ obra_item.Status_Obra }}
-                                        </span>
-                                    </td>
-                                    <td>{{ obra_item.Data_Inicio_Prevista.strftime('%d/%m/%Y') if obra_item.Data_Inicio_Prevista else 'N/A' }}</td>
-                                    <td>{{ obra_item.Data_Fim_Prevista.strftime('%d/%m/%Y') if obra_item.Data_Fim_Prevista else 'N/A' }}</td>
-                                    <td class="value-cell">R$ {{ "%.2f"|format(obra_item.Valor_Obra) if obra_item.Valor_Obra is not none else '0.00' }}</td>
-                                    <td class="actions-cell">
-                                        <div class="btn-group" role="group">
-                                            <a href="{{ url_for('obras_bp.obra_details', obra_id=obra_item.ID_Obras) }}" 
-                                               class="btn btn-sm btn-outline-info" data-bs-toggle="tooltip" title="Detalhes">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            <a href="{{ url_for('obras_bp.edit_obra', obra_id=obra_item.ID_Obras) }}" 
-                                               class="btn btn-sm btn-outline-warning" data-bs-toggle="tooltip" title="Editar">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            <form action="{{ url_for('obras_bp.delete_obra', obra_id=obra_item.ID_Obras) }}" 
-                                                  method="POST" class="d-inline">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" 
-                                                        onclick="return confirm('Tem certeza que deseja excluir a obra {{ obra_item.Nome_Obra }}?');" 
-                                                        data-bs-toggle="tooltip" title="Excluir">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            {% else %}
-            <div class="empty-state">
-                <div class="empty-icon">
-                    <i class="fas fa-building"></i>
-                </div>
-                <h3>Nenhuma obra encontrada</h3>
-                <p>Não há obras cadastradas ou que correspondam aos filtros aplicados.</p>
-                <a href="{{ url_for('obras_bp.add_obra') }}" class="btn btn-primary btn-modern">
-                    <i class="fas fa-plus me-2"></i>Adicionar Nova Obra
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <ul class="flash-messages">
+                        {% for category, message in messages %}
+                            <li class="{{ category }}">{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
+
+            <div class="action-buttons">
+                <a href="{{ url_for('obras_bp.add_obra') }}" class="add-button">
+                    <i class="fas fa-plus"></i> Nova Obra
+                </a>
+                <button type="button" onclick="window.print()" class="print-button">
+                    <i class="fas fa-print"></i> Imprimir Relação
+                </button>
+                <a href="{{ url_for('obras_bp.export_obras_excel') }}" class="export-excel-button">
+                    <i class="fas fa-file-excel"></i> Exportar para Excel
+                </a>
+                <a href="{{ url_for('obras_bp.obras_module') }}" class="back-to-module-button">
+                    <i class="fas fa-arrow-left"></i> Voltar ao Dashboard
                 </a>
             </div>
-            {% endif %}
+
+            <form id="filter-form" method="GET" class="filter-form" action="{{ url_for('obras_bp.gerenciar_obras_lista') }}">
+                <div class="filter-group">
+                    <label for="numero_obra">Número da Obra:</label>
+                    <input type="text" id="numero_obra" name="numero_obra" value="{{ selected_numero|default('') }}" placeholder="Buscar por Número">
+                </div>
+                <div class="filter-group">
+                    <label for="nome_obra">Nome:</label>
+                    <input type="text" id="nome_obra" name="nome_obra" value="{{ selected_nome|default('') }}" placeholder="Buscar por Nome">
+                </div>
+                <div class="filter-group">
+                    <label for="status_obra">Status:</label>
+                    <select id="status_obra" name="status_obra">
+                        <option value="">Todos os Status</option>
+                        {% for status in status_options %}
+                            <option value="{{ status }}" {% if selected_status == status %}selected{% endif %}>{{ status }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="cliente_id">Cliente:</label>
+                    <select id="cliente_id" name="cliente_id">
+                        <option value="">Todos os Clientes</option>
+                        {% for cliente in clientes %}
+                            <option value="{{ cliente.ID_Clientes|string }}" 
+                                    {% if selected_cliente_id|string == cliente.ID_Clientes|string %}selected{% endif %}>
+                                {{ cliente.Nome_Cliente }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-buttons-group">
+                    <button type="submit" data-tooltip="Filtrar"><i class="fas fa-filter"></i></button>
+                    <a href="{{ url_for('obras_bp.gerenciar_obras_lista') }}" class="button-icon" data-tooltip="Limpar Filtros"><i class="fas fa-eraser"></i></a>
+                </div>
+            </form>
+
+            <div class="table-container">
+                {% if obras %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Número</th>
+                            <th>Nome da Obra</th>
+                            <th>Contrato/Cliente</th>
+                            <th>Status</th>
+                            <th>Início</th>
+                            <th>Fim</th>
+                            <th>Valor</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for obra_item in obras %}
+                        <tr>
+                            <td>#{{ obra_item.ID_Obras }}</td>
+                            <td>{{ obra_item.Numero_Obra }}</td>
+                            <td>{{ obra_item.Nome_Obra }}</td>
+                            <td>
+                                {{ obra_item.Numero_Contrato }} <br>
+                                <small>{{ obra_item.Nome_Cliente }}</small>
+                            </td>
+                            <td>{{ obra_item.Status_Obra }}</td>
+                            <td>{{ obra_item.Data_Inicio_Prevista.strftime('%d/%m/%Y') if obra_item.Data_Inicio_Prevista else 'N/A' }}</td>
+                            <td>{{ obra_item.Data_Fim_Prevista.strftime('%d/%m/%Y') if obra_item.Data_Fim_Prevista else 'N/A' }}</td>
+                            <td>R$ {{ "%.2f"|format(obra_item.Valor_Obra) if obra_item.Valor_Obra is not none else '0.00' }}</td>
+                            <td class="actions">
+                                <a href="{{ url_for('obras_bp.obra_details', obra_id=obra_item.ID_Obras) }}" class="view" data-tooltip="Detalhes"><i class="fas fa-eye"></i></a>
+                                <a href="{{ url_for('obras_bp.edit_obra', obra_id=obra_item.ID_Obras) }}" class="edit" data-tooltip="Editar"><i class="fas fa-edit"></i></a>
+                                <form action="{{ url_for('obras_bp.delete_obra', obra_id=obra_item.ID_Obras) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir a obra {{ obra_item.Nome_Obra }}? Esta ação é irreversível.');">
+                                    <button type="submit" class="delete" data-tooltip="Excluir"><i class="fas fa-trash-alt"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="no-results-message">Nenhuma obra encontrada.</p>
+                {% endif %}
+            </div>
+
+            <div class="back-button-container" style="display: none;"></div>
         </div>
     </div>
-</div>
-
-<style>
-    /* Reset e Base */
-    * {
-        box-sizing: border-box;
-    }
-
-    .modern-layout {
-        min-height: 100vh;
-        background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
-        background-attachment: fixed;
-    }
-
-    /* Header Section com Imagem de Fundo */
-    .header-section {
-        position: relative;
-        background: linear-gradient(135deg, rgba(74, 85, 104, 0.9), rgba(45, 55, 72, 0.9));
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-        padding: 3rem 0;
-        margin-bottom: 2rem;
-        overflow: hidden;
-    }
-
-    .header-bg-image {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><defs><pattern id="construction" patternUnits="userSpaceOnUse" width="200" height="200"><rect width="200" height="200" fill="rgba(255,255,255,0.03)"/><path d="M20 20h160v160H20z" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="2"/><circle cx="100" cy="100" r="30" fill="rgba(255,255,255,0.05)"/><path d="M70 70l60 60M130 70l-60 60" stroke="rgba(255,255,255,0.06)" stroke-width="3"/></pattern></defs><rect width="1200" height="800" fill="url(%23construction)"/></svg>');
-        background-size: 300px 300px;
-        background-repeat: repeat;
-        opacity: 0.6;
-    }
-
-    .header-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(135deg, rgba(74, 85, 104, 0.2), rgba(45, 55, 72, 0.4));
-    }
-
-    .header-section .container-fluid {
-        position: relative;
-        z-index: 2;
-    }
-
-    .page-title {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: white;
-        margin: 0;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    }
-
-    .page-subtitle {
-        color: rgba(255,255,255,0.8);
-        font-size: 1.1rem;
-        margin: 0.5rem 0 0 0;
-    }
-
-    .stats-mini {
-        display: flex;
-        justify-content: flex-end;
-        gap: 1rem;
-    }
-
-    .stat-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        background: rgba(255,255,255,0.15);
-        padding: 0.75rem 1rem;
-        border-radius: 12px;
-        color: white;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .stat-number {
-        font-size: 1.5rem;
-        font-weight: 700;
-    }
-
-    .stat-label {
-        font-size: 0.9rem;
-        opacity: 0.9;
-    }
-
-    /* Actions Section - Botões Retangulares */
-    .actions-section {
-        margin-bottom: 2rem;
-    }
-
-    .action-btn-rect {
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-        width: 100%;
-        height: 60px;
-        padding: 0 1.5rem;
-        border-radius: 12px;
-        text-decoration: none;
-        color: white;
-        font-weight: 600;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.2);
-        position: relative;
-        overflow: hidden;
-        gap: 1rem;
-    }
-
-    .action-btn-rect::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
-        transition: all 0.3s ease;
-    }
-
-    .action-btn-rect:hover::before {
-        background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
-    }
-
-    .action-btn-rect:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        color: white;
-    }
-
-    .action-btn-rect .btn-icon {
-        position: relative;
-        z-index: 1;
-        font-size: 1.25rem;
-    }
-
-    .action-btn-rect .btn-text {
-        position: relative;
-        z-index: 1;
-    }
-
-    .action-btn-rect.primary { background: linear-gradient(135deg, #4a5568, #2d3748); }
-    .action-btn-rect.secondary { background: linear-gradient(135deg, #718096, #4a5568); }
-    .action-btn-rect.success { background: linear-gradient(135deg, #38a169, #2f855a); }
-    .action-btn-rect.neutral { background: linear-gradient(135deg, #805ad5, #6b46c1); }
-
-    /* Content Section */
-    .content-section {
-        padding-bottom: 2rem;
-    }
-
-    /* Modern Cards */
-    .modern-card {
-        background: rgba(255,255,255,0.98);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.3);
-        border-radius: 16px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-        margin-bottom: 2rem;
-        overflow: hidden;
-    }
-
-    .card-header {
-        background: linear-gradient(135deg, rgba(74, 85, 104, 0.05), rgba(45, 55, 72, 0.03));
-        border-bottom: 1px solid rgba(0,0,0,0.08);
-        padding: 1.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .card-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: #2d3748;
-        margin: 0;
-    }
-
-    .card-tools .badge {
-        font-size: 0.875rem;
-        padding: 0.5rem 1rem;
-        border-radius: 50px;
-        background: linear-gradient(135deg, #4a5568, #2d3748);
-    }
-
-    .filter-buttons {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .card-body {
-        padding: 1.5rem;
-    }
-
-    /* Form Styling com Correção dos Labels */
-    .form-floating {
-        position: relative;
-    }
-
-    .form-floating > .form-control,
-    .form-floating > .form-select {
-        border: 2px solid rgba(74, 85, 104, 0.2);
-        border-radius: 12px;
-        padding: 1rem;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-        background: rgba(255,255,255,0.9);
-    }
-
-    .form-floating > .form-control:focus,
-    .form-floating > .form-select:focus {
-        border-color: #4a5568;
-        box-shadow: 0 0 0 0.2rem rgba(74, 85, 104, 0.25);
-        background: white;
-    }
-
-    .form-floating > label {
-        color: #4a5568;
-        font-weight: 500;
-        padding: 0.5rem 1rem;
-        z-index: 2;
-    }
-
-    /* Correção específica para labels dos selects */
-    .form-floating > .form-select:focus ~ label,
-    .form-floating > .form-select:not(:placeholder-shown) ~ label {
-        transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
-        color: #4a5568;
-    }
-
-    .btn-modern {
-        padding: 0.75rem 1.5rem;
-        border-radius: 12px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        transition: all 0.3s ease;
-        font-size: 0.875rem;
-    }
-
-    .btn-modern:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    }
-
-    .btn-primary.btn-modern {
-        background: linear-gradient(135deg, #4a5568, #2d3748);
-        border: none;
-    }
-
-    .btn-outline-secondary.btn-modern {
-        border-color: #718096;
-        color: #718096;
-    }
-
-    .btn-outline-secondary.btn-modern:hover {
-        background: #718096;
-        border-color: #718096;
-    }
-
-    /* Table Styling */
-    .modern-table {
-        margin: 0;
-        font-size: 0.9rem;
-    }
-
-    .modern-table thead th {
-        background: linear-gradient(135deg, #f7fafc, #edf2f7);
-        border: none;
-        color: #2d3748;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        padding: 1rem;
-        font-size: 0.8rem;
-    }
-
-    .modern-table tbody tr {
-        border-bottom: 1px solid rgba(0,0,0,0.05);
-        transition: background-color 0.3s ease;
-    }
-
-    .modern-table tbody tr:hover {
-        background-color: rgba(74, 85, 104, 0.05);
-    }
-
-    .modern-table td {
-        padding: 1rem;
-        vertical-align: middle;
-        border: none;
-    }
-
-    .id-badge {
-        background: linear-gradient(135deg, #4a5568, #2d3748);
-        color: white;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-    }
-
-    .obra-info {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-    }
-
-    .obra-name {
-        font-weight: 600;
-        color: #2d3748;
-    }
-
-    .obra-address {
-        font-size: 0.8rem;
-        color: #718096;
-    }
-
-    .status-badge {
-        padding: 0.4rem 0.8rem;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .status-planejamento { background: #fed7aa; color: #9a3412; }
-    .status-em-andamento { background: #bfdbfe; color: #1e40af; }
-    .status-concluída { background: #bbf7d0; color: #166534; }
-    .status-pausada { background: #fef3c7; color: #92400e; }
-    .status-cancelada { background: #fecaca; color: #991b1b; }
-
-    .value-cell {
-        font-weight: 600;
-        color: #059669;
-        font-size: 1rem;
-    }
-
-    .actions-cell {
-        text-align: center;
-    }
-
-    .btn-group .btn {
-        border-radius: 8px;
-        margin: 0 0.1rem;
-        transition: all 0.3s ease;
-    }
-
-    .btn-group .btn:hover {
-        transform: translateY(-1px);
-    }
-
-    /* Empty State */
-    .empty-state {
-        text-align: center;
-        padding: 4rem 2rem;
-        background: rgba(255,255,255,0.98);
-        border-radius: 16px;
-        backdrop-filter: blur(10px);
-    }
-
-    .empty-icon {
-        font-size: 4rem;
-        color: #718096;
-        margin-bottom: 1rem;
-    }
-
-    .empty-state h3 {
-        color: #2d3748;
-        margin-bottom: 1rem;
-    }
-
-    .empty-state p {
-        color: #718096;
-        margin-bottom: 2rem;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .page-title {
-            font-size: 2rem;
-        }
-        
-        .stats-mini {
-            justify-content: center;
-            margin-top: 1rem;
-        }
-        
-        .action-btn-rect {
-            height: 50px;
-            font-size: 0.9rem;
-        }
-        
-        .card-header {
-            flex-direction: column;
-            gap: 1rem;
-            text-align: center;
-        }
-        
-        .filter-buttons {
-            flex-direction: column;
-            width: 100%;
-        }
-    }
-</style>
-{% endblock %}
-
-{% block scripts %}
-{{ super() }}
-<script>
-    // Ativa os tooltips do Bootstrap
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl)
-    })
-
-    // Adiciona animação suave ao scroll
-    document.documentElement.style.scrollBehavior = 'smooth';
-
-    // Animação de entrada dos cards
-    const cards = document.querySelectorAll('.modern-card');
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
-            }
-        });
-    }, { threshold: 0.1 });
-
-    cards.forEach(card => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(20px)';
-        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-        observer.observe(card);
-    });
-
-    // Corrige o posicionamento dos labels nos selects
-    document.querySelectorAll('.form-select').forEach(select => {
-        const checkLabel = () => {
-            const label = select.nextElementSibling;
-            if (label && label.tagName === 'LABEL') {
-                if (select.value !== '') {
-                    label.classList.add('active');
-                } else {
-                    label.classList.remove('active');
-                }
-            }
-        };
-        
-        select.addEventListener('change', checkLabel);
-        checkLabel(); // Verificar estado inicial
-    });
-</script>
-
-<style>
-    /* Correção adicional para labels dos selects */
-    .form-floating > .form-select ~ label.active,
-    .form-floating > .form-select:not([value=""]) ~ label,
-    .form-floating > .form-select[value]:not([value=""]) ~ label {
-        transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
-        color: #4a5568;
-    }
-</style>
-{% endblock %}
+</body>
+</html>

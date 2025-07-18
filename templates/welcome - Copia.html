@@ -1,0 +1,169 @@
+{% extends 'base.html' %} {% block title %}Bem vindo - LUMOB{% endblock %} {%
+block messages %}{% endblock %} {# Continua suprimindo as mensagens flash
+redundantes nesta página #} {% block content %}
+<div class="container mt-4">
+  {# Container principal com margem superior #} {# Estrutura do Cabeçalho -
+  Mensagem de boas-vindas e botão Sair (Ajustada novamente para clareza) #}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0 text-start">Bem vindo {{ user.username }}</h5>
+    <a href="{{ url_for('logout') }}" class="btn btn-danger btn-sm">Sair</a>
+  </div>
+
+  <hr class="my-3" />
+  {# Linha separadora horizontal #} {# Cards dos Módulos #}
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4 mt-2">
+    {% for module in all_modules_db %} {% set module_name_display =
+    module.Nome_Modulo %} {% set module_url = '#' %} {% set image_path_base =
+    url_for('static', filename='img/') %} {% set module_image_file = '' %} {%
+    set is_restricted = not user.can_access_module(module_name_display) %} {%
+    set restricted_class = 'module-card-restricted' if is_restricted else '' %}
+    {# Mapeamento de Nome do Módulo para URL e Imagem #} {% if
+    module_name_display == 'Obras' %} {% set module_url =
+    url_for('obras_bp.obras_module') %} {% set module_image_file =
+    'obras_colorful.jpg' %} {% elif module_name_display == 'Segurança' %} {% set
+    module_url = url_for('seguranca_bp.seguranca_module') %} {% set
+    module_image_file = 'seguranca_colorful.jpg' %} {% elif module_name_display
+    == 'Pessoal' %} {% set module_url = url_for('pessoal_bp.pessoal_module') %}
+    {% set module_image_file = 'pessoal_colorful.jpg' %} {% elif
+    module_name_display == 'Usuários' %} {% set module_url =
+    url_for('users_bp.users_module') %} {% set module_image_file =
+    'users_colorful.jpg' %} {% endif %}
+
+    <div class="col">
+      <div
+        class="card h-100 shadow-sm rounded-3 module-card-custom {{ restricted_class }}"
+      >
+        <div
+          class="card-img-overlay d-flex flex-column justify-content-end align-items-center p-0"
+        >
+          {# A imagem agora é um background ou overlay que ocupa todo o espaço
+          do card #} {% if module_image_file %}
+          <img
+            src="{{ image_path_base }}{{ module_image_file }}"
+            alt="{{ module_name_display }}"
+            class="img-fluid module-image-band"
+          />
+          {% endif %}
+          <div
+            class="module-text-overlay d-flex flex-column justify-content-between align-items-center p-3 text-center"
+          >
+            <h5 class="card-title text-white mb-auto">
+              {{ module_name_display }}
+            </h5>
+            {% if is_restricted %}
+            <span class="btn btn-secondary btn-sm disabled"
+              >Acesso Restrito</span
+            >
+            {% else %}
+            <a href="{{ module_url }}" class="btn btn-primary btn-sm"
+              >Acessar</a
+            >
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<style>
+  /* Estilos Customizados para welcome.html (Cards) */
+  .module-card-custom {
+    aspect-ratio: 1 / 1; /* Força o card a ser quadrado */
+    overflow: hidden; /* Esconde qualquer transbordamento de conteúdo */
+    position: relative; /* Para posicionamento absoluto dos overlays */
+    border-radius: 4rem; /* Cantos arredondados, use um valor para maior arredondamento se quiser */
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); /* Sombra suave */
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  }
+  .module-card-custom:hover {
+    transform: translateY(-5px); /* Efeito de flutuar no hover */
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15); /* Sombra mais intensa no hover */
+  }
+
+  .module-image-band {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Faz a imagem cobrir o card inteiro (faixa) */
+    opacity: 0.5; /* Transparência inicial para TODOS os cards */
+    filter: grayscale(0%); /* Colorido inicialmente para TODOS os cards */
+    transition: opacity 0.3s ease-in-out, filter 0.3s ease-in-out; /* Transição suave para opacidade e filtro */
+  }
+
+  /* Comportamento de HOVER para CARDS PERMITIDOS (vivido e colorido) */
+  /* Este estilo torna a imagem opaca (vívida) no hover e colorida */
+  .module-card-custom:not(.module-card-restricted):hover .module-image-band {
+    opacity: 1;
+    filter: grayscale(0%);
+  }
+
+  /* Comportamento de HOVER para CARDS RESTRITOS (preto e branco, semi-transparente) */
+  /* Este estilo aplica o filtro P&B e a opacidade no hover para cards restritos */
+  .module-card-custom.module-card-restricted:hover .module-image-band {
+    opacity: 0.7; /* Semi-transparente no hover, ajuste conforme o desejado */
+    filter: grayscale(100%); /* Aplica o filtro P&B no hover */
+  }
+
+  .module-text-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(
+      0,
+      0,
+      0,
+      0.4
+    ); /* Overlay escuro para contraste do texto */
+    border-radius: inherit; /* Herda os cantos arredondados */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Distribui o espaço entre título e botão */
+    padding: 1.5rem; /* Espaçamento interno */
+  }
+
+  .card-title {
+    margin-bottom: 0;
+    font-size: 1.8rem; /* Tamanho do título do card */
+    font-weight: bold; /* Negrito */
+    color: white; /* Cor do título */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7); /* Sombra para legibilidade */
+    flex-grow: 1; /* Título ocupa o espaço restante, empurrando o botão para baixo */
+    display: flex;
+    align-items: center; /* Centraliza verticalmente o texto do título */
+    justify-content: center; /* Centraliza horizontalmente o texto do título */
+  }
+
+  /* Estilos do cabeçalho */
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  .header-top h5 {
+    font-size: 1.25rem;
+    color: #212529;
+    margin-bottom: 0;
+    flex-grow: 1;
+    text-align: left;
+  }
+  .logout-btn-container {
+    flex-shrink: 0;
+  }
+
+  /* Ajustes para botões gerais */
+  .btn.btn-primary,
+  .btn.btn-secondary {
+    font-size: 0.9rem;
+  }
+  .btn.btn-danger.btn-sm {
+    font-size: 0.8rem;
+  }
+</style>
+{% endblock %}

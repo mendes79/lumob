@@ -136,15 +136,24 @@
         min-height: 80px; /* Altura mínima menor */
     }
 
-    /* Estilos para o checkbox e seu container */
     .checkbox-custom-container { /* Nova classe para controle preciso */
         display: flex;
+        flex-direction: row; /* Garante que o checkbox e o label fiquem em linha */
         align-items: center;
         margin-bottom: 1rem; /* Margem inferior padrão do Bootstrap mb-3 */
-        /* Ajustar alinhamento horizontal */
-        padding-left: 0; /* Remover padding padrão do form-check */
-        margin-left: 0; /* Remover margem extra, se houver */
+        
+        /* ---- INÍCIO DA ALTERAÇÃO PARA CENTRALIZAÇÃO ---- */
+        justify-content: center; /* Centraliza horizontalmente os itens flex */
+        width: fit-content;    /* Faz o container ter a largura do seu conteúdo */
+        margin-left: auto;     /* Empurra para a direita */
+        margin-right: auto;    /* Empurra para a esquerda (junto com o acima, centraliza) */
+        /* ---- FIM DA ALTERAÇÃO PARA CENTRALIZAÇÃO ---- */
+
+        /* Regras anteriores que devem ser mantidas ou reavaliadas se causarem conflito */
+        padding-left: 0 !important; /* Remover padding padrão do form-check */
+        /* margin-left: 0; -- Esta linha pode ser removida se "margin-left: auto;" já for usada */
     }
+    
     .custom-form-check-input { /* Nova classe para o input checkbox */
         margin-top: 0; /* Alinhar verticalmente */
         /* Remover margin-right padrão do form-check-input e controlar o espaçamento aqui */

@@ -5,13 +5,11 @@
 {% block messages %}{% endblock %} 
 
 {% block content %}
-<div class="container custom-form-container mt-4 mb-4 p-4"> {# Container customizado, margens e padding #}
-    {# Título dentro da faixa preta #}
-    <div class="title-band mb-2"> {# mb-2 para margem inferior menor para o botão Voltar #}
-        <h1 class="text-white text-center mb-0"><i class="fas fa-shield-alt me-3"></i>Editar Seguro: {{ seguro.Numero_Apolice }} (Obra: {{ seguro.Nome_Obra }})</h1> {# Ícone de escudo para seguro #}
+<div class="container custom-form-container mt-4 mb-4 p-4">
+    <div class="title-band mb-2">
+        <h1 class="text-white text-center mb-0"><i class="fas fa-shield-alt me-3"></i>Editar Seguro: {{ seguro.Numero_Apolice }} (Obra: {{ seguro.Nome_Obra }})</h1>
     </div>
 
-    {# Bloco para Flash Messages - Mantido dentro do content, igual aos outros formulários #}
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <ul class="flash-messages">
@@ -23,7 +21,7 @@
     {% endwith %}
 
     <form action="{{ url_for('obras_bp.edit_seguro', seguro_id=seguro.ID_Seguros) }}" method="POST">
-        <div class="mb-3"> {# mb-3 para Bootstrap spacing #}
+        <div class="mb-3">
             <label for="seguro_id" class="form-label custom-form-label">ID do Seguro:</label>
             <input type="text" id="seguro_id" name="seguro_id" class="form-control custom-form-control" value="{{ seguro.ID_Seguros }}" readonly>
         </div>
@@ -33,7 +31,7 @@
                 <option value="">Selecione uma Obra</option>
                 {% for obra in all_obras %}
                     <option value="{{ obra.ID_Obras }}" 
-                        {% if (form_data and form_data['id_obras']|default('')|int == obra.ID_Obras) or (not form_data and seguro.ID_Obras == obra.ID_Obras) %}selected{% endif %}>
+                        {% if form_data and form_data['id_obras']|string == obra.ID_Obras|string %}selected{% endif %}>
                         {{ obra.Numero_Obra }} - {{ obra.Nome_Obra }}
                     </option>
                 {% endfor %}
@@ -41,11 +39,11 @@
         </div>
         <div class="mb-3">
             <label for="numero_apolice" class="form-label custom-form-label">Número da Apólice:</label>
-            <input type="text" id="numero_apolice" name="numero_apolice" class="form-control custom-form-control" value="{{ form_data['numero_apolice'] if form_data else seguro.Numero_Apolice }}" required>
+            <input type="text" id="numero_apolice" name="numero_apolice" class="form-control custom-form-control" value="{{ form_data.numero_apolice|default('') }}" required>
         </div>
         <div class="mb-3">
             <label for="seguradora" class="form-label custom-form-label">Seguradora:</label>
-            <input type="text" id="seguradora" name="seguradora" class="form-control custom-form-control" value="{{ form_data['seguradora'] if form_data else seguro.Seguradora }}" required>
+            <input type="text" id="seguradora" name="seguradora" class="form-control custom-form-control" value="{{ form_data.seguradora|default('') }}" required>
         </div>
         <div class="mb-3">
             <label for="tipo_seguro" class="form-label custom-form-label">Tipo de Seguro:</label>
@@ -53,24 +51,24 @@
                 <option value="">Selecione o Tipo</option>
                 {% for tipo in tipo_seguro_options %}
                     <option value="{{ tipo }}" 
-                        {% if (form_data and form_data['tipo_seguro'] == tipo) or (not form_data and seguro.Tipo_Seguro == tipo) %}selected{% endif %}>{{ tipo }}</option>
+                        {% if form_data and form_data['tipo_seguro'] == tipo %}selected{% endif %}>{{ tipo }}</option>
                 {% endfor %}
             </select>
         </div>
         <div class="mb-3">
             <label for="valor_segurado" class="form-label custom-form-label">Valor Segurado (R$):</label>
             <input type="number" step="0.01" id="valor_segurado" name="valor_segurado" class="form-control custom-form-control" 
-                value="{{ '%.2f'|format(form_data['valor_segurado']) if form_data and form_data['valor_segurado'] is not none else '%.2f'|format(seguro.Valor_Segurado) if seguro.Valor_Segurado is not none else '' }}">
+                value="{{ '%.2f'|format(form_data.valor_segurado|float) if form_data.valor_segurado is not none else '' }}">
         </div>
         <div class="mb-3">
             <label for="data_inicio_vigencia" class="form-label custom-form-label">Data Início Vigência:</label>
             <input type="date" id="data_inicio_vigencia" name="data_inicio_vigencia" class="form-control custom-form-control" 
-                value="{{ form_data['data_inicio_vigencia'] if form_data and form_data['data_inicio_vigencia'] else (seguro.Data_Inicio_Vigencia.strftime('%Y-%m-%d') if seguro.Data_Inicio_Vigencia and seguro.Data_Inicio_Vigencia is not string else seguro.Data_Inicio_Vigencia) or '' }}" required>
+                value="{{ form_data.data_inicio_vigencia|default('') }}" required>
         </div>
         <div class="mb-3">
             <label for="data_fim_vigencia" class="form-label custom-form-label">Data Fim Vigência:</label>
             <input type="date" id="data_fim_vigencia" name="data_fim_vigencia" class="form-control custom-form-control" 
-                value="{{ form_data['data_fim_vigencia'] if form_data and form_data['data_fim_vigencia'] else (seguro.Data_Fim_Vigencia.strftime('%Y-%m-%d') if seguro.Data_Fim_Vigencia and seguro.Data_Fim_Vigencia is not string else seguro.Data_Fim_Vigencia) or '' }}">
+                value="{{ form_data.data_fim_vigencia|default('') }}">
         </div>
         <div class="mb-3">
             <label for="status_seguro" class="form-label custom-form-label">Status do Seguro:</label>
@@ -78,22 +76,22 @@
                 <option value="">Selecione o Status</option>
                 {% for status in status_options %}
                     <option value="{{ status }}" 
-                        {% if (form_data and form_data['status_seguro'] == status) or (not form_data and seguro.Status_Seguro == status) %}selected{% endif %}>{{ status }}</option>
+                        {% if form_data and form_data['status_seguro'] == status %}selected{% endif %}>{{ status }}</option>
                 {% endfor %}
             </select>
         </div>
         <div class="mb-3">
             <label for="observacoes_seguro" class="form-label custom-form-label">Observações:</label>
-            <textarea id="observacoes_seguro" name="observacoes_seguro" rows="3" class="form-control custom-form-control">
-{{ form_data['observacoes_seguro'] if form_data else seguro.Observacoes_Seguro }}</textarea>
+            <textarea id="observacoes_seguro" name="observacoes_seguro" rows="3" class="form-control custom-form-control">{{ form_data.observacoes_seguro|default('') }}</textarea>
         </div>
-        <div class="d-grid gap-2 d-md-flex justify-content-md-end"> {# Botões Salvar/Cancelar #}
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
             <button type="submit" class="btn btn-primary custom-submit-btn">Salvar Alterações</button>
             <a href="{{ url_for('obras_bp.seguros_module') }}" class="btn btn-secondary custom-cancel-btn">Cancelar</a>
         </div>
     </form>
 </div>
 
+{# ... (seu bloco de <style> continua aqui, sem alterações) ... #}
 <style>
     /* Estilos Customizados para o Título como Faixa */
     .title-band {

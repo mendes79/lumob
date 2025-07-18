@@ -1,161 +1,438 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Detalhes do Participante - LUMOB</title>
-    <style>
-      body {
-        font-family: sans-serif;
-        margin: 20px;
-      }
-      .container {
-        max-width: 800px;
-        margin: auto;
-        padding: 20px;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-      }
-      h1 {
-        text-align: center;
-        color: #333;
-      }
-      p {
-        margin-bottom: 8px;
-      }
-      strong {
-        display: inline-block;
-        width: 220px;
-      }
-      .actions {
-        text-align: center;
-        margin-top: 20px;
-      }
-      .actions button,
-      .actions a {
-        padding: 10px 15px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 16px;
-        margin: 0 5px;
-        text-decoration: none;
-        display: inline-block;
-      }
-      .actions button.delete {
-        background-color: #dc3545;
-      }
-      .actions button:hover {
-        background-color: #0056b3;
-      }
-      .actions button.delete:hover {
-        background-color: #c82333;
-      }
-      .back-link {
-        display: block;
-        text-align: center;
-        margin-top: 20px;
-      }
+{% extends 'base.html' %} {% block title %}Detalhes do Participante - LUMOB{%
+endblock %} {% block messages %}{% endblock %} {% block content %}
+<div class="container custom-form-container mt-4 mb-4 p-4">
+  {# Container customizado, margens e padding #} {# Título dentro da faixa preta
+  #}
+  <div class="title-band mb-2">
+    <h1 class="text-white text-center mb-0">
+      <i class="fas fa-user-check me-3"></i>Detalhes do Participante (ID: {{
+      participante.ID_Participante }})
+    </h1>
+  </div>
 
-      /* Estilo para impressão */
-      @media print {
-        .actions,
-        .back-link {
-          display: none;
-        }
-        .container {
-          box-shadow: none;
-          border: none;
-          margin: 0;
-          padding: 0;
-        }
-        body {
-          margin: 0;
-          padding: 0;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <h1>Detalhes do Participante (ID: {{ participante.ID_Participante }})</h1>
-
-      <div>
-        <p>
-          <strong>ID do Participante:</strong> {{ participante.ID_Participante
-          }}
-        </p>
-        <p>
-          <strong>Agendamento:</strong> {{ participante.Nome_Treinamento }} ({{
-          participante.Data_Hora_Inicio.strftime('%d/%m/%Y %H:%M') if
-          participante.Data_Hora_Inicio else 'N/A' }})
-        </p>
-        <p>
-          <strong>Funcionário:</strong> {{ participante.Nome_Funcionario }} ({{
-          participante.Matricula_Funcionario }})
-        </p>
-        <p>
-          <strong>Presença:</strong> {{ 'Sim' if participante.Presenca else
-          'Não' }}
-        </p>
-        <p>
-          <strong>Nota de Avaliação:</strong> {{
-          "%.2f"|format(participante.Nota_Avaliacao) if
-          participante.Nota_Avaliacao is not none else 'N/A' }}
-        </p>
-        <p>
-          <strong>Data de Conclusão:</strong> {{
-          participante.Data_Conclusao.strftime('%d/%m/%Y') if
-          participante.Data_Conclusao else 'N/A' }}
-        </p>
-        <p>
-          <strong>Certificado Emitido:</strong> {{ 'Sim' if
-          participante.Certificado_Emitido else 'Não' }}
-        </p>
-        <p>
-          <strong>Data de Criação:</strong> {{
-          participante.Data_Criacao.strftime('%d/%m/%Y %H:%M:%S') if
-          participante.Data_Criacao else 'N/A' }}
-        </p>
-        <p>
-          <strong>Última Modificação:</strong> {{
-          participante.Data_Modificacao.strftime('%d/%m/%Y %H:%M:%S') if
-          participante.Data_Modificacao else 'N/A' }}
-        </p>
+  {# Área de Detalhes do Participante #}
+  <div class="card card-body shadow-sm mb-4 custom-details-card">
+    {# Adicionada classe customizada para o card #}
+    <h4 class="mb-3 custom-details-title">Informações Principais</h4>
+    {# Classe customizada para o título #}
+    <div class="row mb-2">
+      <div class="col-md-6">
+        <p class="mb-0 fw-bold custom-details-label">ID do Participante:</p>
       </div>
-
-      <div class="actions">
-        <a
-          href="{{ url_for('seguranca_bp.edit_treinamento_participante', participante_id=participante.ID_Participante) }}"
-          >Editar</a
-        >
-        <button
-          type="button"
-          onclick="window.print()"
-          style="background-color: #007bff"
-        >
-          Imprimir
-        </button>
-        <form
-          action="{{ url_for('seguranca_bp.delete_treinamento_participante', participante_id=participante.ID_Participante) }}"
-          method="POST"
-          style="display: inline"
-          onsubmit="return confirm('Tem certeza que deseja excluir este participante? Esta ação é irreversível.');"
-        >
-          <button type="submit" class="delete">Excluir</button>
-        </form>
-      </div>
-
-      <div class="back-link">
-        <p>
-          <a
-            href="{{ url_for('seguranca_bp.treinamentos_participantes_module') }}"
-            >Voltar para a Lista de Participantes</a
-          >
+      <div class="col-md-6">
+        <p class="mb-0 custom-details-value">
+          {{ participante.ID_Participante }}
         </p>
       </div>
     </div>
-  </body>
-</html>
+    <div class="row mb-2">
+      <div class="col-md-6">
+        <p class="mb-0 fw-bold custom-details-label">Agendamento:</p>
+      </div>
+      <div class="col-md-6">
+        <p class="mb-0 custom-details-value">
+          {{ participante.Nome_Treinamento }} ({{
+          participante.Data_Hora_Inicio.strftime('%d/%m/%Y %H:%M') if
+          participante.Data_Hora_Inicio else 'N/A' }})
+        </p>
+      </div>
+    </div>
+    <div class="row mb-2">
+      <div class="col-md-6">
+        <p class="mb-0 fw-bold custom-details-label">Funcionário:</p>
+      </div>
+      <div class="col-md-6">
+        <p class="mb-0 custom-details-value">
+          {{ participante.Nome_Funcionario }} ({{
+          participante.Matricula_Funcionario }})
+        </p>
+      </div>
+    </div>
+    <div class="row mb-2">
+      <div class="col-md-6">
+        <p class="mb-0 fw-bold custom-details-label">Presença:</p>
+      </div>
+      <div class="col-md-6">
+        <p class="mb-0 custom-details-value">
+          {{ 'Sim' if participante.Presenca else 'Não' }}
+        </p>
+      </div>
+    </div>
+    <div class="row mb-2">
+      <div class="col-md-6">
+        <p class="mb-0 fw-bold custom-details-label">Nota de Avaliação:</p>
+      </div>
+      <div class="col-md-6">
+        <p class="mb-0 custom-details-value">
+          {{ "%.2f"|format(participante.Nota_Avaliacao) if
+          participante.Nota_Avaliacao is not none else 'N/A' }}
+        </p>
+      </div>
+    </div>
+    <div class="row mb-2">
+      <div class="col-md-6">
+        <p class="mb-0 fw-bold custom-details-label">Data de Conclusão:</p>
+      </div>
+      <div class="col-md-6">
+        <p class="mb-0 custom-details-value">
+          {{ participante.Data_Conclusao.strftime('%d/%m/%Y') if
+          participante.Data_Conclusao else 'N/A' }}
+        </p>
+      </div>
+    </div>
+    <div class="row mb-2">
+      <div class="col-md-6">
+        <p class="mb-0 fw-bold custom-details-label">Certificado Emitido:</p>
+      </div>
+      <div class="col-md-6">
+        <p class="mb-0 custom-details-value">
+          {{ 'Sim' if participante.Certificado_Emitido else 'Não' }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  {# Botões de Ação #}
+  <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+    {# Alinha os botões à direita #}
+    <a
+      href="{{ url_for('seguranca_bp.edit_treinamento_participante', participante_id=participante.ID_Participante) }}"
+      class="btn btn-info custom-submit-btn"
+      {#
+      Usando
+      custom-submit-btn
+      para
+      o
+      Editar
+      #}
+      >Editar</a
+    >
+    <button
+      type="button"
+      onclick="window.print()"
+      class="btn btn-primary custom-print-btn"
+      {#
+      Nova
+      classe
+      para
+      o
+      botão
+      Imprimir
+      #}
+    >
+      Imprimir
+    </button>
+    <form
+      action="{{ url_for('seguranca_bp.delete_treinamento_participante', participante_id=participante.ID_Participante) }}"
+      method="POST"
+      class="d-inline"
+    >
+      <button
+        type="submit"
+        class="btn btn-danger custom-delete-btn"
+        {#
+        Nova
+        classe
+        para
+        o
+        botão
+        Excluir
+        #}
+        onclick="return confirm('Tem certeza que deseja excluir este participante? Esta ação é irreversível.');"
+      >
+        Excluir
+      </button>
+    </form>
+    <a
+      href="{{ url_for('seguranca_bp.treinamentos_participantes_module') }}"
+      class="btn btn-secondary custom-cancel-btn"
+      >Cancelar</a
+    >
+    {# Botão Cancelar que retorna à lista #}
+  </div>
+</div>
+
+<style>
+  /* Estilos Customizados para o Título como Faixa */
+  .title-band {
+    background-color: #212529; /* Preto ou cinza escuro */
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .title-band h1 {
+    color: white;
+    margin-bottom: 0;
+    font-size: 1.5rem; /* Título menor para design minimalista */
+  }
+
+  /* Estilos para o Container Principal do Formulário (Fumê, Estreito, 3D) */
+  .custom-form-container {
+    max-width: 700px; /* Um pouco mais largo que os formulários de adição/edição para caber os detalhes */
+    margin-left: auto;
+    margin-right: auto; /* Centralizado */
+    background-color: rgba(
+      33,
+      37,
+      41,
+      0.85
+    ); /* Fundo preto com transparência (vidro fumê) */
+    border: 1px solid #000000; /* Borda preta fina */
+    border-radius: 0.75rem; /* Cantos arredondados */
+    box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.3),
+      0 0.25rem 0.5rem rgba(0, 0, 0, 0.2); /* Efeito 3D mais pronunciado */
+    padding: 1.5rem; /* Padding interno reduzido */
+    position: relative;
+    transform: translateY(-3px); /* Leve elevação */
+  }
+
+  /* Estilos para o Card de Detalhes dentro do container */
+  .custom-details-card {
+    background-color: rgba(
+      255,
+      255,
+      255,
+      0.9
+    ); /* Fundo branco semi-transparente para o card */
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: #212529; /* Cor do texto padrão para o card */
+  }
+
+  /* Estilos para o título dentro do card de detalhes */
+  .custom-details-title {
+    color: #212529; /* Cor do título dentro do card */
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding-bottom: 0.5rem;
+  }
+
+  /* Estilos para as labels (negrito) e valores dos detalhes */
+  .custom-details-label {
+    color: #343a40; /* Cor para as labels dos detalhes */
+    font-size: 0.9rem;
+  }
+
+  .custom-details-value {
+    color: #495057; /* Cor para os valores dos detalhes */
+    font-size: 0.9rem;
+  }
+
+  /* Estilos para os Botões "Salvar/Editar" e "Cancelar" (Mais Sofisticados) */
+  .custom-submit-btn,
+  .custom-cancel-btn,
+  .custom-delete-btn,
+  .custom-print-btn {
+    /* Incluindo o print aqui */
+    padding: 0.6rem 1.2rem; /* Padding reduzido */
+    border-radius: 0.5rem; /* Cantos arredondados */
+    font-size: 0.9rem; /* Tamanho de fonte menor */
+    font-weight: 600; /* Peso da fonte maior */
+    transition: all 0.3s ease-in-out; /* Transição suave */
+    border: none; /* Remove borda padrão */
+    cursor: pointer; /* Cursor de pointer */
+    position: relative; /* Para efeitos de posicionamento */
+    overflow: hidden; /* Para efeitos de animação */
+    margin-left: 0.5rem; /* Margem entre botões */
+  }
+
+  .custom-submit-btn {
+    background: linear-gradient(135deg, #198754, #157347); /* Gradiente verde */
+    color: white;
+    box-shadow: 0 0.25rem 0.5rem rgba(25, 135, 84, 0.3);
+  }
+  .custom-submit-btn:hover {
+    background: linear-gradient(
+      135deg,
+      #157347,
+      #146c43
+    ); /* Gradiente mais escuro */
+    transform: translateY(-3px); /* Elevação no hover */
+    box-shadow: 0 0.5rem 1rem rgba(25, 135, 84, 0.4); /* Sombra mais pronunciada */
+  }
+  .custom-submit-btn:active {
+    transform: translateY(-1px); /* Menos elevação no click */
+  }
+
+  .custom-cancel-btn {
+    background: linear-gradient(135deg, #6c757d, #5c636a); /* Gradiente cinza */
+    color: white;
+    box-shadow: 0 0.25rem 0.5rem rgba(108, 117, 125, 0.3);
+  }
+  .custom-cancel-btn:hover {
+    background: linear-gradient(
+      135deg,
+      #5c636a,
+      #565e64
+    ); /* Gradiente mais escuro */
+    transform: translateY(-3px); /* Elevação no hover */
+    box-shadow: 0 0.5rem 1rem rgba(108, 117, 125, 0.4); /* Sombra mais pronunciada */
+  }
+  .custom-cancel-btn:active {
+    transform: translateY(-1px); /* Menos elevação no click */
+  }
+
+  /* Novo estilo para o botão Excluir */
+  .custom-delete-btn {
+    background: linear-gradient(
+      135deg,
+      #dc3545,
+      #c82333
+    ); /* Gradiente vermelho */
+    color: white;
+    box-shadow: 0 0.25rem 0.5rem rgba(220, 53, 69, 0.3);
+  }
+  .custom-delete-btn:hover {
+    background: linear-gradient(
+      135deg,
+      #c82333,
+      #bd2130
+    ); /* Gradiente vermelho mais escuro */
+    transform: translateY(-3px); /* Elevação no hover */
+    box-shadow: 0 0.5rem 1rem rgba(220, 53, 69, 0.4); /* Sombra mais pronunciada */
+  }
+  .custom-delete-btn:active {
+    transform: translateY(-1px);
+  }
+
+  /* Novo estilo para o botão Imprimir */
+  .custom-print-btn {
+    background: linear-gradient(135deg, #0d6efd, #0b5ed7); /* Azul Bootstrap */
+    color: white;
+    box-shadow: 0 0.25rem 0.5rem rgba(13, 110, 253, 0.3);
+  }
+  .custom-print-btn:hover {
+    background: linear-gradient(135deg, #0b5ed7, #0a58ca);
+    transform: translateY(-3px);
+    box-shadow: 0 0.5rem 1rem rgba(13, 110, 253, 0.4);
+  }
+  .custom-print-btn:active {
+    transform: translateY(-1px);
+  }
+
+  /* Efeito adicional de brilho nos botões */
+  .custom-submit-btn::before,
+  .custom-cancel-btn::before,
+  .custom-delete-btn::before,
+  .custom-print-btn::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent
+    );
+    transition: left 0.5s ease-in-out;
+  }
+  .custom-submit-btn:hover::before,
+  .custom-cancel-btn:hover::before,
+  .custom-delete-btn:hover::before,
+  .custom-print-btn:hover::before {
+    left: 100%;
+  }
+
+  /* Ajustes para responsividade */
+  @media (max-width: 768px) {
+    .custom-form-container {
+      max-width: 95%;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+    .title-band h1 {
+      font-size: 1.3rem;
+    }
+    .custom-details-label,
+    .custom-details-value {
+      font-size: 0.85rem;
+    }
+    .d-md-flex {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .custom-submit-btn,
+    .custom-cancel-btn,
+    .custom-delete-btn,
+    .custom-print-btn {
+      margin-left: 0 !important;
+      margin-bottom: 0.5rem; /* Espaçamento entre botões empilhados */
+    }
+  }
+
+  /* Estilos para impressão */
+  @media print {
+    .actions,
+    .back-link,
+    .main-header,
+    .main-footer,
+    .navbar {
+      /* Esconder elementos de navegação e botões */
+      display: none !important;
+    }
+    .container.custom-form-container {
+      box-shadow: none !important;
+      border: none !important;
+      background-color: transparent !important;
+      transform: none !important;
+      padding: 0 !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      color: #000; /* Texto preto para impressão */
+    }
+    h1,
+    h4,
+    h6,
+    p {
+      color: #000 !important; /* Forçar cor preta para textos */
+    }
+    .custom-details-card {
+      background-color: transparent !important;
+      box-shadow: none !important;
+      border: 1px solid #ccc !important; /* Adicionar borda leve para separar seções impressas */
+    }
+    .custom-details-title {
+      border-bottom-color: #ccc !important; /* Borda mais clara na impressão */
+    }
+  }
+
+  /* Adaptação dos estilos flash messages se já não estiverem no base.html */
+  .flash-messages {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 1rem;
+  }
+  .flash-messages li {
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+    border-radius: 0.25rem;
+    font-weight: bold;
+  }
+  .flash-messages li.success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+  }
+  .flash-messages li.danger {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+  }
+  .flash-messages li.info {
+    color: #0c5460;
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+  }
+</style>
+{% endblock %}

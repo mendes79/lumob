@@ -1,5 +1,6 @@
 # app.py
 # rev01 - integração do campo email da tabela usuarios no app.py
+# rev02 - Correção do erro 'now is undefined' no template welcome.html
 
 #################################################################
 # 0. CONFIGURAÇÕES INICIAIS
@@ -10,7 +11,7 @@
 # ===============================================================
 
 # Necessária para carregar credenciais e senhas do .env
-import os 
+import os
 from dotenv import load_dotenv # Idem
 
 from flask import Flask, render_template, redirect, url_for, request, flash, session, get_flashed_messages, jsonify
@@ -58,12 +59,15 @@ app.config['DB_CONFIG'] = db_config # Atribui a variável global a app.config
 # Disponibilizar date.today() como 'today' no ambiente Jinja2 para aniversariantes do mês
 # Isso permitirá usar 'today()' no HTML
 # Alternativamente, para usar 'now()', você precisaria importar 'datetime' e usar 'datetime.now'
-app.jinja_env.globals.update(today=date.today) 
+# REMOVIDO: app.jinja_env.globals.update(today=date.today)
+# Justificativa: Vamos passar datetime.now() diretamente para o template welcome.html,
+# o que é mais explícito para o uso no rodapé. A função 'today' para aniversariantes
+# (se utilizada) pode ser passada da mesma forma ou de forma mais específica no seu blueprint.
 
 # Inicialização do Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = 'login' 
+login_manager.login_view = 'login'
 # Se o usuário tentar acessar uma página protegida sem estar logado, será redirecionado para 'login'
 
 # Classe User para Flask-Login
@@ -83,7 +87,7 @@ class User(UserMixin):
 
     # Método auxiliar para verificar se o usuário tem permissão para um módulo
     def can_access_module(self, module_name):
-        if self.role == 'admin':                # Admin sempre tem acesso total, ignora permissões de módulo
+        if self.role == 'admin':            # Admin sempre tem acesso total, ignora permissões de módulo
             return True
         return module_name in self.permissions  # Verifica se o módulo está na lista de permissões do usuário
 
@@ -132,6 +136,7 @@ def login():
 
                 if user_record:
                     user_permissions = user_manager.get_user_permissions(user_record['id'])
+                    # Certifique-se de que 'email' existe no user_record, use .get() para segurança
                     user = User(user_record['id'], user_record['username'], user_record['role'], user_record.get('email'), user_permissions)
                     login_user(user)
                     # --- REMOVIDO: flash('Login bem-sucedido!', 'success') para evitar redundância ---
@@ -166,6 +171,7 @@ def welcome():
     try:
         with DatabaseManager(**db_config) as db_base:
             user_manager = UserManager(db_base)
+            # Garante que as permissões e email do usuário atual estejam atualizadas
             current_user.permissions = user_manager.get_user_permissions(current_user.id)
             updated_user_data = user_manager.find_user_by_id(current_user.id)
             if updated_user_data:
@@ -185,7 +191,13 @@ def welcome():
     except Exception as e:
         print(f"Erro ao obter todos os módulos para welcome.html: {e}")
 
-    return render_template('welcome.html', user=current_user, all_modules_db=all_modules_db)
+    # CORREÇÃO: Passar o objeto datetime.now() explicitamente para o template
+    return render_template(
+        'welcome.html',
+        user=current_user,
+        all_modules_db=all_modules_db,
+        now=datetime.now() # AGORA SIM: 'now' será definido no template!
+    )
 
 #################################################################
 # 99. REGISTRO DOS BLUEPRINTS (NOVO)
@@ -196,4 +208,6 @@ app.register_blueprint(obras_bp) # Registra o Blueprint do Módulo Obras
 app.register_blueprint(seguranca_bp)
 
 if __name__ == '__main__':
+    # Carrega variáveis de ambiente do arquivo .env
+    load_dotenv() # É boa prática carregar as variáveis de ambiente antes de usar osenv()
     app.run(debug=True)

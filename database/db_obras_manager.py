@@ -949,7 +949,18 @@ class ObrasManager:
         """
         result = self.db.execute_query(query, (seguro_id,), fetch_results=True)
         if result:
-            return self._format_date_fields(result[0])
+            item = result[0] # Pega o dicionário de resultado
+            
+            # --- NOVO: TRATAMENTO EXPLÍCITO PARA VALOR_SEGURADO ---
+            valor = item.get('Valor_Segurado')
+            if valor is not None:
+                try:
+                    item['Valor_Segurado'] = float(valor)
+                except (ValueError, TypeError):
+                    item['Valor_Segurado'] = None
+            # --- FIM DO NOVO TRATAMENTO ---
+
+            return self._format_date_fields(item) # Formata as datas por último
         return None
 
     def update_seguro(self, seguro_id, id_obras, numero_apolice, seguradora, tipo_seguro, valor_segurado, data_inicio_vigencia, data_fim_vigencia, status_seguro, observacoes_seguro):

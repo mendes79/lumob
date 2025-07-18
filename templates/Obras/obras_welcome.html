@@ -3,166 +3,662 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LUMOB - Módulo Obras (Visão Geral)</title>
+    <title>LUMOB - Módulo Obras</title>
     <link
       rel="stylesheet"
-      href="{{ url_for('static', filename='css/style_welcome.css') }}"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
     />
     <style>
-      /* Estilos básicos para o container e cabeçalho */
+      /* Reset e variáveis CSS - IDÊNTICO AO PESSOAL_WELCOME.HTML */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #34495e;
+        --accent-color: #3498db;
+        --success-color: #27ae60;
+        --warning-color: #f39c12;
+        --danger-color: #e74c3c;
+        --light-gray: #ecf0f1;
+        --medium-gray: #bdc3c7;
+        --dark-gray: #7f8c8d;
+        --text-dark: #2c3e50;
+        --text-light: #ffffff;
+        --glass-bg: rgba(255, 255, 255, 0.95);
+        --shadow-light: 0 4px 20px rgba(0, 0, 0, 0.08);
+        --shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.12);
+        --shadow-heavy: 0 16px 48px rgba(0, 0, 0, 0.15);
+        --shadow-intense: 0 20px 60px rgba(0, 0, 0, 0.25);
+        --glow-accent: 0 0 20px rgba(52, 152, 219, 0.3);
+        --glow-intense: 0 0 40px rgba(52, 152, 219, 0.5);
+      }
+
+      /* Estilos globais */
       body {
-        font-family: sans-serif;
-        background-color: #f4f4f4;
-        color: #333;
-        margin: 20px;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+        color: var(--text-dark);
+        line-height: 1.6;
+        overflow-x: hidden;
       }
-      .container {
-        max-width: 900px;
-        margin: 50px auto;
-        padding: 20px;
-        background-color: #fff;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+
+      /* Container principal */
+      .main-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+        position: relative;
       }
-      h1 {
+
+      /* Efeito de partículas de fundo */
+      .main-container::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: radial-gradient(
+            circle at 20% 20%,
+            rgba(255, 255, 255, 0.1) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 80% 80%,
+            rgba(255, 255, 255, 0.1) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 40% 60%,
+            rgba(255, 255, 255, 0.05) 0%,
+            transparent 50%
+          );
+        pointer-events: none;
+      }
+
+      /* Container de conteúdo */
+      .content-container {
+        max-width: 1200px;
+        width: 100%;
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        box-shadow: var(--shadow-heavy);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 3rem;
+        position: relative;
+        z-index: 1;
+        animation: fadeInUp 0.8s ease-out;
+      }
+
+      /* Animações */
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(40px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes slideInLeft {
+        from {
+          opacity: 0;
+          transform: translateX(-30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes scaleIn {
+        from {
+          opacity: 0;
+          transform: scale(0.9);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      /* REMOVIDAS: @keyframes pulseGlow, @keyframes floatUp, @keyframes shimmer */
+
+      /* Cabeçalho */
+      .header {
         text-align: center;
-        color: #0056b3;
-        margin-bottom: 30px;
+        margin-bottom: 3rem;
+        position: relative;
       }
+
+      .title-band {
+        background: linear-gradient(
+          135deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        padding: 1.5rem;
+        border-radius: 16px;
+        margin-bottom: 1rem;
+        box-shadow: var(--shadow-medium);
+        animation: slideInLeft 0.8s ease-out 0.2s both;
+      }
+
+      .title-band h1 {
+        color: var(--text-light);
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+      }
+
+      .title-band h1 i {
+        font-size: 2rem;
+        opacity: 0.9;
+      }
+
+      .subtitle {
+        color: var(--dark-gray);
+        font-size: 1.1rem;
+        font-weight: 400;
+        margin-top: 0.5rem;
+        animation: slideInLeft 0.8s ease-out 0.4s both;
+      }
+
+      /* Mensagens flash */
+      .flash-messages {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 2rem 0;
+        animation: scaleIn 0.6s ease-out 0.6s both;
+      }
+
+      .flash-messages li {
+        padding: 1rem 1.5rem;
+        margin-bottom: 1rem;
+        border-radius: 12px;
+        font-weight: 500;
+        font-size: 0.95rem;
+        box-shadow: var(--shadow-light);
+        border-left: 4px solid;
+        backdrop-filter: blur(10px);
+        animation: slideInLeft 0.6s ease-out;
+      }
+
+      .flash-messages li.success {
+        background: rgba(39, 174, 96, 0.1);
+        color: var(--success-color);
+        border-left-color: var(--success-color);
+      }
+
+      .flash-messages li.danger {
+        background: rgba(231, 76, 60, 0.1);
+        color: var(--danger-color);
+        border-left-color: var(--danger-color);
+      }
+
+      .flash-messages li.info {
+        background: rgba(52, 152, 219, 0.1);
+        color: var(--accent-color);
+        border-left-color: var(--accent-color);
+      }
+
+      .flash-messages li.warning {
+        background: rgba(243, 156, 18, 0.1);
+        color: var(--warning-color);
+        border-left-color: var(--warning-color);
+      }
+
+      /* Grid de módulos */
       .module-grid {
         display: grid;
-        grid-template-columns: repeat(
-          auto-fit,
-          minmax(250px, 1fr)
-        ); /* Colunas flexíveis */
-        gap: 20px;
-        justify-content: center;
+        grid-template-columns: repeat(auto-fit, minmax(224px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
       }
+
+      /* Cards de módulos */
       .module-card {
-        background-color: #f0f8ff; /* Um azul claro */
-        border: 1px solid #cceeff;
-        border-radius: 8px;
-        padding: 20px;
-        text-align: center;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        transition: transform 0.2s, box-shadow 0.2s;
-        display: flex; /* Para centralizar o conteúdo verticalmente */
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        min-height: 120px; /* Altura mínima para os cartões */
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 1.4rem;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: var(--shadow-light);
+        transition: transform 0.3s ease, box-shadow 0.3s ease,
+          border-color 0.3s ease; /* Transição para as novas propriedades */
+        position: relative;
+        overflow: hidden;
+        animation: scaleIn 0.6s ease-out both;
+        cursor: pointer;
+        z-index: 2; /* Garante que o card esteja acima de qualquer fundo */
       }
+
+      .module-card:nth-child(1) {
+        animation-delay: 0.1s;
+      }
+      .module-card:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .module-card:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+      .module-card:nth-child(4) {
+        animation-delay: 0.4s;
+      }
+      .module-card:nth-child(5) {
+        animation-delay: 0.5s;
+      }
+      .module-card:nth-child(6) {
+        animation-delay: 0.6s;
+      }
+      .module-card:nth-child(7) {
+        animation-delay: 0.7s;
+      }
+      .module-card:nth-child(8) {
+        animation-delay: 0.8s;
+      }
+      .module-card:nth-child(9) {
+        animation-delay: 0.9s;
+      }
+      .module-card:nth-child(10) {
+        animation-delay: 1s;
+      }
+
+      /* REMOVIDO: Efeito shimmer e brilho através de ::before e ::after */
+      /* Remova todo o bloco de código para .module-card::before e .module-card::after */
+      /* .module-card::before { ... } */
+      /* .module-card::after { ... } */
+
+      /* Hover effects - Nova implementação */
       .module-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        transform: translateY(-8px) scale(1.02); /* Eleva e escala ligeiramente */
+        box-shadow: var(--shadow-heavy), var(--glow-accent); /* Sombra mais intensa com brilho */
+        border-color: var(--accent-color); /* Borda destaca */
       }
+
+      .module-card-icon {
+        width: 42px;
+        height: 42px;
+        background: linear-gradient(135deg, var(--accent-color), #5dade2);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        box-shadow: var(--shadow-light);
+        transition: transform 0.3s ease, box-shadow 0.3s ease,
+          background 0.3s ease; /* Transição para o ícone */
+        position: relative;
+        z-index: 2;
+      }
+
+      .module-card:hover .module-card-icon {
+        transform: scale(1.15); /* Ícone escala um pouco mais */
+        box-shadow: var(--glow-accent), 0 0 15px rgba(52, 152, 219, 0.4); /* Sombra do ícone com brilho */
+        background: linear-gradient(
+          135deg,
+          #5dade2,
+          var(--accent-color)
+        ); /* Inverte o gradiente */
+      }
+
+      .module-card-icon i {
+        font-size: 1.05rem;
+        color: var(--text-light);
+        transition: text-shadow 0.3s ease;
+      }
+
+      .module-card:hover .module-card-icon i {
+        text-shadow: 0 0 12px rgba(255, 255, 255, 0.9);
+      }
+
       .module-card a {
-        text-decoration: none;
-        color: #0056b3; /* Cor do link */
-        font-size: 1.2em;
-        font-weight: bold;
-      }
-      .module-card a:hover {
-        text-decoration: underline;
-      }
-      .module-card p {
-        margin-top: 10px;
-        font-size: 0.9em;
-        color: #666;
-      }
-      .back-link {
         display: block;
-        margin-top: 30px;
-        text-align: center;
-      }
-      .back-link a {
-        color: #007bff;
         text-decoration: none;
+        color: var(--text-dark);
+        transition: all 0.3s ease;
+        position: relative;
+        z-index: 2;
+      }
+
+      .module-card-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-bottom: 0.7rem;
+        color: var(--primary-color);
+        text-align: center;
+        transition: color 0.3s ease, transform 0.3s ease;
+        line-height: 1.3;
+      }
+
+      .module-card:hover .module-card-title {
+        color: var(--accent-color);
+        transform: translateY(-2px);
+        text-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+      }
+
+      .module-card-description {
+        color: var(--dark-gray);
+        font-size: 0.63rem;
+        line-height: 1.4;
+        text-align: center;
+        margin: 0;
+        transition: color 0.3s ease, transform 0.3s ease;
+      }
+
+      .module-card:hover .module-card-description {
+        color: var(--text-dark);
+        transform: translateY(-1px);
+      }
+
+      /* Botão de voltar */
+      .back-button-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 2rem;
+      }
+
+      .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem 2rem;
+        background: linear-gradient(
+          135deg,
+          var(--dark-gray),
+          var(--medium-gray)
+        );
+        color: var(--text-light);
+        text-decoration: none;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        box-shadow: var(--shadow-light);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+        animation: scaleIn 0.6s ease-out 1.2s both;
+      }
+
+      .back-button::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
+        transition: left 0.6s ease-in-out;
+      }
+
+      .back-button:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-medium);
+        background: linear-gradient(
+          135deg,
+          var(--medium-gray),
+          var(--dark-gray)
+        );
+      }
+
+      .back-button:hover::before {
+        left: 100%;
+      }
+      .back-button:active {
+        transform: translateY(-1px);
+      }
+
+      /* Responsividade */
+      @media (max-width: 768px) {
+        .content-container {
+          padding: 2rem 1.5rem;
+          border-radius: 16px;
+        }
+        .title-band h1 {
+          font-size: 1.8rem;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+        .module-grid {
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 1rem;
+        }
+        .module-card {
+          padding: 1.2rem;
+        }
+        .module-card-title {
+          font-size: 0.8rem;
+        }
+        .module-card-description {
+          font-size: 0.6rem;
+        }
+        .module-card-icon {
+          width: 38px;
+          height: 38px;
+        }
+        .module-card-icon i {
+          font-size: 0.95rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .main-container {
+          padding: 1rem 0.5rem;
+        }
+        .content-container {
+          padding: 1.5rem 1rem;
+        }
+        .title-band {
+          padding: 1rem;
+        }
+        .title-band h1 {
+          font-size: 1.5rem;
+        }
+        .module-grid {
+          grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        }
+        .module-card {
+          padding: 1rem;
+        }
+        .module-card-icon {
+          width: 35px;
+          height: 35px;
+        }
+        .module-card-icon i {
+          font-size: 0.85rem;
+        }
+        .module-card-title {
+          font-size: 0.75rem;
+        }
+        .module-card-description {
+          font-size: 0.55rem;
+        }
       }
     </style>
   </head>
   <body>
-    <div class="container">
-      <h1>Módulo de Obras</h1>
-      <div class="module-grid">
-        {# NOVO CARD PARA O DASHBOARD DE OBRAS #}
-        <div class="module-card">
-          <a href="{{ url_for('obras_bp.obras_dashboard') }}"
-            >Dashboard de Obras</a
+    <div class="main-container">
+      <div class="content-container">
+        <div class="header">
+          <div class="title-band">
+            <h1>
+              <i class="fas fa-hard-hat"></i>
+              Módulo de Obras
+            </h1>
+          </div>
+          <p class="subtitle">Planejamento, execução e controle de obras</p>
+        </div>
+
+        <ul class="flash-messages"></ul>
+
+        <div class="module-grid">
+          <div
+            class="module-card"
+            onclick="location.href=this.querySelector('a').href"
           >
-          <p>Visão geral de indicadores chave e resumos do módulo de obras.</p>
-        </div>
-        {# FIM DO NOVO CARD #}
-        <div class="module-card">
-          <a href="{{ url_for('obras_bp.obras_relatorio_andamento') }}"
-            >Relatório de Andamento</a
+            <div class="module-card-icon">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            <a href="{{ url_for('obras_bp.obras_dashboard') }}">
+              <h3 class="module-card-title">Dashboard de Obras</h3>
+              <p class="module-card-description">
+                Visão geral de indicadores chave e resumos do módulo de obras.
+              </p>
+            </a>
+          </div>
+
+          <div
+            class="module-card"
+            onclick="location.href=this.querySelector('a').href"
           >
-          <p>Acompanhe o progresso físico atual de cada obra.</p>
-        </div>
-        {# CARD EXISTENTE PARA GERENCIAR OBRAS - LINK AJUSTADO #}
-        <div class="module-card">
-          <a href="{{ url_for('obras_bp.gerenciar_obras_lista') }}"
-            >Gerenciar Obras</a
+            <div class="module-card-icon"><i class="fas fa-tasks"></i></div>
+            <a href="{{ url_for('obras_bp.obras_relatorio_andamento') }}">
+              <h3 class="module-card-title">Relatório de Andamento</h3>
+              <p class="module-card-description">
+                Acompanhe o progresso físico atual de cada obra.
+              </p>
+            </a>
+          </div>
+
+          <div
+            class="module-card"
+            onclick="location.href=this.querySelector('a').href"
           >
-          <p>Planejamento, acompanhamento e controle das obras em andamento.</p>
-        </div>
-        {# FIM DO CARD AJUSTADO #} {# Demais cards de submódulos - Mantenho sua
-        ordem original #}
-        <div class="module-card">
-          <a href="{{ url_for('obras_bp.clientes_module') }}"
-            >Gerenciar Clientes</a
+            <div class="module-card-icon"><i class="fas fa-building"></i></div>
+            <a href="{{ url_for('obras_bp.gerenciar_obras_lista') }}">
+              <h3 class="module-card-title">Gerenciar Obras</h3>
+              <p class="module-card-description">
+                Planejamento, acompanhamento e controle das obras em andamento.
+              </p>
+            </a>
+          </div>
+
+          <div
+            class="module-card"
+            onclick="location.href=this.querySelector('a').href"
           >
-          <p>Cadastro e controle de todos os clientes da LUMOB.</p>
-        </div>
-        <div class="module-card">
-          <a href="{{ url_for('obras_bp.contratos_module') }}"
-            >Gerenciar Contratos</a
+            <div class="module-card-icon">
+              <i class="fas fa-user-friends"></i>
+            </div>
+            <a href="{{ url_for('obras_bp.clientes_module') }}">
+              <h3 class="module-card-title">Gerenciar Clientes</h3>
+              <p class="module-card-description">
+                Cadastro e controle de todos os clientes da LUMOB.
+              </p>
+            </a>
+          </div>
+
+          <div
+            class="module-card"
+            onclick="location.href=this.querySelector('a').href"
           >
-          <p>Cadastro e gestão de contratos com clientes e subempreiteiros.</p>
-        </div>
-        <div class="module-card">
-          <a href="{{ url_for('obras_bp.arts_module') }}">Gerenciar ARTs</a>
-          <p>Controle de Anotações de Responsabilidade Técnica.</p>
-        </div>
-        <div class="module-card">
-          <a href="{{ url_for('obras_bp.medicoes_module') }}"
-            >Gerenciar Medições</a
+            <div class="module-card-icon">
+              <i class="fas fa-file-signature"></i>
+            </div>
+            <a href="{{ url_for('obras_bp.contratos_module') }}">
+              <h3 class="module-card-title">Gerenciar Contratos</h3>
+              <p class="module-card-description">
+                Cadastro e gestão de contratos com clientes e subempreiteiros.
+              </p>
+            </a>
+          </div>
+
+          <div
+            class="module-card"
+            onclick="location.href=this.querySelector('a').href"
           >
-          <p>Registro e acompanhamento das medições físicas e financeiras.</p>
-        </div>
-        <div class="module-card">
-          <a href="{{ url_for('obras_bp.avancos_fisicos_module') }}"
-            >Gerenciar Avanços Físicos</a
+            <div class="module-card-icon"><i class="fas fa-stamp"></i></div>
+            <a href="{{ url_for('obras_bp.arts_module') }}">
+              <h3 class="module-card-title">Gerenciar ARTs</h3>
+              <p class="module-card-description">
+                Controle de Anotações de Responsabilidade Técnica.
+              </p>
+            </a>
+          </div>
+
+          <div
+            class="module-card"
+            onclick="location.href=this.querySelector('a').href"
           >
-          <p>Registro e acompanhamento do progresso físico das obras.</p>
-        </div>
-        <div class="module-card">
-          <a href="{{ url_for('obras_bp.reidis_module') }}">Gerenciar REIDIs</a>
-          <p>
-            Gestão dos Registros de Incentivo ao Desenvolvimento da
-            Infraestrutura.
-          </p>
-        </div>
-        <div class="module-card">
-          <a href="{{ url_for('obras_bp.seguros_module') }}"
-            >Gerenciar Seguros</a
+            <div class="module-card-icon">
+              <i class="fas fa-ruler-combined"></i>
+            </div>
+            <a href="{{ url_for('obras_bp.medicoes_module') }}">
+              <h3 class="module-card-title">Gerenciar Medições</h3>
+              <p class="module-card-description">
+                Registro e acompanhamento das medições físicas e financeiras.
+              </p>
+            </a>
+          </div>
+
+          <div
+            class="module-card"
+            onclick="location.href=this.querySelector('a').href"
           >
-          <p>Cadastro e acompanhamento de apólices de seguros para as obras.</p>
+            <div class="module-card-icon"><i class="fas fa-chart-pie"></i></div>
+            <a href="{{ url_for('obras_bp.avancos_fisicos_module') }}">
+              <h3 class="module-card-title">Gerenciar Avanços Físicos</h3>
+              <p class="module-card-description">
+                Registro e acompanhamento do progresso físico das obras.
+              </p>
+            </a>
+          </div>
+
+          <div
+            class="module-card"
+            onclick="location.href=this.querySelector('a').href"
+          >
+            <div class="module-card-icon"><i class="fas fa-scroll"></i></div>
+            <a href="{{ url_for('obras_bp.reidis_module') }}">
+              <h3 class="module-card-title">Gerenciar REIDIs</h3>
+              <p class="module-card-description">
+                Gestão dos Registros de Incentivo ao Desenvolvimento da
+                Infraestrutura.
+              </p>
+            </a>
+          </div>
+
+          <div
+            class="module-card"
+            onclick="location.href=this.querySelector('a').href"
+          >
+            <div class="module-card-icon">
+              <i class="fas fa-shield-alt"></i>
+            </div>
+            <a href="{{ url_for('obras_bp.seguros_module') }}">
+              <h3 class="module-card-title">Gerenciar Seguros</h3>
+              <p class="module-card-description">
+                Cadastro e acompanhamento de apólices de seguros para as obras.
+              </p>
+            </a>
+          </div>
         </div>
-        {# Comentários de cards futuros mantidos por sua preferência #} {#
-        <div class="module-card">
-          <a href="#">Orçamentos</a>
-          <p>Elaboração e controle orçamentário dos projetos.</p>
+
+        <div class="back-button-container">
+          <a href="{{ url_for('welcome') }}" class="back-button">
+            <i class="fas fa-arrow-left"></i>
+            Voltar para a Página Principal
+          </a>
         </div>
-        #} {#
-        <div class="module-card">
-          <a href="#">Compras e Suprimentos</a>
-          <p>Gestão de compras e estoque de materiais.</p>
-        </div>
-        #}
-      </div>
-      <div class="back-link">
-        <a href="{{ url_for('welcome') }}">Voltar para a Página Principal</a>
       </div>
     </div>
   </body>

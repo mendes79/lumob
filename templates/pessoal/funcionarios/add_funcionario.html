@@ -1,87 +1,66 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adicionar Funcionário - LUMOB</title>
-    <style>
-        body { font-family: sans-serif; margin: 20px; }
-        .container { max-width: 900px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
-        h1 { text-align: center; color: #333; }
-        .section-title { margin-top: 25px; margin-bottom: 15px; background-color: #e9ecef; padding: 10px; border-radius: 5px; font-weight: bold; }
-        form div { margin-bottom: 10px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"], input[type="date"], input[type="number"], select, textarea {
-            width: calc(100% - 22px); padding: 10px; border: 1px solid #ddd; border-radius: 4px;
-            box-sizing: border-box;
-        }
-        button {
-            padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px;
-            cursor: pointer; font-size: 16px; margin-right: 10px;
-        }
-        button:hover { background-color: #0056b3; }
-        .flash { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
-        .flash.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .flash.danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6fb; }
-        .cancel-link {
-            padding: 10px 15px; background-color: #6c757d; color: white; border: none; border-radius: 4px;
-            cursor: pointer; font-size: 16px; text-decoration: none; display: inline-block; vertical-align: middle;
-        }
-        .cancel-link:hover { background-color: #5a6268; }
-        .back-link { display: block; text-align: center; margin-top: 20px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Adicionar Novo Funcionário</h1>
+{% extends 'base.html' %}
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
+{% block title %}Adicionar Funcionário - LUMOB{% endblock %}
+
+{% block messages %}{% endblock %} 
+
+{% block content %}
+<div class="container custom-form-container mt-4 mb-4 p-4"> {# Container customizado, margens e padding #}
+    {# Título dentro da faixa preta #}
+    <div class="title-band mb-2"> {# mb-2 para margem inferior menor para o botão Voltar #}
+        <h1 class="text-white text-center mb-0"><i class="fas fa-user-plus me-3"></i>Adicionar Novo Funcionário</h1> {# Ícone de adicionar usuário #}
+    </div>
+
+    {# Bloco para Flash Messages - Mantido dentro do content, igual aos outros formulários #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class="flash-messages">
                 {% for category, message in messages %}
-                    <div class="flash {{ category }}">{{ message }}</div>
+                    <li class="{{ category }}">{{ message }}</li>
                 {% endfor %}
-            {% endif %}
-        {% endwith %}
+            </ul>
+        {% endif %}
+    {% endwith %}
 
-        <form action="{{ url_for('pessoal_bp.add_funcionario') }}" method="POST">
-            <div class="section-title">Dados Cadastrais</div>
-            <div>
-                <label for="matricula">Matrícula:</label>
-                <input type="text" id="matricula" name="matricula" value="{{ form_data['matricula']|default(next_matricula) }}" required>
-            </div>
-            <div>
-                <label for="nome_completo">Nome Completo:</label>
-                <input type="text" id="nome_completo" name="nome_completo" value="{{ form_data['nome_completo']|default('') }}" required>
-            </div>
-            <div>
-                <label for="data_admissao">Data de Admissão:</label>
-                <input type="date" id="data_admissao" name="data_admissao" value="{{ form_data['data_admissao']|default('') }}" required>
-            </div>
-            <div>
-                <label for="id_cargos">Cargo:</label>
-                <select id="id_cargos" name="id_cargos" required>
-                    <option value="">Selecione um Cargo</option>
-                    {% for cargo in all_cargos %}
-                        <option value="{{ cargo.ID_Cargos }}" {% if form_data['id_cargos']|default('')|int == cargo.ID_Cargos %}selected{% endif %}>
-                            {{ cargo.Nome_Cargo }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div>
-                <label for="id_niveis">Nível:</label>
-                <select id="id_niveis" name="id_niveis" required>
-                    <option value="">Selecione um Nível</option>
-                    {% for nivel in all_niveis %}
+    <form action="{{ url_for('pessoal_bp.add_funcionario') }}" method="POST">
+        <div class="section-title custom-section-title">Dados Cadastrais</div>
+        <div class="mb-3">
+            <label for="matricula" class="form-label custom-form-label">Matrícula:</label>
+            <input type="text" id="matricula" name="matricula" class="form-control custom-form-control" value="{{ form_data['matricula']|default(next_matricula) }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="nome_completo" class="form-label custom-form-label">Nome Completo:</label>
+            <input type="text" id="nome_completo" name="nome_completo" class="form-control custom-form-control" value="{{ form_data['nome_completo']|default('') }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="data_admissao" class="form-label custom-form-label">Data de Admissão:</label>
+            <input type="date" id="data_admissao" name="data_admissao" class="form-control custom-form-control" value="{{ form_data['data_admissao']|default('') }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="id_cargos" class="form-label custom-form-label">Cargo:</label>
+            <select id="id_cargos" name="id_cargos" class="form-select custom-form-control" required>
+                <option value="">Selecione um Cargo</option>
+                {% for cargo in all_cargos %}
+                    <option value="{{ cargo.ID_Cargos }}" {% if form_data['id_cargos']|default('')|int == cargo.ID_Cargos %}selected{% endif %}>
+                        {{ cargo.Nome_Cargo }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="id_niveis" class="form-label custom-form-label">Nível:</label>
+            <select id="id_niveis" name="id_niveis" class="form-select custom-form-control" required>
+                <option value="">Selecione um Nível</option>
+                {% for nivel in all_niveis %}
                         <option value="{{ nivel.ID_Niveis }}" {% if form_data['id_niveis']|default('')|int == nivel.ID_Niveis %}selected{% endif %}>
                             {{ nivel.Nome_Nivel }}
                         </option>
                     {% endfor %}
                 </select>
             </div>
-            <div>
-                <label for="status">Status:</label>
-                <select id="status" name="status" required>
+            <div class="mb-3">
+                <label for="status" class="form-label custom-form-label">Status:</label>
+                <select id="status" name="status" class="form-select custom-form-control" required>
                     <option value="">Selecione o Status</option>
                     {% for status_opt in status_options %}
                         <option value="{{ status_opt }}" {% if form_data['status']|default('') == status_opt %}selected{% endif %}>{{ status_opt }}</option>
@@ -89,160 +68,335 @@
                 </select>
             </div>
 
-            <div class="section-title">Dados Pessoais e Documentos</div>
-            <div>
-                <label for="rg_numero">RG Número:</label>
-                <input type="text" id="rg_numero" name="rg_numero" value="{{ form_data['rg_numero']|default('') }}">
+            <div class="section-title custom-section-title">Dados Pessoais e Documentos</div>
+            <div class="mb-3">
+                <label for="rg_numero" class="form-label custom-form-label">RG Número:</label>
+                <input type="text" id="rg_numero" name="rg_numero" class="form-control custom-form-control" value="{{ form_data['rg_numero']|default('') }}">
             </div>
-            <div>
-                <label for="rg_orgao_emissor">RG Órgão Emissor:</label>
-                <input type="text" id="rg_orgao_emissor" name="rg_orgao_emissor" value="{{ form_data['rg_orgao_emissor']|default('') }}">
+            <div class="mb-3">
+                <label for="rg_orgao_emissor" class="form-label custom-form-label">RG Órgão Emissor:</label>
+                <input type="text" id="rg_orgao_emissor" name="rg_orgao_emissor" class="form-control custom-form-control" value="{{ form_data['rg_orgao_emissor']|default('') }}">
             </div>
-            <div>
-                <label for="rg_uf_emissor">RG UF Emissor:</label>
-                <input type="text" id="rg_uf_emissor" name="rg_uf_emissor" value="{{ form_data['rg_uf_emissor']|default('') }}">
+            <div class="mb-3">
+                <label for="rg_uf_emissor" class="form-label custom-form-label">RG UF Emissor:</label>
+                <input type="text" id="rg_uf_emissor" name="rg_uf_emissor" class="form-control custom-form-control" value="{{ form_data['rg_uf_emissor']|default('') }}">
             </div>
-            <div>
-                <label for="rg_data_emissao">RG Data Emissão:</label>
-                <input type="date" id="rg_data_emissao" name="rg_data_emissao" value="{{ form_data['rg_data_emissao']|default('') }}">
-            </div>
-
-            <div>
-                <label for="cpf_numero">CPF:</label>
-                <input type="text" id="cpf_numero" name="cpf_numero" value="{{ form_data['cpf_numero']|default('') }}">
+            <div class="mb-3">
+                <label for="rg_data_emissao" class="form-label custom-form-label">RG Data Emissão:</label>
+                <input type="date" id="rg_data_emissao" name="rg_data_emissao" class="form-control custom-form-control" value="{{ form_data['rg_data_emissao']|default('') }}">
             </div>
 
-            <div>
-                <label for="ctps_numero">CTPS Número:</label>
-                <input type="text" id="ctps_numero" name="ctps_numero" value="{{ form_data['ctps_numero']|default('') }}">
-            </div>
-            <div>
-                <label for="ctps_serie">CTPS Série:</label>
-                <input type="text" id="ctps_serie" name="ctps_serie" value="{{ form_data['ctps_serie']|default('') }}">
+            <div class="mb-3">
+                <label for="cpf_numero" class="form-label custom-form-label">CPF:</label>
+                <input type="text" id="cpf_numero" name="cpf_numero" class="form-control custom-form-control" value="{{ form_data['cpf_numero']|default('') }}">
             </div>
 
-            <div>
-                <label for="pispasep">PIS/PASEP:</label>
-                <input type="text" id="pispasep" name="pispasep" value="{{ form_data['pispasep']|default('') }}">
+            <div class="mb-3">
+                <label for="ctps_numero" class="form-label custom-form-label">CTPS Número:</label>
+                <input type="text" id="ctps_numero" name="ctps_numero" class="form-control custom-form-control" value="{{ form_data['ctps_numero']|default('') }}">
+            </div>
+            <div class="mb-3">
+                <label for="ctps_serie" class="form-label custom-form-label">CTPS Série:</label>
+                <input type="text" id="ctps_serie" name="ctps_serie" class="form-control custom-form-control" value="{{ form_data['ctps_serie']|default('') }}">
             </div>
 
-            <div>
-                <label for="cnh_numero">CNH Número:</label>
-                <input type="text" id="cnh_numero" name="cnh_numero" value="{{ form_data['cnh_numero']|default('') }}">
-            </div>
-            <div>
-                <label for="cnh_categoria">CNH Categoria:</label>
-                <input type="text" id="cnh_categoria" name="cnh_categoria" value="{{ form_data['cnh_categoria']|default('') }}">
-            </div>
-            <div>
-                <label for="cnh_data_validade">CNH Data Validade:</label>
-                <input type="date" id="cnh_data_validade" name="cnh_data_validade" value="{{ form_data['cnh_data_validade']|default('') }}">
-            </div>
-            <div>
-                <label for="cnh_orgao_emissor">CNH Órgão Emissor:</label>
-                <input type="text" id="cnh_orgao_emissor" name="cnh_orgao_emissor" value="{{ form_data['cnh_orgao_emissor']|default('') }}">
+            <div class="mb-3">
+                <label for="pispasep" class="form-label custom-form-label">PIS/PASEP:</label>
+                <input type="text" id="pispasep" name="pispasep" class="form-control custom-form-control" value="{{ form_data['pispasep']|default('') }}">
             </div>
 
-            <div>
-                <label for="titeleitor_numero">Título Eleitor Número:</label>
-                <input type="text" id="titeleitor_numero" name="titeleitor_numero" value="{{ form_data['titeleitor_numero']|default('') }}">
+            <div class="mb-3">
+                <label for="cnh_numero" class="form-label custom-form-label">CNH Número:</label>
+                <input type="text" id="cnh_numero" name="cnh_numero" class="form-control custom-form-control" value="{{ form_data['cnh_numero']|default('') }}">
             </div>
-            <div>
-                <label for="titeleitor_zona">Título Eleitor Zona:</label>
-                <input type="text" id="titeleitor_zona" name="titeleitor_zona" value="{{ form_data['titeleitor_zona']|default('') }}">
+            <div class="mb-3">
+                <label for="cnh_categoria" class="form-label custom-form-label">CNH Categoria:</label>
+                <input type="text" id="cnh_categoria" name="cnh_categoria" class="form-control custom-form-control" value="{{ form_data['cnh_categoria']|default('') }}">
             </div>
-            <div>
-                <label for="titeleitor_secao">Título Eleitor Seção:</label>
-                <input type="text" id="titeleitor_secao" name="titeleitor_secao" value="{{ form_data['titeleitor_secao']|default('') }}">
+            <div class="mb-3">
+                <label for="cnh_data_validade" class="form-label custom-form-label">CNH Data Validade:</label>
+                <input type="date" id="cnh_data_validade" name="cnh_data_validade" class="form-control custom-form-control" value="{{ form_data['cnh_data_validade']|default('') }}">
+            </div>
+            <div class="mb-3">
+                <label for="cnh_orgao_emissor" class="form-label custom-form-label">CNH Órgão Emissor:</label>
+                <input type="text" id="cnh_orgao_emissor" name="cnh_orgao_emissor" class="form-control custom-form-control" value="{{ form_data['cnh_orgao_emissor']|default('') }}">
             </div>
 
-            <div>
-                <label for="data_nascimento">Data de Nascimento:</label>
-                <input type="date" id="data_nascimento" name="data_nascimento" value="{{ form_data['data_nascimento']|default('') }}">
+            <div class="mb-3">
+                <label for="titeleitor_numero" class="form-label custom-form-label">Título Eleitor Número:</label>
+                <input type="text" id="titeleitor_numero" name="titeleitor_numero" class="form-control custom-form-control" value="{{ form_data['titeleitor_numero']|default('') }}">
             </div>
-            <div>
-                <label for="estado_civil">Estado Civil:</label>
-                <select id="estado_civil" name="estado_civil">
+            <div class="mb-3">
+                <label for="titeleitor_zona" class="form-label custom-form-label">Título Eleitor Zona:</label>
+                <input type="text" id="titeleitor_zona" name="titeleitor_zona" class="form-control custom-form-control" value="{{ form_data['titeleitor_zona']|default('') }}">
+            </div>
+            <div class="mb-3">
+                <label for="titeleitor_secao" class="form-label custom-form-label">Título Eleitor Seção:</label>
+                <input type="text" id="titeleitor_secao" name="titeleitor_secao" class="form-control custom-form-control" value="{{ form_data['titeleitor_secao']|default('') }}">
+            </div>
+
+            <div class="mb-3">
+                <label for="data_nascimento" class="form-label custom-form-label">Data de Nascimento:</label>
+                <input type="date" id="data_nascimento" name="data_nascimento" class="form-control custom-form-control" value="{{ form_data['data_nascimento']|default('') }}">
+            </div>
+            <div class="mb-3">
+                <label for="estado_civil" class="form-label custom-form-label">Estado Civil:</label>
+                <select id="estado_civil" name="estado_civil" class="form-select custom-form-control">
                     <option value="">Selecione</option>
                     {% for ec in estado_civil_options %}
                         <option value="{{ ec }}" {% if form_data['estado_civil']|default('') == ec %}selected{% endif %}>{{ ec }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div>
-                <label for="nacionalidade">Nacionalidade:</label>
-                <input type="text" id="nacionalidade" name="nacionalidade" value="{{ form_data['nacionalidade']|default('') }}">
+            <div class="mb-3">
+                <label for="nacionalidade" class="form-label custom-form-label">Nacionalidade:</label>
+                <input type="text" id="nacionalidade" name="nacionalidade" class="form-control custom-form-control" value="{{ form_data['nacionalidade']|default('') }}">
             </div>
-            <div>
-                <label for="naturalidade">Naturalidade:</label>
-                <input type="text" id="naturalidade" name="naturalidade" value="{{ form_data['naturalidade']|default('') }}">
+            <div class="mb-3">
+                <label for="naturalidade" class="form-label custom-form-label">Naturalidade:</label>
+                <input type="text" id="naturalidade" name="naturalidade" class="form-control custom-form-control" value="{{ form_data['naturalidade']|default('') }}">
             </div>
-            <div>
-                <label for="genero">Gênero:</label>
-                <select id="genero" name="genero">
+            <div class="mb-3">
+                <label for="genero" class="form-label custom-form-label">Gênero:</label>
+                <select id="genero" name="genero" class="form-select custom-form-control">
                     <option value="">Selecione</option>
                     {% for g in genero_options %}
                         <option value="{{ g }}" {% if form_data['genero']|default('') == g %}selected{% endif %}>{{ g }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div>
-                <label for="observacoes_doc">Observações Documentos:</label>
-                <textarea id="observacoes_doc" name="observacoes_doc">{{ form_data['observacoes_doc']|default('') }}</textarea>
+            <div class="mb-3">
+                <label for="observacoes_doc" class="form-label custom-form-label">Observações Documentos:</label>
+                <textarea id="observacoes_doc" name="observacoes_doc" class="form-control custom-form-control">{{ form_data['observacoes_doc']|default('') }}</textarea>
             </div>
-            <div>
-                <label for="link_foto">Link da Foto:</label>
-                <input type="text" id="link_foto" name="link_foto" value="{{ form_data['link_foto']|default('') }}">
+            <div class="mb-3">
+                <label for="link_foto" class="form-label custom-form-label">Link da Foto:</label>
+                <input type="text" id="link_foto" name="link_foto" class="form-control custom-form-control" value="{{ form_data['link_foto']|default('') }}">
             </div>
             
-            <div class="section-title">Endereço Residencial</div>
-            <div>
-                <label for="logradouro">Logradouro:</label>
-                <input type="text" id="logradouro" name="logradouro" value="{{ form_data['logradouro']|default('') }}">
+            <div class="section-title custom-section-title">Endereço Residencial</div>
+            <div class="mb-3">
+                <label for="logradouro" class="form-label custom-form-label">Logradouro:</label>
+                <input type="text" id="logradouro" name="logradouro" class="form-control custom-form-control" value="{{ form_data['logradouro']|default('') }}">
             </div>
-            <div>
-                <label for="numero_end">Número:</label>
-                <input type="text" id="numero_end" name="numero_end" value="{{ form_data['numero_end']|default('') }}">
+            <div class="mb-3">
+                <label for="numero_end" class="form-label custom-form-label">Número:</label>
+                <input type="text" id="numero_end" name="numero_end" class="form-control custom-form-control" value="{{ form_data['numero_end']|default('') }}">
             </div>
-            <div>
-                <label for="complemento">Complemento:</label>
-                <input type="text" id="complemento" name="complemento" value="{{ form_data['complemento']|default('') }}">
+            <div class="mb-3">
+                <label for="complemento" class="form-label custom-form-label">Complemento:</label>
+                <input type="text" id="complemento" name="complemento" class="form-control custom-form-control" value="{{ form_data['complemento']|default('') }}">
             </div>
-            <div>
-                <label for="bairro">Bairro:</label>
-                <input type="text" id="bairro" name="bairro" value="{{ form_data['bairro']|default('') }}">
+            <div class="mb-3">
+                <label for="bairro" class="form-label custom-form-label">Bairro:</label>
+                <input type="text" id="bairro" name="bairro" class="form-control custom-form-control" value="{{ form_data['bairro']|default('') }}">
             </div>
-            <div>
-                <label for="cidade">Cidade:</label>
-                <input type="text" id="cidade" name="cidade" value="{{ form_data['cidade']|default('') }}">
+            <div class="mb-3">
+                <label for="cidade" class="form-label custom-form-label">Cidade:</label>
+                <input type="text" id="cidade" name="cidade" class="form-control custom-form-control" value="{{ form_data['cidade']|default('') }}">
             </div>
-            <div>
-                <label for="estado_end">Estado (UF):</label>
-                <input type="text" id="estado_end" name="estado_end" value="{{ form_data['estado_end']|default('') }}">
+            <div class="mb-3">
+                <label for="estado_end" class="form-label custom-form-label">Estado (UF):</label>
+                <input type="text" id="estado_end" name="estado_end" class="form-control custom-form-control" value="{{ form_data['estado_end']|default('') }}">
             </div>
-            <div>
-                <label for="cep">CEP:</label>
-                <input type="text" id="cep" name="cep" value="{{ form_data['cep']|default('') }}">
-            </div>
-
-            <div class="section-title">Contatos</div>
-            <div>
-                <label for="tel_principal">Telefone Principal:</label>
-                <input type="text" id="tel_principal" name="tel_principal" value="{{ form_data['tel_principal']|default('') }}">
-            </div>
-            <div>
-                <label for="email_pessoal">E-mail Pessoal:</label>
-                <input type="email" id="email_pessoal" name="email_pessoal" value="{{ form_data['email_pessoal']|default('') }}">
+            <div class="mb-3">
+                <label for="cep" class="form-label custom-form-label">CEP:</label>
+                <input type="text" id="cep" name="cep" class="form-control custom-form-control" value="{{ form_data['cep']|default('') }}">
             </div>
 
-            <div>
-                <button type="submit">Adicionar Funcionário</button>
-                <a href="{{ url_for('pessoal_bp.funcionarios_module') }}" class="cancel-link">Cancelar</a>
+            <div class="section-title custom-section-title">Contatos</div>
+            <div class="mb-3">
+                <label for="tel_principal" class="form-label custom-form-label">Telefone Principal:</label>
+                <input type="text" id="tel_principal" name="tel_principal" class="form-control custom-form-control" value="{{ form_data['tel_principal']|default('') }}">
+            </div>
+            <div class="mb-3">
+                <label for="email_pessoal" class="form-label custom-form-label">E-mail Pessoal:</label>
+                <input type="email" id="email_pessoal" name="email_pessoal" class="form-control custom-form-control" value="{{ form_data['email_pessoal']|default('') }}">
+            </div>
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <button type="submit" class="btn btn-primary custom-submit-btn">Adicionar Funcionário</button>
+                <a href="{{ url_for('pessoal_bp.funcionarios_module') }}" class="btn btn-secondary custom-cancel-btn">Cancelar</a>
             </div>
         </form>
-        <div class="back-link">
-            <p><a href="{{ url_for('pessoal_bp.funcionarios_module') }}">Voltar para a Lista de Funcionários</a></p>
-        </div>
-    </div>
-</body>
-</html>
+</div>
+
+<style>
+    /* Estilos Customizados para o Título como Faixa */
+    .title-band {
+        background-color: #212529; /* Preto ou cinza escuro */
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .title-band h1 {
+        color: white;
+        margin-bottom: 0;
+        font-size: 1.5rem; /* Título menor para design minimalista */
+    }
+
+    /* Estilos para o Container Principal do Formulário (Fumê, Estreito, 3D) */
+    .custom-form-container {
+        /* Aumentado para acomodar mais campos e seções */
+        max-width: 600px; /* Aumentar um pouco mais a largura */
+        margin-left: auto;
+        margin-right: auto; /* Centralizado */
+        background-color: rgba(33, 37, 41, 0.85); /* Fundo preto com transparência (vidro fumê) */
+        border: 1px solid #000000; /* Borda preta fina */
+        border-radius: 0.75rem; /* Cantos arredondados */
+        box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.3), 
+                    0 0.25rem 0.5rem rgba(0, 0, 0, 0.2); /* Efeito 3D mais pronunciado */
+        padding: 1.5rem; /* Padding interno reduzido */
+        position: relative;
+        transform: translateY(-3px); /* Leve elevação */
+    }
+
+    /* Estilos para Labels e Inputs/Selects (Design Minimalista, Letras Menores) */
+    .custom-form-label {
+        color: #f8f9fa; /* Labels brancas */
+        font-size: 0.8rem; /* Letras menores para design minimalista */
+        font-weight: 500; /* Peso da fonte um pouco maior */
+        margin-bottom: 0.25rem; /* Menor margem */
+    }
+    .custom-form-control {
+        font-size: 0.85rem; /* Letras menores para inputs/selects */
+        background-color: rgba(255, 255, 255, 0.95); /* Fundo semi-transparente */
+        border: 1px solid rgba(255, 255, 255, 0.2); /* Borda suave */
+        color: #212529; /* Cor do texto */
+        padding: 0.5rem; /* Padding menor */
+        border-radius: 0.375rem; /* Cantos levemente arredondados */
+        transition: all 0.2s ease-in-out; /* Transição suave */
+    }
+    .custom-form-control:focus {
+        background-color: rgba(255, 255, 255, 1); /* Fundo opaco no focus */
+        border-color: #86b7fe; /* Cor de borda do Bootstrap no focus */
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        transform: translateY(-1px); /* Leve elevação no focus */
+    }
+    textarea.custom-form-control {
+        resize: vertical; /* Permite redimensionar apenas verticalmente */
+        min-height: 80px; /* Altura mínima menor */
+    }
+
+    /* Estilos para Títulos de Seção */
+    .custom-section-title {
+        background-color: rgba(255, 255, 255, 0.1); /* Fundo sutil para a faixa de título */
+        color: #f8f9fa; /* Texto branco */
+        padding: 0.75rem 1rem; /* Padding interno */
+        border-radius: 0.3rem; /* Cantos arredondados */
+        margin-top: 2rem; /* Margem superior para separar das seções anteriores */
+        margin-bottom: 1rem; /* Margem inferior para separar dos campos */
+        font-size: 1rem; /* Tamanho da fonte */
+        font-weight: 600; /* Peso da fonte */
+        border-left: 4px solid #198754; /* Borda lateral verde */
+    }
+
+
+    /* Estilos para os Botões "Adicionar Obra" e "Cancelar" (Mais Sofisticados) */
+    .custom-submit-btn, .custom-cancel-btn {
+        padding: 0.6rem 1.2rem; /* Padding reduzido */
+        border-radius: 0.5rem; /* Cantos arredondados */
+        font-size: 0.9rem; /* Tamanho de fonte menor */
+        font-weight: 600; /* Peso da fonte maior */
+        transition: all 0.3s ease-in-out; /* Transição suave */
+        border: none; /* Remove borda padrão */
+        cursor: pointer; /* Cursor de pointer */
+        position: relative; /* Para efeitos de posicionamento */
+        overflow: hidden; /* Para efeitos de animação */
+    }
+
+    .custom-submit-btn {
+        background: linear-gradient(135deg, #198754, #157347); /* Gradiente verde */
+        color: white;
+        box-shadow: 0 0.25rem 0.5rem rgba(25, 135, 84, 0.3);
+    }
+    .custom-submit-btn:hover {
+        background: linear-gradient(135deg, #157347, #146c43); /* Gradiente mais escuro */
+        transform: translateY(-3px); /* Elevação no hover */
+        box-shadow: 0 0.5rem 1rem rgba(25, 135, 84, 0.4); /* Sombra mais pronunciada */
+    }
+    .custom-submit-btn:active {
+        transform: translateY(-1px); /* Menos elevação no click */
+    }
+
+    .custom-cancel-btn {
+        background: linear-gradient(135deg, #6c757d, #5c636a); /* Gradiente cinza */
+        color: white;
+        box-shadow: 0 0.25rem 0.5rem rgba(108, 117, 125, 0.3);
+    }
+    .custom-cancel-btn:hover {
+        background: linear-gradient(135deg, #5c636a, #565e64); /* Gradiente mais escuro */
+        transform: translateY(-3px); /* Elevação no hover */
+        box-shadow: 0 0.5rem 1rem rgba(108, 117, 125, 0.4); /* Sombra mais pronunciada */
+    }
+    .custom-cancel-btn:active {
+        transform: translateY(-1px); /* Menos elevação no click */
+    }
+
+    /* Efeito adicional de brilho nos botões */
+    .custom-submit-btn::before, .custom-cancel-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.5s ease-in-out;
+    }
+    .custom-submit-btn:hover::before, .custom-cancel-btn:hover::before {
+        left: 100%;
+    }
+
+    /* Ajustes para responsividade */
+    @media (max-width: 576px) {
+        .custom-form-container {
+            max-width: 95%;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        .title-band h1 {
+            font-size: 1.3rem;
+        }
+        .custom-form-label {
+            font-size: 0.75rem;
+        }
+        .custom-form-control {
+            font-size: 0.8rem;
+        }
+        .custom-section-title {
+            font-size: 0.9rem; /* Título de seção menor em mobile */
+            padding: 0.5rem 0.75rem;
+        }
+    }
+
+    /* Estilos para flash messages */
+    .flash-messages {
+        list-style: none;
+        padding: 0;
+        margin-bottom: 1rem;
+    }
+    .flash-messages li {
+        padding: 0.75rem 1.25rem;
+        margin-bottom: 1rem;
+        border: 1px solid transparent;
+        border-radius: 0.25rem;
+        font-weight: bold;
+    }
+    .flash-messages li.success {
+        color: #155724;
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+    }
+    .flash-messages li.danger {
+        color: #721c24;
+        background-color: #f8d7da;
+        border-color: #f5c6fb; 
+    }
+    .flash-messages li.info {
+        color: #0c5460;
+        background-color: #d1ecf1;
+        border-color: #bee5eb;
+    }
+</style>
+{% endblock %}

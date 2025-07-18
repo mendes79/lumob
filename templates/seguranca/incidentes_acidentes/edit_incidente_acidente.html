@@ -1,129 +1,264 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editar Incidente/Acidente - LUMOB</title>
-    <style>
-        body { font-family: sans-serif; margin: 20px; }
-        .container { max-width: 800px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
-        h1 { text-align: center; color: #333; }
-        form div { margin-bottom: 10px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"], input[type="datetime-local"], input[type="date"], select, textarea {
-            width: calc(100% - 22px); padding: 10px; border: 1px solid #ddd; border-radius: 4px;
-            box-sizing: border-box;
-        }
-        button {
-            padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px;
-            cursor: pointer; font-size: 16px; margin-right: 10px;
-        }
-        button:hover { background-color: #0056b3; }
-        .flash { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
-        .flash.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .flash.danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6fb; }
-        .cancel-link {
-            padding: 10px 15px; background-color: #6c757d; color: white; border: none; border-radius: 4px;
-            cursor: pointer; font-size: 16px; text-decoration: none; display: inline-block; vertical-align: middle;
-        }
-        .cancel-link:hover { background-color: #5a6268; }
-        .back-link { display: block; text-align: center; margin-top: 20px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Editar Incidente/Acidente: {{ incidente['tipo_registro'] }}</h1> {# Acesso por colchetes, minúscula #}
+{% extends 'base.html' %}
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <ul class="flash-messages">
-                    {% for category, message in messages %}
-                        <li class="{{ category }}">{{ message }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        {% endwith %}
+{% block title %}Editar Incidente/Acidente - LUMOB{% endblock %}
 
-        <form action="{{ url_for('seguranca_bp.edit_incidente_acidente', incidente_id=incidente['id_incidente_acidente']) }}" method="POST"> {# Acesso por colchetes, minúscula #}
-            <div class="form-group">
-                <label for="incidente_id">ID do Registro:</label>
-                <input type="text" id="incidente_id" name="incidente_id" value="{{ incidente['id_incidente_acidente'] }}" readonly class="form-control"> {# Acesso por colchetes, minúscula #}
-            </div>
-            <div class="form-group">
-                <label for="tipo_registro">Tipo de Registro:</label>
-                <select class="form-control" id="tipo_registro" name="tipo_registro" required>
-                    <option value="">Selecione o Tipo</option>
-                    {% for tipo in tipo_registro_options %}
-                        <option value="{{ tipo }}" {% if incidente['tipo_registro'] == tipo %}selected{% endif %}>{{ tipo }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="data_hora_ocorrencia">Data/Hora da Ocorrência:</label>
-                <input type="datetime-local" class="form-control" id="data_hora_ocorrencia" name="data_hora_ocorrencia" value="{{ incidente['data_hora_ocorrencia']|default('') }}" required>
-            </div>
-            <div class="form-group">
-                <label for="local_ocorrencia">Local da Ocorrência:</label>
-                <input type="text" class="form-control" id="local_ocorrencia" name="local_ocorrencia" value="{{ incidente['local_ocorrencia']|default('') }}">
-            </div>
-            <div class="form-group">
-                <label for="id_obras">Obra Associada (Opcional):</label>
-                <select class="form-control" id="id_obras" name="id_obras">
-                    <option value="">Selecione uma Obra</option>
-                    {% for obra in all_obras %}
-                        <option value="{{ obra.ID_Obras }}" {% if incidente['id_obras']|string == obra.ID_Obras|string %}selected{% endif %}>
-                            {{ obra.Nome_Obra }} ({{ obra.Numero_Obra }})
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="descricao_resumida">Descrição Resumida:</label>
-                <textarea class="form-control" id="descricao_resumida" name="descricao_resumida" rows="3" required>{{ incidente['descricao_resumida']|default('') }}</textarea>
-            </div>
-            <div class="form-group">
-                <label for="causas_identificadas">Causas Identificadas (Opcional):</label>
-                <textarea class="form-control" id="causas_identificadas" name="causas_identificadas" rows="3">{{ incidente['causas_identificadas']|default('') }}</textarea>
-            </div>
-            <div class="form-group">
-                <label for="acoes_corretivas_tomadas">Ações Corretivas Tomadas (Opcional):</label>
-                <textarea class="form-control" id="acoes_corretivas_tomadas" name="acoes_corretivas_tomadas" rows="3">{{ incidente['acoes_corretivas_tomadas']|default('') }}</textarea>
-            </div>
-            <div class="form-group">
-                <label for="acoes_preventivas_recomendadas">Ações Preventivas Recomendadas (Opcional):</label>
-                <textarea class="form-control" id="acoes_preventivas_recomendadas" name="acoes_preventivas_recomendadas" rows="3">{{ incidente['acoes_preventivas_recomendadas']|default('') }}</textarea>
-            </div>
-            <div class="form-group">
-                <label for="status_registro">Status do Registro:</label>
-                <select class="form-control" id="status_registro" name="status_registro" required>
-                    <option value="">Selecione o Status</option>
-                    {% for status in status_registro_options %}
-                        <option value="{{ status }}" {% if incidente['status_registro'] == status %}selected{% endif %}>{{ status }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="responsavel_matricula">Responsável pela Investigação (Matrícula - Opcional):</label>
-                <input type="text" class="form-control" id="responsavel_matricula" name="responsavel_matricula" value="{{ incidente['responsavel_matricula']|default('') }}" placeholder="Ex: MATR001">
-                {# Ou um dropdown de funcionários, se preferir #}
-            </div>
-            <div class="form-group">
-                <label for="data_fechamento">Data de Fechamento (Opcional):</label>
-                <input type="date" class="form-control" id="data_fechamento" name="data_fechamento" value="{{ incidente['data_fechamento']|default('') }}">
-            </div>
-            <div class="form-group">
-                <label for="observacoes">Observações (Opcional):</label>
-                <textarea class="form-control" id="observacoes" name="observacoes" rows="3">{{ incidente['observacoes']|default('') }}</textarea>
-            </div>
-            
-            <div class="btn-container">
-                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-                <a href="{{ url_for('seguranca_bp.incidentes_acidentes_module') }}" class="btn btn-secondary">Cancelar</a>
-            </div>
-        </form>
-        <div class="back-link">
-            <p><a href="{{ url_for('seguranca_bp.incidentes_acidentes_module') }}">Voltar para a Lista de Incidentes/Acidentes</a></p>
-        </div>
+{% block messages %}{% endblock %} 
+
+{% block content %}
+<div class="container custom-form-container mt-4 mb-4 p-4"> {# Container customizado, margens e padding #}
+    {# Título dentro da faixa preta #}
+    <div class="title-band mb-2"> {# mb-2 para margem inferior menor #}
+        <h1 class="text-white text-center mb-0"><i class="fas fa-exclamation-triangle me-3"></i>Editar Incidente/Acidente: {{ incidente['tipo_registro'] }}</h1> {# Ícone de triângulo de aviso #}
     </div>
-</body>
-</html>
+
+    {# Bloco para Flash Messages - Mantido dentro do content, igual aos outros formulários #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class="flash-messages">
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <form action="{{ url_for('seguranca_bp.edit_incidente_acidente', incidente_id=incidente['id_incidente_acidente']) }}" method="POST">
+        <div class="mb-3"> {# mb-3 para Bootstrap spacing #}
+            <label for="incidente_id" class="form-label custom-form-label">ID do Registro:</label>
+            <input type="text" id="incidente_id" name="incidente_id" class="form-control custom-form-control" value="{{ incidente['id_incidente_acidente'] }}" readonly>
+        </div>
+        <div class="mb-3">
+            <label for="tipo_registro" class="form-label custom-form-label">Tipo de Registro:</label>
+            <select id="tipo_registro" name="tipo_registro" class="form-select custom-form-control" required>
+                <option value="">Selecione o Tipo</option>
+                {% for tipo in tipo_registro_options %}
+                    <option value="{{ tipo }}" {% if incidente['tipo_registro'] == tipo %}selected{% endif %}>{{ tipo }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="data_hora_ocorrencia" class="form-label custom-form-label">Data/Hora da Ocorrência:</label>
+            <input type="datetime-local" id="data_hora_ocorrencia" name="data_hora_ocorrencia" class="form-control custom-form-control" 
+                value="{{ form_data['data_hora_ocorrencia'] if form_data and form_data['data_hora_ocorrencia'] else (incidente['data_hora_ocorrencia'].strftime('%Y-%m-%dT%H:%M') if incidente['data_hora_ocorrencia'] is not string else incidente['data_hora_ocorrencia']) or '' }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="local_ocorrencia" class="form-label custom-form-label">Local da Ocorrência:</label>
+            <input type="text" id="local_ocorrencia" name="local_ocorrencia" class="form-control custom-form-control" value="{{ form_data['local_ocorrencia'] if form_data else incidente['local_ocorrencia']|default('') }}">
+        </div>
+        <div class="mb-3">
+            <label for="id_obras" class="form-label custom-form-label">Obra Associada (Opcional):</label>
+            <select id="id_obras" name="id_obras" class="form-select custom-form-control">
+                <option value="">Selecione uma Obra</option>
+                {% for obra in all_obras %}
+                    <option value="{{ obra.ID_Obras }}" {% if (form_data and form_data['id_obras']|default('')|int == obra.ID_Obras) or (not form_data and incidente['id_obras']|default('')|int == obra.ID_Obras) %}selected{% endif %}>
+                        {{ obra.Nome_Obra }} ({{ obra.Numero_Obra }})
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="descricao_resumida" class="form-label custom-form-label">Descrição Resumida (Obrigatório):</label>
+            <textarea id="descricao_resumida" name="descricao_resumida" rows="3" class="form-control custom-form-control" required>{{ form_data['descricao_resumida'] if form_data else incidente['descricao_resumida']|default('') }}</textarea>
+        </div>
+        <div class="mb-3">
+            <label for="causas_identificadas" class="form-label custom-form-label">Causas Identificadas (Opcional):</label>
+            <textarea id="causas_identificadas" name="causas_identificadas" rows="3" class="form-control custom-form-control">{{ form_data['causas_identificadas'] if form_data else incidente['causas_identificadas']|default('') }}</textarea>
+        </div>
+        <div class="mb-3">
+            <label for="acoes_corretivas_tomadas" class="form-label custom-form-label">Ações Corretivas Tomadas (Opcional):</label>
+            <textarea id="acoes_corretivas_tomadas" name="acoes_corretivas_tomadas" rows="3" class="form-control custom-form-control">{{ form_data['acoes_corretivas_tomadas'] if form_data else incidente['acoes_corretivas_tomadas']|default('') }}</textarea>
+        </div>
+        <div class="mb-3">
+            <label for="acoes_preventivas_recomendadas" class="form-label custom-form-label">Ações Preventivas Recomendadas (Opcional):</label>
+            <textarea id="acoes_preventivas_recomendadas" name="acoes_preventivas_recomendadas" rows="3" class="form-control custom-form-control">{{ form_data['acoes_preventivas_recomendadas'] if form_data else incidente['acoes_preventivas_recomendadas']|default('') }}</textarea>
+        </div>
+        <div class="mb-3">
+            <label for="status_registro" class="form-label custom-form-label">Status do Registro:</label>
+            <select id="status_registro" name="status_registro" class="form-select custom-form-control" required>
+                <option value="">Selecione o Status</option>
+                {% for status in status_registro_options %}
+                    <option value="{{ status }}" {% if incidente['status_registro'] == status %}selected{% endif %}>{{ status }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="responsavel_matricula" class="form-label custom-form-label">Responsável pela Investigação (Matrícula - Opcional):</label>
+            <input type="text" id="responsavel_matricula" name="responsavel_matricula" class="form-control custom-form-control" value="{{ form_data['responsavel_matricula'] if form_data else incidente['responsavel_matricula']|default('') }}" placeholder="Ex: MATR001">
+            {# Ou um dropdown de funcionários, se preferir #}
+        </div>
+        <div class="mb-3">
+            <label for="data_fechamento" class="form-label custom-form-label">Data de Fechamento (Opcional):</label>
+            <input type="date" id="data_fechamento" name="data_fechamento" class="form-control custom-form-control" 
+                value="{{ form_data['data_fechamento'] if form_data and form_data['data_fechamento'] else (incidente['data_fechamento'].strftime('%Y-%m-%d') if incidente['data_fechamento'] is not string else incidente['data_fechamento']) or '' }}">
+        </div>
+        <div class="mb-3">
+            <label for="observacoes" class="form-label custom-form-label">Observações (Opcional):</label>
+            <textarea id="observacoes" name="observacoes" rows="3" class="form-control custom-form-control">{{ form_data['observacoes'] if form_data else incidente['observacoes']|default('') }}</textarea>
+        </div>
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end"> {# Botões Salvar/Cancelar #}
+            <button type="submit" class="btn btn-primary custom-submit-btn">Salvar Alterações</button>
+            <a href="{{ url_for('seguranca_bp.incidentes_acidentes_module') }}" class="btn btn-secondary custom-cancel-btn">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<style>
+    /* Estilos Customizados para o Título como Faixa */
+    .title-band {
+        background-color: #212529; /* Preto ou cinza escuro */
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .title-band h1 {
+        color: white;
+        margin-bottom: 0;
+        font-size: 1.5rem; /* Título menor para design minimalista */
+    }
+
+    /* Estilos para o Container Principal do Formulário (Fumê, Estreito, 3D) */
+    .custom-form-container {
+        max-width: 500px; /* Mais estreito para design minimalista */
+        margin-left: auto;
+        margin-right: auto; /* Centralizado */
+        background-color: rgba(33, 37, 41, 0.85); /* Fundo preto com transparência (vidro fumê) */
+        border: 1px solid #000000; /* Borda preta fina */
+        border-radius: 0.75rem; /* Cantos arredondados */
+        box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.3), 
+                    0 0.25rem 0.5rem rgba(0, 0, 0, 0.2); /* Efeito 3D mais pronunciado */
+        padding: 1.5rem; /* Padding interno reduzido */
+        position: relative;
+        transform: translateY(-3px); /* Leve elevação */
+    }
+
+    /* Estilos para Labels e Inputs/Selects (Design Minimalista, Letras Menores) */
+    .custom-form-label {
+        color: #f8f9fa; /* Labels brancas */
+        font-size: 0.8rem; /* Letras menores para design minimalista */
+        font-weight: 500; /* Peso da fonte um pouco maior */
+        margin-bottom: 0.25rem; /* Menor margem */
+    }
+    .custom-form-control {
+        font-size: 0.85rem; /* Letras menores para inputs/selects */
+        background-color: rgba(255, 255, 255, 0.95); /* Fundo semi-transparente */
+        border: 1px solid rgba(255, 255, 255, 0.2); /* Borda suave */
+        color: #212529; /* Cor do texto */
+        padding: 0.5rem; /* Padding menor */
+        border-radius: 0.375rem; /* Cantos levemente arredondados */
+        transition: all 0.2s ease-in-out; /* Transição suave */
+    }
+    .custom-form-control:focus {
+        background-color: rgba(255, 255, 255, 1); /* Fundo opaco no focus */
+        border-color: #86b7fe; /* Cor de borda do Bootstrap no focus */
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        transform: translateY(-1px); /* Leve elevação no focus */
+    }
+    textarea.custom-form-control {
+        resize: vertical; /* Permite redimensionar apenas verticalmente */
+        min-height: 80px; /* Altura mínima menor */
+    }
+
+    /* Estilos para os Botões "Adicionar Obra" e "Cancelar" (Mais Sofisticados) */
+    .custom-submit-btn, .custom-cancel-btn {
+        padding: 0.6rem 1.2rem; /* Padding reduzido */
+        border-radius: 0.5rem; /* Cantos arredondados */
+        font-size: 0.9rem; /* Tamanho de fonte menor */
+        font-weight: 600; /* Peso da fonte maior */
+        transition: all 0.3s ease-in-out; /* Transição suave */
+        border: none; /* Remove borda padrão */
+        cursor: pointer; /* Cursor de pointer */
+        position: relative; /* Para efeitos de posicionamento */
+        overflow: hidden; /* Para efeitos de animação */
+    }
+
+    .custom-submit-btn {
+        background: linear-gradient(135deg, #198754, #157347); /* Gradiente verde */
+        color: white;
+        box-shadow: 0 0.25rem 0.5rem rgba(25, 135, 84, 0.3);
+    }
+    .custom-submit-btn:hover {
+        background: linear-gradient(135deg, #157347, #146c43); /* Gradiente mais escuro */
+        transform: translateY(-3px); /* Elevação no hover */
+        box-shadow: 0 0.5rem 1rem rgba(25, 135, 84, 0.4); /* Sombra mais pronunciada */
+    }
+    .custom-submit-btn:active {
+        transform: translateY(-1px); /* Menos elevação no click */
+    }
+
+    .custom-cancel-btn {
+        background: linear-gradient(135deg, #6c757d, #5c636a); /* Gradiente cinza */
+        color: white;
+        box-shadow: 0 0.25rem 0.5rem rgba(108, 117, 125, 0.3);
+    }
+    .custom-cancel-btn:hover {
+        background: linear-gradient(135deg, #5c636a, #565e64); /* Gradiente mais escuro */
+        transform: translateY(-3px); /* Elevação no hover */
+        box-shadow: 0 0.5rem 1rem rgba(108, 117, 125, 0.4); /* Sombra mais pronunciada */
+    }
+    .custom-cancel-btn:active {
+        transform: translateY(-1px); /* Menos elevação no click */
+    }
+
+    /* Efeito adicional de brilho nos botões */
+    .custom-submit-btn::before, .custom-cancel-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.5s ease-in-out;
+    }
+    .custom-submit-btn:hover::before, .custom-cancel-btn:hover::before {
+        left: 100%;
+    }
+
+    /* Ajustes para responsividade */
+    @media (max-width: 576px) {
+        .custom-form-container {
+            max-width: 95%;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        .title-band h1 {
+            font-size: 1.3rem;
+        }
+        .custom-form-label {
+            font-size: 0.75rem;
+        }
+        .custom-form-control {
+            font-size: 0.8rem;
+        }
+    }
+
+    /* Estilos para flash messages */
+    .flash-messages {
+        list-style: none;
+        padding: 0;
+        margin-bottom: 1rem;
+    }
+    .flash-messages li {
+        padding: 0.75rem 1.25rem;
+        margin-bottom: 1rem;
+        border: 1px solid transparent;
+        border-radius: 0.25rem;
+        font-weight: bold;
+    }
+    .flash-messages li.success {
+        color: #155724;
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+    }
+    .flash-messages li.danger {
+        color: #721c24;
+        background-color: #f8d7da;
+        border-color: #f5c6fb; 
+    }
+    .flash-messages li.info {
+        color: #0c5460;
+        background-color: #d1ecf1;
+        border-color: #bee5eb;
+    }
+</style>
+{% endblock %}
