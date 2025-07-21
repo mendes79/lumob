@@ -1,6 +1,7 @@
 # app.py
 # rev01 - integração do campo email da tabela usuarios no app.py
 # rev02 - Correção do erro 'now is undefined' no template welcome.html
+# rev03 - Suporte a requisições AJAX e respostas JSON na rota /login para o novo layout de login
 
 #################################################################
 # 0. CONFIGURAÇÕES INICIAIS
@@ -14,7 +15,7 @@
 import os
 from dotenv import load_dotenv # Idem
 
-from flask import Flask, render_template, redirect, url_for, request, flash, session, get_flashed_messages, jsonify
+from flask import Flask, render_template, redirect, url_for, request, flash, session, get_flashed_messages, jsonify # Adicionado jsonify
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 import mysql.connector              # Para a classe Error do MySQL
 from datetime import datetime, date # Garante que datetime e date estejam disponíveis
@@ -126,8 +127,20 @@ def login():
         return redirect(url_for('welcome'))
 
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password'] # A senha vinda do formulário
+        # Verifica se a requisição é AJAX (enviada pelo JavaScript)
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json
+
+        username = None
+        password = None
+
+        # Tenta obter os dados do JSON se for uma requisição JSON
+        if request.is_json:
+            data = request.get_json()
+            username = data.get('username')
+            password = data.get('password')
+        else: # Se não for JSON, tenta pegar dos dados de formulário padrão
+            username = request.form.get('username')
+            password = request.form.get('password')
 
         try:
             with DatabaseManager(**db_config) as db_base:
@@ -139,17 +152,34 @@ def login():
                     # Certifique-se de que 'email' existe no user_record, use .get() para segurança
                     user = User(user_record['id'], user_record['username'], user_record['role'], user_record.get('email'), user_permissions)
                     login_user(user)
-                    # --- REMOVIDO: flash('Login bem-sucedido!', 'success') para evitar redundância ---
-                    return redirect(url_for('welcome'))
+                    if is_ajax: # Se for AJAX, retorna JSON de sucesso
+                        return jsonify(success=True, redirect_url=url_for('welcome'))
+                    else: # Se não for AJAX (submissão de formulário normal), redireciona e flash
+                        flash('Login bem-sucedido!', 'success')
+                        return redirect(url_for('welcome'))
                 else:
-                    flash('Usuário ou senha inválidos.', 'danger')
+                    message = 'Usuário ou senha inválidos.'
+                    if is_ajax: # Se for AJAX, retorna JSON de falha
+                        return jsonify(success=False, message=message), 401 # Retorna 401 Unauthorized para credenciais inválidas
+                    else: # Se não for AJAX, flash e renderiza o template de login
+                        flash(message, 'danger')
         except mysql.connector.Error as e:
-            flash(f"Erro de banco de dados: {e}", 'danger')
+            message = f"Erro de banco de dados: {e}"
             print(f"Erro de banco de dados: {e}")
+            if is_ajax: # Em caso de erro de banco de dados, retorna JSON de erro
+                return jsonify(success=False, message=message), 500
+            else: # Caso contrário, flash e renderiza
+                flash(message, 'danger')
         except Exception as e:
-            flash(f"Ocorreu um erro inesperado: {e}", 'danger')
+            message = f"Ocorreu um erro inesperado: {e}"
             print(f"Erro inesperado durante o login: {e}")
+            if is_ajax: # Em caso de erro inesperado, retorna JSON de erro
+                return jsonify(success=False, message=message), 500
+            else: # Caso contrário, flash e renderiza
+                flash(message, 'danger')
 
+    # Para requisições GET ou submissões POST não-AJAX que falham
+    # Este return será alcançado se o método não for POST, ou se o POST não for AJAX e falhar no try/except.
     return render_template('login.html')
 
 @app.route('/logout')

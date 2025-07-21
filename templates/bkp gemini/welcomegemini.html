@@ -1,0 +1,385 @@
+{% extends 'base.html' %} {% block title %}Bem vindo - LUMOB{% endblock %} {%
+block messages %}{% endblock %} {# Continua suprimindo as mensagens flash
+redundantes nesta página #} {% block content %}
+<div class="main-content">
+  {# Novo container para o conteúdo principal, excluindo o cabeçalho e rodapé
+  fixos #} {# Estrutura do Cabeçalho - Mensagem de boas-vindas e botão Sair #}
+  <header class="app-header">
+    <div class="header-content">
+      <h1 class="app-title">LUMOB</h1>
+      <div class="user-info">
+        <span class="welcome-message"
+          >Bem-vindo, <span class="username">{{ user.username }}</span></span
+        >
+        <a
+          href="{{ url_for('logout') }}"
+          class="btn btn-danger btn-sm logout-btn"
+          ><i class="fas fa-sign-out-alt"></i> Sair</a
+        >
+      </div>
+    </div>
+  </header>
+
+  <div class="container main-container-content mt-4">
+    <hr class="my-3" />
+    {# Linha separadora horizontal #} {# Cards dos Módulos #}
+    <div class="module-grid-new">
+      {% for module in all_modules_db %} {% set module_name_display =
+      module.Nome_Modulo %} {% set module_url = '#' %} {% set image_path_base =
+      url_for('static', filename='img/') %} {% set module_image_file = '' %} {%
+      set is_restricted = not user.can_access_module(module_name_display) %} {#
+      Mapeamento de Nome do Módulo para URL e Imagem #} {% if
+      module_name_display == 'Obras' %} {% set module_url =
+      url_for('obras_bp.obras_module') %} {% set module_image_file =
+      'obras_colorful.jpg' %} {% elif module_name_display == 'Segurança' %} {%
+      set module_url = url_for('seguranca_bp.seguranca_module') %} {% set
+      module_image_file = 'seguranca_colorful.jpg' %} {% elif
+      module_name_display == 'Pessoal' %} {% set module_url =
+      url_for('pessoal_bp.pessoal_module') %} {% set module_image_file =
+      'pessoal_colorful.jpg' %} {% elif module_name_display == 'Usuários' %} {%
+      set module_url = url_for('users_bp.users_module') %} {% set
+      module_image_file = 'users_colorful.jpg' %} {% endif %}
+
+      <div
+        class="module-card-new {% if is_restricted %}module-card-restricted{% endif %}"
+        {%
+        if
+        not
+        is_restricted
+        %}onclick="location.href='{{ module_url }}'"
+        {%
+        endif
+        %}
+      >
+        <div
+          class="module-image-wrapper"
+          style="background-image: url('{{ image_path_base }}{{ module_image_file }}');"
+        ></div>
+        <div class="module-content-overlay">
+          <h3 class="module-title">{{ module_name_display }}</h3>
+          {% if is_restricted %}
+          <span class="restricted-tag">Acesso Restrito</span>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<footer class="app-footer">
+  <div class="container">
+    <p>&copy; {{ now.year }} LUMOB. Todos os direitos reservados.</p>
+    {# CORREÇÃO: Removido os parênteses de 'now()' #}
+    <p>Desenvolvido por Mendes Engenharia.</p>
+  </div>
+</footer>
+
+<style>
+  /* Novas Variáveis para Cores e Sombras */
+  :root {
+    --primary-blue: #3498db;
+    --dark-blue: #2c3e50;
+    --light-gray-bg: #ecf0f1;
+    --text-color: #34495e;
+    --hover-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+    --card-bg-light: rgba(255, 255, 255, 0.95);
+    --border-light: rgba(255, 255, 255, 0.2);
+    --restricted-red: #e74c3c;
+  }
+
+  body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column; /* Para o rodapé fixo na parte inferior */
+    color: var(--text-color);
+  }
+
+  .main-content {
+    flex-grow: 1; /* Ocupa o espaço disponível, empurrando o rodapé para baixo */
+    display: flex;
+    flex-direction: column;
+    padding-top: 80px; /* Espaço para o cabeçalho fixo */
+    padding-bottom: 60px; /* Espaço para o rodapé fixo */
+  }
+
+  .main-container-content {
+    flex-grow: 1;
+    padding: 2rem 1rem;
+    max-width: 1200px; /* Ajuste se necessário */
+    margin: 0 auto;
+  }
+
+  /* Header da Aplicação */
+  .app-header {
+    background: linear-gradient(to right, #2c3e50, #34495e);
+    color: white;
+    padding: 0.8rem 2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    position: fixed; /* Fixa o cabeçalho no topo */
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+  }
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .app-title {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .welcome-message {
+    font-size: 1rem;
+    font-weight: 400;
+    opacity: 0.9;
+  }
+
+  .username {
+    font-weight: 600;
+    color: var(--primary-blue);
+  }
+
+  .logout-btn {
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+
+  .logout-btn:hover {
+    background-color: #c0392b;
+    transform: translateY(-2px);
+  }
+
+  /* Grid de Módulos (novo) */
+  .module-grid-new {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 25px; /* Espaçamento maior entre os cards */
+    padding: 20px 0;
+  }
+
+  /* Cards dos Módulos (novo estilo) */
+  .module-card-new {
+    background: var(--card-bg-light);
+    border-radius: 18px; /* Cantos arredondados */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1); /* Sombra mais suave */
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end; /* Conteúdo na parte inferior */
+    padding-bottom: 20px; /* Espaço para o texto na parte inferior */
+    transition: transform 0.3s ease, box-shadow 0.3s ease,
+      border-color 0.3s ease;
+    min-height: 220px; /* Altura mínima para os cards */
+    text-decoration: none; /* Remove sublinhado de links */
+    color: inherit; /* Mantém a cor do texto padrão */
+    border: 1px solid var(--border-light); /* Borda sutil */
+  }
+
+  .module-card-new:hover {
+    transform: translateY(-10px) scale(1.03); /* Eleva e escala no hover */
+    box-shadow: var(--hover-shadow); /* Sombra intensa no hover */
+    border-color: var(--primary-blue); /* Borda azul no hover */
+  }
+
+  .module-image-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    opacity: 0.6; /* Opacidade inicial para a imagem */
+    filter: grayscale(80%); /* P&B inicial para a imagem */
+    transition: opacity 0.3s ease, filter 0.3s ease;
+    z-index: 1; /* Garante que a imagem esteja abaixo do overlay de conteúdo */
+  }
+
+  .module-card-new:not(.module-card-restricted):hover .module-image-wrapper {
+    opacity: 1; /* Imagem fica totalmente opaca no hover */
+    filter: grayscale(0%); /* Imagem fica colorida no hover */
+  }
+
+  .module-content-overlay {
+    position: relative; /* Para garantir que o z-index funcione */
+    z-index: 2; /* Acima da imagem */
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.7) 0%,
+      rgba(0, 0, 0, 0.3) 50%,
+      transparent 100%
+    ); /* Gradiente na parte inferior para legibilidade do texto */
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* Alinha o conteúdo na parte inferior */
+    padding: 1.5rem;
+    text-align: center;
+    transition: background 0.3s ease; /* Transição para o gradiente */
+  }
+
+  .module-card-new:not(.module-card-restricted):hover .module-content-overlay {
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.8) 0%,
+      rgba(0, 0, 0, 0.4) 50%,
+      transparent 100%
+    ); /* Gradiente mais escuro no hover */
+  }
+
+  .module-title {
+    color: white;
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+    transition: transform 0.3s ease, color 0.3s ease;
+  }
+
+  .module-card-new:not(.module-card-restricted):hover .module-title {
+    transform: translateY(-5px); /* Título sobe um pouco no hover */
+    color: var(--primary-blue); /* Cor do título muda no hover */
+  }
+
+  /* Estilos para cards restritos */
+  .module-card-new.module-card-restricted {
+    cursor: not-allowed;
+    opacity: 0.6;
+    filter: grayscale(100%); /* Mantém em P&B */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05); /* Sombra mais suave */
+  }
+
+  .module-card-new.module-card-restricted .module-image-wrapper {
+    filter: grayscale(100%); /* Garante que a imagem seja P&B */
+    opacity: 0.4; /* Menor opacidade para restritos */
+  }
+
+  .module-card-new.module-card-restricted:hover {
+    transform: none; /* Remove o efeito de flutuar */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1); /* Sombra permanece suave */
+    border-color: var(--border-light); /* Borda não muda */
+  }
+
+  .restricted-tag {
+    background-color: var(--restricted-red);
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 5px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-top: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Rodapé da Aplicação */
+  .app-footer {
+    background-color: var(--dark-blue);
+    color: var(--light-gray-bg);
+    padding: 1.2rem 1rem;
+    text-align: center;
+    font-size: 0.85rem;
+    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.1);
+    position: fixed; /* Fixa o rodapé */
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 999;
+  }
+
+  .app-footer p {
+    margin: 0.2rem 0;
+  }
+
+  /* Responsividade */
+  @media (max-width: 768px) {
+    .app-header {
+      padding: 0.8rem 1rem;
+    }
+    .header-content {
+      flex-direction: column;
+      text-align: center;
+    }
+    .user-info {
+      margin-top: 10px;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .app-title {
+      font-size: 1.6rem;
+    }
+    .welcome-message {
+      font-size: 0.9rem;
+    }
+    .main-content {
+      padding-top: 120px; /* Ajusta padding para header maior */
+    }
+    .module-card-new {
+      min-height: 180px;
+    }
+    .module-title {
+      font-size: 1.2rem;
+    }
+    .restricted-tag {
+      font-size: 0.7rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .main-content {
+      padding-top: 100px;
+      padding-bottom: 50px;
+    }
+    .app-title {
+      font-size: 1.4rem;
+    }
+    .welcome-message {
+      font-size: 0.8rem;
+    }
+    .module-grid-new {
+      gap: 15px;
+    }
+    .module-card-new {
+      min-height: 160px;
+    }
+    .module-title {
+      font-size: 1.1rem;
+    }
+    .restricted-tag {
+      font-size: 0.65rem;
+    }
+    .logout-btn {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.75rem;
+    }
+    .app-footer {
+      padding: 1rem 0.5rem;
+      font-size: 0.75rem;
+    }
+  }
+</style>
+{% endblock %}

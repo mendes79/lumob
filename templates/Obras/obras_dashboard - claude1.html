@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard de Obras - LUMOB</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/form.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+      /* Reset e variáveis CSS - IDÊNTICO AO OBRAS_WELCOME.HTML */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #34495e;
+        --accent-color: #3498db;
+        --success-color: #27ae60;
+        --warning-color: #f39c12;
+        --danger-color: #e74c3c;
+        --light-gray: #ecf0f1;
+        --medium-gray: #bdc3c7;
+        --dark-gray: #7f8c8d;
+        --text-dark: #2c3e50;
+        --text-light: #ffffff;
+        --glass-bg: rgba(255, 255, 255, 0.95);
+        --shadow-light: 0 4px 20px rgba(0, 0, 0, 0.08);
+        --shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.12);
+        --shadow-heavy: 0 16px 48px rgba(0, 0, 0, 0.15);
+        --glow-accent: 0 0 20px rgba(52, 152, 219, 0.3);
+      }
+
+      /* Estilos globais */
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+        color: var(--text-dark);
+        line-height: 1.6;
+        overflow-x: hidden;
+      }
+
+      /* Header */
+      .header {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 1rem 0;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow-light);
+      }
+
+      .header-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 2rem;
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+
+      .header h1 {
+        color: var(--primary-color);
+        font-size: 1.8rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .header h1 i {
+        color: var(--accent-color);
+        font-size: 1.6rem;
+      }
+
+      .header nav {
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+      }
+
+      .header nav a {
+        color: var(--text-dark);
+        text-decoration: none;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+      }
+
+      .header nav a:hover {
+        background: var(--accent-color);
+        color: var(--text-light);
+        transform: translateY(-2px);
+      }
+
+      /* Container principal */
+      .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 2rem 2rem;
+        position: relative;
+      }
+
+      /* Animações */
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(40px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes scaleIn {
+        from {
+          opacity: 0;
+          transform: scale(0.9);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      /* Mensagens flash */
+      .flash-messages {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 2rem 0;
+        animation: scaleIn 0.6s ease-out;
+      }
+
+      .flash-messages li {
+        padding: 1rem 1.5rem;
+        margin-bottom: 1rem;
+        border-radius: 12px;
+        font-weight: 500;
+        font-size: 0.95rem;
+        box-shadow: var(--shadow-light);
+        border-left: 4px solid;
+        backdrop-filter: blur(10px);
+        animation: fadeInUp 0.6s ease-out;
+      }
+
+      .flash-messages li.success {
+        background: rgba(39, 174, 96, 0.1);
+        color: var(--success-color);
+        border-left-color: var(--success-color);
+      }
+
+      .flash-messages li.danger {
+        background: rgba(231, 76, 60, 0.1);
+        color: var(--danger-color);
+        border-left-color: var(--danger-color);
+      }
+
+      .flash-messages li.warning {
+        background: rgba(243, 156, 18, 0.1);
+        color: var(--warning-color);
+        border-left-color: var(--warning-color);
+      }
+
+      /* Grid de KPIs */
+      .kpis-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+        animation: fadeInUp 0.8s ease-out 0.2s both;
+      }
+
+      /* Cards KPI */
+      .kpi-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: var(--shadow-medium);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        animation: scaleIn 0.6s ease-out both;
+      }
+
+      .kpi-card:nth-child(1) {
+        animation-delay: 0.1s;
+      }
+      .kpi-card:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .kpi-card:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+      .kpi-card:nth-child(4) {
+        animation-delay: 0.4s;
+      }
+      .kpi-card:nth-child(5) {
+        animation-delay: 0.5s;
+      }
+      .kpi-card:nth-child(6) {
+        animation-delay: 0.6s;
+      }
+
+      .kpi-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-heavy), var(--glow-accent);
+      }
+
+      .kpi-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: between;
+        margin-bottom: 1rem;
+      }
+
+      .kpi-card-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: var(--shadow-light);
+        transition: transform 0.3s ease;
+      }
+
+      .kpi-card:hover .kpi-card-icon {
+        transform: scale(1.1);
+      }
+
+      .kpi-card-icon i {
+        font-size: 1.5rem;
+        color: var(--text-light);
+      }
+
+      .kpi-card-icon.success {
+        background: linear-gradient(135deg, var(--success-color), #2ecc71);
+      }
+
+      .kpi-card-icon.primary {
+        background: linear-gradient(
+          135deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+      }
+
+      .kpi-card-icon.accent {
+        background: linear-gradient(135deg, var(--accent-color), #5dade2);
+      }
+
+      .kpi-card-icon.warning {
+        background: linear-gradient(135deg, var(--warning-color), #f4d03f);
+      }
+
+      .kpi-card-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--dark-gray);
+        margin: 0;
+      }
+
+      .kpi-card-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin: 0.5rem 0;
+        transition: color 0.3s ease;
+      }
+
+      .kpi-card:hover .kpi-card-value {
+        color: var(--accent-color);
+      }
+
+      .kpi-card-trend {
+        font-size: 0.8rem;
+        color: var(--success-color);
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+      }
+
+      .kpi-card-trend.negative {
+        color: var(--danger-color);
+      }
+
+      /* Seções do dashboard */
+      .dashboard-section {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow-medium);
+        animation: fadeInUp 0.8s ease-out both;
+      }
+
+      .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: between;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      }
+
+      .section-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0;
+      }
+
+      .section-title i {
+        color: var(--accent-color);
+        font-size: 1.1rem;
+      }
+
+      /* Grid de gráficos */
+      .charts-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+      }
+
+      .chart-container {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: var(--shadow-medium);
+        animation: fadeInUp 0.8s ease-out both;
+      }
+
+      .chart-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+        text-align: center;
+      }
+
+      .chart-wrapper {
+        position: relative;
+        height: 300px;
+      }
+
+      /* Lista de status */
+      .status-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .status-list li {
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        background: rgba(255, 255, 255, 0.5);
+        border-radius: 8px;
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        transition: all 0.3s ease;
+      }
+
+      .status-list li:hover {
+        background: rgba(255, 255, 255, 0.8);
+        transform: translateX(5px);
+      }
+
+      .status-name {
+        font-weight: 600;
+        color: var(--text-dark);
+      }
+
+      .status-count {
+        font-weight: 700;
+        color: var(--accent-color);
+        background: rgba(52, 152, 219, 0.1);
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+      }
+
+      /* Footer */
+      footer {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 1.5rem 0;
+        margin-top: 3rem;
+        text-align: center;
+        color: var(--dark-gray);
+        box-shadow: var(--shadow-light);
+      }
+
+      /* Responsividade */
+      @media (max-width: 1024px) {
+        .charts-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .main-container {
+          padding: 0 1rem 2rem;
+        }
+
+        .header-container {
+          padding: 0 1rem;
+          flex-direction: column;
+          text-align: center;
+        }
+
+        .kpis-container {
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+
+        .dashboard-section {
+          padding: 1.5rem;
+        }
+
+        .section-header {
+          flex-direction: column;
+          gap: 1rem;
+          text-align: center;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .kpis-container {
+          grid-template-columns: 1fr;
+        }
+
+        .header h1 {
+          font-size: 1.5rem;
+          flex-direction: column;
+        }
+
+        .header nav {
+          justify-content: center;
+        }
+
+        .chart-wrapper {
+          height: 250px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <div class="header-container">
+        <h1>
+          <i class="fas fa-chart-line"></i>
+          Dashboard de Obras
+        </h1>
+        <nav>
+          <a href="{{ url_for('welcome') }}">
+            <i class="fas fa-home"></i> Início
+          </a>
+          <a href="{{ url_for('obras_bp.obras_module') }}">
+            <i class="fas fa-hard-hat"></i> Módulo Obras
+          </a>
+          <a href="{{ url_for('logout') }}">
+            <i class="fas fa-sign-out-alt"></i> Sair
+          </a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="main-container">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %}
+      <ul class="flash-messages">
+        {% for category, message in messages %}
+        <li class="{{ category }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %} {% endwith %}
+
+      <!-- KPIs Grid -->
+      <div class="kpis-container">
+        <div class="kpi-card">
+          <div class="kpi-card-header">
+            <div class="kpi-card-icon success">
+              <i class="fas fa-play-circle"></i>
+            </div>
+          </div>
+          <h4 class="kpi-card-title">Obras em Andamento</h4>
+          <p class="kpi-card-value">
+            {{ status_counts.get('Em Andamento', 0) }}
+          </p>
+          <div class="kpi-card-trend">
+            <i class="fas fa-arrow-up"></i>
+            Ativas
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card-header">
+            <div class="kpi-card-icon primary">
+              <i class="fas fa-check-circle"></i>
+            </div>
+          </div>
+          <h4 class="kpi-card-title">Obras Concluídas</h4>
+          <p class="kpi-card-value">{{ status_counts.get('Concluída', 0) }}</p>
+          <div class="kpi-card-trend">
+            <i class="fas fa-check"></i>
+            Finalizadas
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card-header">
+            <div class="kpi-card-icon accent">
+              <i class="fas fa-building"></i>
+            </div>
+          </div>
+          <h4 class="kpi-card-title">Total de Obras</h4>
+          <p class="kpi-card-value">{{ total_obras_geral }}</p>
+          <div class="kpi-card-trend">
+            <i class="fas fa-hashtag"></i>
+            Geral
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card-header">
+            <div class="kpi-card-icon warning">
+              <i class="fas fa-file-contract"></i>
+            </div>
+          </div>
+          <h4 class="kpi-card-title">Contratos Ativos</h4>
+          <p class="kpi-card-value">{{ total_contratos_ativos }}</p>
+          <div class="kpi-card-trend">
+            <i class="fas fa-handshake"></i>
+            Vigentes
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card-header">
+            <div class="kpi-card-icon primary">
+              <i class="fas fa-ruler-combined"></i>
+            </div>
+          </div>
+          <h4 class="kpi-card-title">Medições Realizadas</h4>
+          <p class="kpi-card-value">{{ total_medicoes_realizadas }}</p>
+          <div class="kpi-card-trend">
+            <i class="fas fa-clipboard-check"></i>
+            Total
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card-header">
+            <div class="kpi-card-icon success">
+              <i class="fas fa-percentage"></i>
+            </div>
+          </div>
+          <h4 class="kpi-card-title">Avanço Físico Médio</h4>
+          <p class="kpi-card-value">{{ avg_avanco_fisico }}%</p>
+          <div class="kpi-card-trend">
+            <i class="fas fa-chart-line"></i>
+            Progresso
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráficos -->
+      <div class="charts-grid">
+        <div class="chart-container">
+          <h3 class="chart-title">
+            <i class="fas fa-pie-chart"></i>
+            Distribuição por Status
+          </h3>
+          <div class="chart-wrapper">
+            <canvas id="statusChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <h3 class="chart-title">
+            <i class="fas fa-bar-chart"></i>
+            Progresso das Obras Ativas
+          </h3>
+          <div class="chart-wrapper">
+            <canvas id="progressChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção de Status Detalhado -->
+      <div class="dashboard-section">
+        <div class="section-header">
+          <h3 class="section-title">
+            <i class="fas fa-list-alt"></i>
+            Distribuição Detalhada por Status
+          </h3>
+        </div>
+        {% if status_counts %}
+        <ul class="status-list">
+          {% for status, count in status_counts.items() %}
+          <li>
+            <span class="status-name">{{ status }}</span>
+            <span class="status-count">{{ count }} obras</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p
+          style="
+            text-align: center;
+            color: var(--dark-gray);
+            font-style: italic;
+          "
+        >
+          Nenhuma obra encontrada para exibir a distribuição por status.
+        </p>
+        {% endif %}
+      </div>
+    </main>
+
+    <footer>
+      <div class="header-container">
+        <p>&copy; 2025 LUMOB - Sistema de Gestão Interna</p>
+      </div>
+    </footer>
+
+    <script>
+      // Configuração dos gráficos
+      Chart.defaults.font.family = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+      Chart.defaults.font.size = 12;
+      Chart.defaults.color = '#2c3e50';
+
+      // Dados do status (obtidos do backend)
+      const statusData = {{ status_counts | tojson | safe }};
+
+      // Gráfico de Pizza - Distribuição por Status
+      const statusCtx = document.getElementById('statusChart').getContext('2d');
+      const statusChart = new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(statusData),
+          datasets: [{
+            data: Object.values(statusData),
+            backgroundColor: [
+              '#3498db',
+              '#27ae60',
+              '#f39c12',
+              '#e74c3c',
+              '#9b59b6',
+              '#1abc9c',
+              '#34495e',
+              '#f1c40f'
+            ],
+            borderWidth: 0,
+            hoverBorderWidth: 3,
+            hoverBorderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                padding: 20,
+                usePointStyle: true,
+                pointStyle: 'circle'
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(44, 62, 80, 0.9)',
+              titleColor: '#ffffff',
+              bodyColor: '#ffffff',
+              borderColor: '#3498db',
+              borderWidth: 1,
+              cornerRadius: 8,
+              displayColors: true,
+              callbacks: {
+                label: function(context) {
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = ((context.parsed * 100) / total).toFixed(1);
+                  return `${context.label}: ${context.parsed} obras (${percentage}%)`;
+                }
+              }
+            }
+          },
+          animation: {
+            animateRotate: true,
+            animateScale: true,
+            duration: 1000,
+            easing: 'easeOutQuart'
+          }
+        }
+      });
+
+      // Dados simulados para o gráfico de progresso (você deve substituir pelos dados reais)
+      const progressData = {
+        labels: ['Obra A', 'Obra B', 'Obra C', 'Obra D', 'Obra E'],
+        values: [65, 80, 45, 90, 25]
+      };
+
+      // Gráfico de Barras - Progresso das Obras
+      const progressCtx = document.getElementById('progressChart').getContext('2d');
+      const progressChart = new Chart(progressCtx, {
+        type: 'bar',
+        data: {
+          labels: progressData.labels,
+          datasets: [{
+            label: 'Avanço Físico (%)',
+            data: progressData.values,
+            backgroundColor: 'rgba(52, 152, 219, 0.8)',
+            borderColor: '#3498db',
+            borderWidth: 2,
+            borderRadius: 6,
+            borderSkipped: false,
+            hoverBackgroundColor: 'rgba(52, 152, 219, 1)',
+            hoverBorderColor: '#2980b9'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              backgroundColor: 'rgba(44, 62, 80, 0.9)',
+              titleColor: '#ffffff',
+              bodyColor: '#ffffff',
+              borderColor: '#3498db',
+              borderWidth: 1,
+              cornerRadius: 8,
+              callbacks: {
+                label: function(context) {
+                  return `Progresso: ${context.parsed.y}%`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              grid: {
+                color: 'rgba(0, 0, 0, 0.05)'
+              },
+              ticks: {
+                callback: function(value) {
+                  return value + '%';
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              }
+            }
+          },
+          animation: {
+            duration: 1200,
+            easing: 'easeOutQuart'
+          }
+        }
+      });
+
+      // Animações de entrada dos cards
+      const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+      };
+
+      const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.style.animationPlayState = 'running';
+          }
+        });
+      }, observerOptions);
+
+      // Observar todos os elementos animados
+      document.querySelectorAll('.kpi-card, .dashboard-section, .chart-container').forEach(el => {
+        observer.observe(el);
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bem-vindo - LUMOB</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-content">
+        <div class="brand-section">
+          <div class="logo-container">
+            <i class="fas fa-cube logo-icon"></i>
+            <h1 class="app-title">LUMOB</h1>
+          </div>
+          <span class="app-subtitle">Sistema de Gestão Integrada</span>
+        </div>
+        <div class="user-section">
+          <div class="user-info">
+            <div class="user-avatar">
+              <i class="fas fa-user"></i>
+            </div>
+            <div class="user-details">
+              <span class="welcome-text">Bem-vindo</span>
+              <span class="username">João Silva</span>
+            </div>
+          </div>
+          <button class="logout-btn">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Sair</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="container">
+        <!-- Page Title Section -->
+        <div class="page-header">
+          <h2 class="page-title">Selecione um Módulo</h2>
+          <p class="page-description">
+            Escolha o módulo que deseja acessar para gerenciar suas operações
+          </p>
+        </div>
+
+        <!-- Modules Grid -->
+        <div class="modules-grid">
+          <!-- Obras Module -->
+          <div class="module-card" data-module="obras">
+            <div class="module-icon-container">
+              <i class="fas fa-hard-hat module-icon"></i>
+              <div class="icon-bg-effect"></div>
+            </div>
+            <div class="module-content">
+              <h3 class="module-title">Obras</h3>
+              <p class="module-description">
+                Gestão completa de projetos e construções
+              </p>
+              <div class="module-stats">
+                <span class="stat-item">
+                  <i class="fas fa-project-diagram"></i>
+                  <span>15 projetos ativos</span>
+                </span>
+              </div>
+            </div>
+            <div class="module-arrow">
+              <i class="fas fa-arrow-right"></i>
+            </div>
+          </div>
+
+          <!-- Pessoal Module -->
+          <div class="module-card" data-module="pessoal">
+            <div class="module-icon-container">
+              <i class="fas fa-users module-icon"></i>
+              <div class="icon-bg-effect"></div>
+            </div>
+            <div class="module-content">
+              <h3 class="module-title">Pessoal</h3>
+              <p class="module-description">
+                Gerenciamento de recursos humanos e colaboradores
+              </p>
+              <div class="module-stats">
+                <span class="stat-item">
+                  <i class="fas fa-user-check"></i>
+                  <span>248 funcionários</span>
+                </span>
+              </div>
+            </div>
+            <div class="module-arrow">
+              <i class="fas fa-arrow-right"></i>
+            </div>
+          </div>
+
+          <!-- Segurança Module -->
+          <div class="module-card" data-module="seguranca">
+            <div class="module-icon-container">
+              <i class="fas fa-shield-alt module-icon"></i>
+              <div class="icon-bg-effect"></div>
+            </div>
+            <div class="module-content">
+              <h3 class="module-title">Segurança</h3>
+              <p class="module-description">
+                Controle de acesso e segurança do trabalho
+              </p>
+              <div class="module-stats">
+                <span class="stat-item">
+                  <i class="fas fa-exclamation-triangle"></i>
+                  <span>3 alertas pendentes</span>
+                </span>
+              </div>
+            </div>
+            <div class="module-arrow">
+              <i class="fas fa-arrow-right"></i>
+            </div>
+          </div>
+
+          <!-- Usuários Module -->
+          <div class="module-card" data-module="usuarios">
+            <div class="module-icon-container">
+              <i class="fas fa-user-cog module-icon"></i>
+              <div class="icon-bg-effect"></div>
+            </div>
+            <div class="module-content">
+              <h3 class="module-title">Usuários</h3>
+              <p class="module-description">
+                Administração de usuários e permissões
+              </p>
+              <div class="module-stats">
+                <span class="stat-item">
+                  <i class="fas fa-users-cog"></i>
+                  <span>42 usuários ativos</span>
+                </span>
+              </div>
+            </div>
+            <div class="module-arrow">
+              <i class="fas fa-arrow-right"></i>
+            </div>
+          </div>
+
+          <!-- Restricted Module Example -->
+          <div class="module-card module-restricted" data-module="financeiro">
+            <div class="module-icon-container">
+              <i class="fas fa-chart-line module-icon"></i>
+              <div class="icon-bg-effect"></div>
+            </div>
+            <div class="module-content">
+              <h3 class="module-title">Financeiro</h3>
+              <p class="module-description">Gestão financeira e contábil</p>
+              <div class="restricted-badge">
+                <i class="fas fa-lock"></i>
+                <span>Acesso Restrito</span>
+              </div>
+            </div>
+            <div class="module-arrow">
+              <i class="fas fa-lock"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+          <h3 class="section-title">Ações Rápidas</h3>
+          <div class="actions-grid">
+            <button class="action-btn">
+              <i class="fas fa-plus"></i>
+              <span>Novo Projeto</span>
+            </button>
+            <button class="action-btn">
+              <i class="fas fa-file-alt"></i>
+              <span>Relatórios</span>
+            </button>
+            <button class="action-btn">
+              <i class="fas fa-bell"></i>
+              <span>Notificações</span>
+            </button>
+            <button class="action-btn">
+              <i class="fas fa-cog"></i>
+              <span>Configurações</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-left">
+            <p>&copy; 2025 LUMOB. Todos os direitos reservados.</p>
+            <p>Desenvolvido por Mendes Engenharia.</p>
+          </div>
+          <div class="footer-right">
+            <span class="version">v2.1.3</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <style>
+      :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #34495e;
+        --accent-color: #3498db;
+        --success-color: #27ae60;
+        --warning-color: #f39c12;
+        --danger-color: #e74c3c;
+        --light-gray: #ecf0f1;
+        --medium-gray: #bdc3c7;
+        --dark-gray: #7f8c8d;
+        --white: #ffffff;
+        --bg-primary: #f8f9fa;
+        --bg-secondary: #ffffff;
+        --border-color: #e9ecef;
+        --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.05);
+        --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.1);
+        --shadow-heavy: 0 8px 25px rgba(0, 0, 0, 0.15);
+        --border-radius: 12px;
+        --border-radius-lg: 16px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+        background: var(--bg-primary);
+        color: var(--primary-color);
+        line-height: 1.6;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+      }
+
+      /* Header Styles */
+      .app-header {
+        background: var(--white);
+        border-bottom: 1px solid var(--border-color);
+        padding: 1rem 0;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        backdrop-filter: blur(10px);
+      }
+
+      .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .brand-section {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .logo-container {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .logo-icon {
+        font-size: 2rem;
+        color: var(--accent-color);
+      }
+
+      .app-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        letter-spacing: -0.02em;
+      }
+
+      .app-subtitle {
+        color: var(--dark-gray);
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+
+      .user-section {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+      }
+
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(
+          135deg,
+          var(--accent-color),
+          var(--secondary-color)
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--white);
+      }
+
+      .user-details {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .welcome-text {
+        font-size: 0.75rem;
+        color: var(--dark-gray);
+        font-weight: 500;
+      }
+
+      .username {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--primary-color);
+      }
+
+      .logout-btn {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        color: var(--primary-color);
+        padding: 0.5rem 1rem;
+        border-radius: var(--border-radius);
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: var(--transition);
+      }
+
+      .logout-btn:hover {
+        background: var(--danger-color);
+        color: var(--white);
+        border-color: var(--danger-color);
+        transform: translateY(-1px);
+      }
+
+      /* Main Content */
+      .main-content {
+        flex: 1;
+        padding: 2rem 0;
+      }
+
+      .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+      }
+
+      .page-title {
+        font-size: 2.25rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.02em;
+      }
+
+      .page-description {
+        font-size: 1.125rem;
+        color: var(--dark-gray);
+        font-weight: 400;
+      }
+
+      /* Modules Grid */
+      .modules-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+      }
+
+      .module-card {
+        background: var(--white);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-lg);
+        padding: 2rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 1.5rem;
+        cursor: pointer;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .module-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-heavy);
+        border-color: var(--accent-color);
+      }
+
+      .module-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(
+          90deg,
+          var(--accent-color),
+          var(--secondary-color)
+        );
+        transform: scaleX(0);
+        transition: var(--transition);
+      }
+
+      .module-card:hover::before {
+        transform: scaleX(1);
+      }
+
+      .module-icon-container {
+        position: relative;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .module-icon {
+        font-size: 1.75rem;
+        color: var(--accent-color);
+        z-index: 2;
+        position: relative;
+      }
+
+      .icon-bg-effect {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--accent-color);
+        opacity: 0.1;
+        border-radius: 50%;
+        transform: scale(0.8);
+        transition: var(--transition);
+      }
+
+      .module-card:hover .icon-bg-effect {
+        transform: scale(1);
+        opacity: 0.15;
+      }
+
+      .module-content {
+        flex: 1;
+      }
+
+      .module-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+      }
+
+      .module-description {
+        font-size: 0.875rem;
+        color: var(--dark-gray);
+        margin-bottom: 1rem;
+        line-height: 1.5;
+      }
+
+      .module-stats {
+        display: flex;
+        align-items: center;
+      }
+
+      .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.75rem;
+        color: var(--medium-gray);
+        font-weight: 500;
+      }
+
+      .stat-item i {
+        color: var(--accent-color);
+      }
+
+      .module-arrow {
+        color: var(--medium-gray);
+        font-size: 1rem;
+        transition: var(--transition);
+      }
+
+      .module-card:hover .module-arrow {
+        color: var(--accent-color);
+        transform: translateX(4px);
+      }
+
+      /* Restricted Module */
+      .module-restricted {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+
+      .module-restricted:hover {
+        transform: none;
+        box-shadow: var(--shadow-light);
+        border-color: var(--border-color);
+      }
+
+      .module-restricted::before {
+        background: linear-gradient(
+          90deg,
+          var(--medium-gray),
+          var(--dark-gray)
+        );
+      }
+
+      .module-restricted .module-icon {
+        color: var(--medium-gray);
+      }
+
+      .module-restricted .icon-bg-effect {
+        background: var(--medium-gray);
+      }
+
+      .restricted-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        background: var(--light-gray);
+        color: var(--dark-gray);
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 500;
+      }
+
+      /* Quick Actions */
+      .quick-actions {
+        margin-bottom: 2rem;
+      }
+
+      .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 1.5rem;
+      }
+
+      .actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+      }
+
+      .action-btn {
+        background: var(--white);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        cursor: pointer;
+        transition: var(--transition);
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--primary-color);
+      }
+
+      .action-btn:hover {
+        background: var(--accent-color);
+        color: var(--white);
+        border-color: var(--accent-color);
+        transform: translateY(-2px);
+      }
+
+      .action-btn i {
+        font-size: 1.125rem;
+      }
+
+      /* Footer */
+      .app-footer {
+        background: var(--white);
+        border-top: 1px solid var(--border-color);
+        padding: 1.5rem 0;
+        margin-top: auto;
+      }
+
+      .footer-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .footer-left p {
+        font-size: 0.875rem;
+        color: var(--dark-gray);
+        margin: 0.25rem 0;
+      }
+
+      .version {
+        background: var(--bg-primary);
+        color: var(--dark-gray);
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 500;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .header-content {
+          flex-direction: column;
+          gap: 1rem;
+          text-align: center;
+        }
+
+        .brand-section {
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .page-title {
+          font-size: 1.875rem;
+        }
+
+        .modules-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .module-card {
+          padding: 1.5rem;
+        }
+
+        .actions-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .footer-content {
+          flex-direction: column;
+          gap: 1rem;
+          text-align: center;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .container {
+          padding: 0 1rem;
+        }
+
+        .module-card {
+          flex-direction: column;
+          text-align: center;
+          gap: 1rem;
+        }
+
+        .actions-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+
+    <script>
+      // Module card interactions
+      document
+        .querySelectorAll(".module-card:not(.module-restricted)")
+        .forEach((card) => {
+          card.addEventListener("click", function () {
+            const module = this.dataset.module;
+            console.log(`Navigating to ${module} module...`);
+            // Here you would implement the actual navigation
+            // window.location.href = `/modules/${module}`;
+          });
+        });
+
+      // Quick action buttons
+      document.querySelectorAll(".action-btn").forEach((btn) => {
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+          const action = this.querySelector("span").textContent;
+          console.log(`Quick action: ${action}`);
+          // Implement quick actions here
+        });
+      });
+
+      // Logout button
+      document
+        .querySelector(".logout-btn")
+        .addEventListener("click", function () {
+          if (confirm("Tem certeza que deseja sair?")) {
+            console.log("Logging out...");
+            // Implement logout logic
+            // window.location.href = '/logout';
+          }
+        });
+    </script>
+  </body>
+</html>
