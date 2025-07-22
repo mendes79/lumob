@@ -2091,7 +2091,11 @@ def export_treinamentos_participantes_excel():
                 'Data_Modificacao': 'Última Modificação'
             })
 
-            df['Presenca'] = df['Presenca'].apply(lambda x: 'Sim' if x else 'Não')
+            # --- CORREÇÃO APLICADA AQUI ---
+            # O nome da coluna agora é 'Presença' (com acento), e não mais 'Presenca'.
+            df['Presença'] = df['Presença'].apply(lambda x: 'Sim' if x else 'Não')
+            
+            # Esta linha já estava correta, pois usa o nome novo 'Certificado Emitido'.
             df['Certificado Emitido'] = df['Certificado Emitido'].apply(lambda x: 'Sim' if x else 'Não')
 
             excel_buffer = BytesIO()
@@ -2109,4 +2113,3 @@ def export_treinamentos_participantes_excel():
         flash(f"Ocorreu um erro ao exportar Participantes para Excel: {e}", 'danger')
         print(f"Erro ao exportar Participantes Excel: {e}")
         return redirect(url_for('seguranca_bp.treinamentos_participantes_module'))
-

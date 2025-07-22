@@ -4,127 +4,775 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LUMOB - Catálogo de Treinamentos</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_welcome.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        body { font-family: sans-serif; background-color: #f4f4f4; color: #333; margin: 20px; }
-        .container { max-width: 1200px; margin: 50px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
-        h1 { text-align: center; color: #0056b3; }
-        .flash-messages { list-style: none; padding: 0; margin-bottom: 20px; }
-        .flash-messages li { padding: 10px; margin-bottom: 10px; border-radius: 5px; }
-        .flash-messages li.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .flash-messages li.danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6fb; }
-        .flash-messages li.info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
-
-        .action-buttons { display: flex; justify-content: flex-end; margin-bottom: 20px; flex-wrap: wrap; }
-        .add-button, .print-button, .export-excel-button {
-            display: block; padding: 10px 20px; color: white; text-align: center; text-decoration: none; border-radius: 5px;
-            margin-left: 10px; margin-bottom: 10px; cursor: pointer; border: none;
+        /* Reset e variáveis CSS do obras_module.html (nosso novo padrão) */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .add-button { background-color: #28a745; }
-        .print-button { background-color: #007bff; }
+
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12; /* Amarelo */
+            --danger-color: #e74c3c;
+            --light-gray: #ecf0f1;
+            --medium-gray: #bdc3c7;
+            --dark-gray: #7f8c8d;
+            --text-dark: #2c3e50;
+            --text-light: #ffffff;
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --shadow-light: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.12);
+            --shadow-heavy: 0 16px 48px rgba(0, 0, 0, 0.15);
+            --shadow-intense: 0 20px 60px rgba(0, 0, 0, 0.25);
+            --glow-accent: 0 0 20px rgba(52, 152, 219, 0.3);
+            --glow-intense: 0 0 40px rgba(52, 152, 219, 0.5);
+            --orange-yellow: #f1c40f; /* Um tom entre amarelo e alaranjado */
+        }
+
+        /* Estilos globais do obras_module.html */
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: var(--text-dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Container principal do obras_module.html */
+        .main-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem 0.5rem;
+            position: relative;
+        }
+
+        /* Efeito de partículas de fundo do obras_module.html */
+        .main-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: radial-gradient(
+                circle at 20% 20%,
+                rgba(255, 255, 255, 0.3) 0%,
+                transparent 50%
+            ),
+            radial-gradient(
+                circle at 80% 80%,
+                rgba(255, 255, 255, 0.3) 0%,
+                transparent 50%
+            ),
+            radial-gradient(
+                circle at 40% 60%,
+                rgba(255, 255, 255, 0.15) 0%,
+                transparent 50%
+            );
+            pointer-events: none;
+        }
+
+        /* Container de conteúdo do obras_module.html */
+        .content-container {
+            max-width: 1700px; /* Mantido o ajuste de largura do obras_module.html */
+            width: 100%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: var(--shadow-heavy);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 2.5rem;
+            position: relative;
+            z-index: 1;
+            animation: fadeInUp 0.5s ease-out;
+            min-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* Animações (tempos mais curtos) */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Cabeçalho */
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .title-band {
+            background: linear-gradient(
+                135deg,
+                var(--primary-color),
+                var(--secondary-color)
+            );
+            padding: 1.2rem;
+            border-radius: 16px;
+            margin-bottom: 0;
+            box-shadow: var(--shadow-medium);
+            animation: slideInLeft 0.5s ease-out 0.1s both;
+        }
+
+        .title-band h1 {
+            color: var(--text-light);
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+        }
+
+        .title-band h1 i {
+            font-size: 1.8rem;
+            opacity: 0.9;
+        }
+
+        /* Mensagens flash (adaptadas do obras_module.html) */
+        .flash-messages {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 1.5rem 0;
+            animation: scaleIn 0.4s ease-out 0.4s both;
+        }
+
+        .flash-messages li {
+            padding: 0.8rem 1.2rem;
+            margin-bottom: 0.8rem;
+            border-radius: 10px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            box-shadow: var(--shadow-light);
+            border-left: 4px solid;
+            backdrop-filter: blur(10px);
+            animation: slideInLeft 0.4s ease-out;
+        }
+
+        .flash-messages li.success {
+            background: rgba(39, 174, 96, 0.1);
+            color: var(--success-color);
+            border-left-color: var(--success-color);
+        }
+
+        .flash-messages li.danger {
+            background: rgba(231, 76, 60, 0.1);
+            color: var(--danger-color);
+            border-left-color: var(--danger-color);
+        }
+
+        .flash-messages li.info {
+            background: rgba(52, 152, 219, 0.1);
+            color: var(--accent-color);
+            border-left-color: var(--accent-color);
+        }
+
+        .flash-messages li.warning {
+            background: rgba(243, 156, 18, 0.1);
+            color: var(--warning-color);
+            border-left-color: var(--warning-color);
+        }
+
+        /* Botões de Ação */
+        .action-buttons {
+            display: flex;
+            justify-content: flex-end; /* Alinha os botões à direita */
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .add-button, .print-button, .export-excel-button, .back-to-module-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.6rem 1.0rem;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: var(--shadow-light);
+            transition: all 0.2s ease-in-out;
+        }
+
+        /* Cor dos botões */
+        .add-button { background-color: var(--orange-yellow); color: var(--text-dark); }
+        .print-button { background-color: var(--accent-color); }
         .export-excel-button { background-color: #1e7e34; }
-        .add-button:hover { background-color: #218838; }
-        .print-button:hover { background-color: #0056b3; }
-        .export-excel-button:hover { background-color: #17642a; }
+        .back-to-module-button { background-color: var(--dark-gray); }
 
-        .filter-form { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9; }
-        .filter-form label { white-space: nowrap; margin-right: 5px; align-self: center; }
-        .filter-form input[type="text"], .filter-form select, .filter-form button { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
-        .filter-form button { background-color: #007bff; color: white; cursor: pointer; }
-        .filter-form button:hover { background-color: #0056b3; }
-        .filter-form .button { background-color: #6c757d; color: white; text-decoration: none; padding: 8px 10px; border-radius: 4px; display: inline-block; }
-        .filter-form .button:hover { background-color: #5a6268; }
+        .add-button:hover { background-color: #e6b10a; transform: translateY(-1px); box-shadow: var(--shadow-medium); }
+        .print-button:hover { background-color: #0056b3; transform: translateY(-1px); box-shadow: var(--shadow-medium); }
+        .export-excel-button:hover { background-color: #17642a; transform: translateY(-1px); box-shadow: var(--shadow-medium); }
+        .back-to-module-button:hover { background-color: #5a6268; transform: translateY(-1px); box-shadow: var(--shadow-medium); }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #007bff; color: white; }
-        .actions a, .actions button {
-            padding: 5px 10px; margin-right: 5px; text-decoration: none; border-radius: 3px; cursor: pointer; border: none;
-            margin-bottom: 5px; display: inline-block;
+        /* Formulário de Filtro - Organização Aprimorada */
+        .filter-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px 25px;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.7);
+            box-shadow: var(--shadow-light);
+            backdrop-filter: blur(10px);
         }
-        .actions a.view { background-color: #17a2b8; color: white; }
-        .actions a.edit { background-color: #ffc107; color: #333; }
-        .actions button.delete { background-color: #dc3545; color: white; }
-        .actions a:hover, .actions button:hover { opacity: 0.9; }
-        .back-link { display: block; margin-top: 30px; text-align: center; }
-        .back-link a { color: #007bff; text-decoration: none; }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-form label {
+            white-space: nowrap;
+            font-weight: 500;
+            color: var(--primary-color);
+            margin-right: 0;
+            align-self: flex-start;
+            font-size: 0.95rem;
+        }
+        .filter-form input,
+        .filter-form select {
+            padding: 9px;
+            border: 1px solid var(--medium-gray);
+            border-radius: 6px;
+            background-color: var(--light-gray);
+            color: var(--text-dark);
+            width: 100%;
+            font-size: 0.95rem;
+        }
+
+        /* Botões de Filtro e Limpar Filtros como Ícones */
+        .filter-buttons-group {
+            grid-column: span 1;
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            padding-top: 10px;
+        }
+
+        .filter-form button[type="submit"],
+        .filter-form .button-icon {
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+            box-shadow: var(--shadow-light);
+            transition: all 0.2s ease-in-out;
+            position: relative;
+        }
+
+        .filter-form button[type="submit"] {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        .filter-form button[type="submit"]:hover { background-color: #0056b3; transform: translateY(-1px); box-shadow: var(--shadow-medium); }
+
+        .filter-form .button-icon {
+            background-color: var(--dark-gray);
+            color: white;
+        }
+        .filter-form .button-icon:hover { background-color: #5a6268; transform: translateY(-1px); box-shadow: var(--shadow-medium); }
+
+        /* Tooltip para botões de filtro */
+        .filter-form .button-icon::after,
+        .filter-form button[type="submit"]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 120%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            padding: 6px 10px;
+            border-radius: 6px;
+            white-space: nowrap;
+            font-size: 0.75rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+            z-index: 2;
+            box-shadow: var(--shadow-light);
+        }
+
+        .filter-form .button-icon:hover::after,
+        .filter-form button[type="submit"]:hover::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-5px);
+        }
+
+
+        /* Tabela de Dados */
+        .table-container {
+            flex-grow: 1;
+            overflow-x: auto;
+            margin-bottom: 1.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-medium);
+            animation: scaleIn 0.6s ease-out 0.4s both;
+            min-width: 800px; /* Ajustado para permitir mais compressão */
+        }
+
+        th, td {
+            border: 1px solid rgba(var(--medium-gray), 0.3);
+            padding: 7px 10px; /* Reduzido o padding */
+            text-align: left;
+            white-space: nowrap;
+            font-size: 0.85rem; /* Diminuído o tamanho da fonte */
+        }
+
+        th {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: var(--text-light);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.6);
+        }
+        tbody tr:hover {
+            background-color: rgba(52, 152, 219, 0.15);
+            cursor: pointer;
+        }
+
+        /* Coluna de Ações - Ícones Quadrados e Destaque Aprimorado */
+        .actions {
+            display: flex;
+            gap: 6px;
+            justify-content: flex-start;
+        }
+
+        .actions a, .actions button {
+            position: relative;
+            width: 34px; /* Levemente reduzido */
+            height: 34px; /* Levemente reduzido */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+            font-size: 0.9rem; /* Levemente reduzido */
+            color: white;
+            box-shadow: var(--shadow-light);
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            overflow: hidden;
+        }
+
+        .actions a.view { background-color: var(--accent-color); }
+        .actions a.edit { background-color: var(--warning-color); color: var(--text-dark); }
+        .actions button.delete { background-color: var(--danger-color); }
+
+        /* Efeito de destaque aprimorado */
+        .actions a::before, .actions button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transition: width 0.3s ease, height 0.3s ease, opacity 0.3s ease;
+            opacity: 0;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+        }
+
+        .actions a:hover::before, .actions button:hover::before {
+            width: 150%;
+            height: 150%;
+            opacity: 1;
+        }
+
+        .actions a:hover, .actions button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium), 0 0 20px rgba(52, 152, 219, 0.7);
+            z-index: 1;
+        }
+
+        /* Tooltip para os botões de ação */
+        .actions a::after, .actions button::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 120%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            padding: 5px 9px;
+            border-radius: 5px;
+            white-space: nowrap;
+            font-size: 0.7rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+            z-index: 2;
+            box-shadow: var(--shadow-light);
+        }
+
+        .actions a:hover::after, .actions button:hover::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-3px);
+        }
+
+
+        /* Nenhum treinamento encontrado */
+        .no-results-message {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 1.1rem;
+            color: var(--dark-gray);
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Botão Voltar (REMOVIDO da parte inferior e adicionado nos botões de ação) */
+        .back-button-container {
+            display: none; /* Esconde o container antigo */
+        }
+
+
+        /* Responsividade */
+        @media (max-width: 1200px) {
+            .content-container {
+                max-width: 95%;
+                padding: 2rem;
+            }
+            table {
+                min-width: 750px; /* Ajustado */
+            }
+        }
+
+        @media (max-width: 992px) {
+            .content-container {
+                max-width: 98%;
+                padding: 1.8rem;
+            }
+            .filter-form {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 15px;
+            }
+            table {
+                min-width: 650px; /* Ajustado */
+                font-size: 0.8rem; /* Ajustado */
+            }
+            th, td {
+                padding: 6px 8px; /* Ajustado */
+            }
+            .actions a, .actions button {
+                width: 30px; /* Levemente reduzido */
+                height: 30px; /* Levemente reduzido */
+                font-size: 0.85rem; /* Levemente reduzido */
+            }
+            .actions a::after, .actions button::after {
+                font-size: 0.65rem;
+                padding: 4px 8px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem 0.5rem;
+            }
+            .content-container {
+                padding: 1.5rem 1rem;
+                border-radius: 16px;
+                min-height: auto;
+            }
+
+            .title-band h1 {
+                font-size: 1.6rem;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .action-buttons {
+                justify-content: center;
+                gap: 6px;
+            }
+            .add-button, .print-button, .export-excel-button, .back-to-module-button {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.8rem;
+            }
+
+            .filter-form {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                padding: 1rem;
+            }
+            .filter-group {
+                gap: 3px;
+            }
+            .filter-form label {
+                font-size: 0.9rem;
+            }
+            .filter-form input, .filter-form select {
+                padding: 8px;
+                font-size: 0.9rem;
+            }
+            .filter-buttons-group {
+                justify-content: center;
+                gap: 8px;
+            }
+            .filter-form button[type="submit"], .filter-form .button-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 0.9rem;
+            }
+
+            table {
+                font-size: 0.75em; /* Ajustado */
+                min-width: 480px; /* Ajustado */
+            }
+            th, td {
+                padding: 5px 7px; /* Ajustado */
+            }
+
+            .actions {
+                justify-content: center;
+                gap: 4px;
+            }
+            .actions a, .actions button {
+                width: 28px; /* Levemente reduzido */
+                height: 28px; /* Levemente reduzido */
+                font-size: 0.8rem; /* Levemente reduzido */
+            }
+            .actions a::after, .actions button::after {
+                font-size: 0.6rem;
+                padding: 3px 6px;
+            }
+
+            .no-results-message {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-container {
+                padding: 0.8rem 0.5rem;
+                align-items: flex-start;
+            }
+            .content-container {
+                padding: 1.2rem 0.8rem;
+            }
+            .title-band {
+                padding: 0.8rem;
+            }
+            .title-band h1 {
+                font-size: 1.4rem;
+            }
+            .action-buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .action-buttons > * {
+                margin: 4px 0;
+            }
+
+            .filter-form {
+                padding: 0.8rem;
+            }
+            .filter-form label, .filter-form input, .filter-form select {
+                font-size: 0.85rem;
+            }
+            .filter-form button[type="submit"], .filter-form .button-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 0.8rem;
+            }
+
+            table {
+                min-width: 340px; /* Ajustado para telas muito pequenas */
+                font-size: 0.7em; /* Ajustado */
+            }
+            th, td {
+                padding: 4px 6px; /* Ajustado */
+            }
+
+            .actions a, .actions button {
+                width: 24px; /* Levemente reduzido */
+                height: 24px; /* Levemente reduzido */
+                font-size: 0.7rem; /* Levemente reduzido */
+            }
+            .actions a::after, .actions button::after {
+                font-size: 0.55rem;
+                padding: 2px 5px;
+                bottom: 110%;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Catálogo de Treinamentos</h1>
+    <div class="main-container">
+        <div class="content-container">
+            <div class="header">
+                <div class="title-band">
+                    <h1>
+                        <i class="fas fa-chalkboard-teacher"></i> {# Ícone apropriado para Treinamentos #}
+                        Catálogo de Treinamentos
+                    </h1>
+                </div>
+            </div>
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <ul class="flash-messages">
-                    {% for category, message in messages %}
-                        <li class="{{ category }}">{{ message }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        {% endwith %}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <ul class="flash-messages">
+                        {% for category, message in messages %}
+                            <li class="{{ category }}">{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
 
-        <div class="action-buttons">
-            <a href="{{ url_for('seguranca_bp.add_treinamento') }}" class="add-button">Adicionar Novo Treinamento</a>
-            <button type="button" onclick="window.print()" class="print-button">Imprimir Catálogo</button>
-            <a href="{{ url_for('seguranca_bp.export_treinamentos_excel') }}" class="export-excel-button">Exportar para Excel</a>
-        </div>
+            <div class="action-buttons">
+                <a href="{{ url_for('seguranca_bp.add_treinamento') }}" class="add-button">
+                    <i class="fas fa-plus"></i> Novo Treinamento
+                </a>
+                <button type="button" onclick="window.print()" class="print-button">
+                    <i class="fas fa-print"></i> Imprimir Catálogo
+                </button>
+                <a href="{{ url_for('seguranca_bp.export_treinamentos_excel') }}" class="export-excel-button">
+                    <i class="fas fa-file-excel"></i> Exportar para Excel
+                </a>
+                <a href="{{ url_for('seguranca_bp.seguranca_module') }}" class="back-to-module-button">
+                    <i class="fas fa-arrow-left"></i> Voltar ao Módulo Segurança
+                </a>
+            </div>
 
-        <form method="GET" class="filter-form" action="{{ url_for('seguranca_bp.treinamentos_module') }}">
-            <label for="nome_treinamento">Nome do Treinamento:</label>
-            <input type="text" id="nome_treinamento" name="nome_treinamento" value="{{ selected_nome if selected_nome else '' }}" placeholder="Buscar por Nome">
+            <form method="GET" class="filter-form" action="{{ url_for('seguranca_bp.treinamentos_module') }}">
+                <div class="filter-group">
+                    <label for="nome_treinamento">Nome do Treinamento:</label>
+                    <input type="text" id="nome_treinamento" name="nome_treinamento" value="{{ selected_nome if selected_nome else '' }}" placeholder="Buscar por Nome">
+                </div>
 
-            <label for="tipo_treinamento">Tipo de Treinamento:</label>
-            <select id="tipo_treinamento" name="tipo_treinamento">
-                <option value="">Todos os Tipos</option>
-                {% for tipo in tipo_treinamento_options %}
-                    <option value="{{ tipo }}" {% if selected_tipo == tipo %}selected{% endif %}>{{ tipo }}</option>
-                {% endfor %}
-            </select>
+                <div class="filter-group">
+                    <label for="tipo_treinamento">Tipo de Treinamento:</label>
+                    <select id="tipo_treinamento" name="tipo_treinamento">
+                        <option value="">Todos os Tipos</option>
+                        {% for tipo in tipo_treinamento_options %}
+                            <option value="{{ tipo }}" {% if selected_tipo == tipo %}selected{% endif %}>{{ tipo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-            <button type="submit">Filtrar</button>
-            <a href="{{ url_for('seguranca_bp.treinamentos_module') }}" class="button">Limpar Filtros</a>
-        </form>
+                <div class="filter-buttons-group">
+                    <button type="submit" data-tooltip="Filtrar"><i class="fas fa-filter"></i></button>
+                    <a href="{{ url_for('seguranca_bp.treinamentos_module') }}" class="button-icon" data-tooltip="Limpar Filtros"><i class="fas fa-eraser"></i></a>
+                </div>
+            </form>
 
-        {% if treinamentos %}
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nome do Treinamento</th>
-                    <th>Carga Horária (h)</th>
-                    <th>Tipo</th>
-                    <th>Validade (dias)</th>
-                    <th>Instrutor</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for treinamento in treinamentos %}
-                <tr>
-                    <td>{{ treinamento.ID_Treinamento }}</td>
-                    <td>{{ treinamento.Nome_Treinamento }}</td>
-                    <td>{{ "%.2f"|format(treinamento.Carga_Horaria_Horas) }}</td>
-                    <td>{{ treinamento.Tipo_Treinamento }}</td>
-                    <td>{{ treinamento.Validade_Dias if treinamento.Validade_Dias is not none else 'N/A' }}</td>
-                    <td>{{ treinamento.Instrutor_Responsavel if treinamento.Instrutor_Responsavel else 'N/A' }}</td>
-                    <td class="actions">
-                        <a href="{{ url_for('seguranca_bp.treinamento_details', treinamento_id=treinamento.ID_Treinamento) }}" class="view">Detalhes</a>
-                        <a href="{{ url_for('seguranca_bp.edit_treinamento', treinamento_id=treinamento.ID_Treinamento) }}" class="edit">Editar</a>
-                        <form action="{{ url_for('seguranca_bp.delete_treinamento', treinamento_id=treinamento.ID_Treinamento) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir o treinamento {{ treinamento.Nome_Treinamento }}? Esta ação é irreversível e impedirá a exclusão se houver agendamentos associados.');">
-                            <button type="submit" class="delete">Excluir</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <p>Nenhum treinamento encontrado.</p>
-        {% endif %}
+            <div class="table-container">
+                {% if treinamentos %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome do Treinamento</th>
+                            <th>Carga Horária (h)</th>
+                            <th>Tipo</th>
+                            <th>Validade (dias)</th>
+                            <th>Instrutor</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for treinamento in treinamentos %}
+                        <tr>
+                            <td>{{ treinamento.ID_Treinamento }}</td>
+                            <td>{{ "%.2f"|format(treinamento.Carga_Horaria_Horas) }}</td>
+                            <td>{{ treinamento.Nome_Treinamento }}</td>
+                            <td>{{ treinamento.Tipo_Treinamento }}</td>
+                            <td>{{ treinamento.Validade_Dias if treinamento.Validade_Dias is not none else 'N/A' }}</td>
+                            <td>{{ treinamento.Instrutor_Responsavel if treinamento.Instrutor_Responsavel else 'N/A' }}</td>
+                            <td class="actions">
+                                <a href="{{ url_for('seguranca_bp.treinamento_details', treinamento_id=treinamento.ID_Treinamento) }}" class="view" data-tooltip="Detalhes"><i class="fas fa-eye"></i></a>
+                                <a href="{{ url_for('seguranca_bp.edit_treinamento', treinamento_id=treinamento.ID_Treinamento) }}" class="edit" data-tooltip="Editar"><i class="fas fa-edit"></i></a>
+                                <form action="{{ url_for('seguranca_bp.delete_treinamento', treinamento_id=treinamento.ID_Treinamento) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir o treinamento {{ treinamento.Nome_Treinamento }}? Esta ação é irreversível e impedirá a exclusão se houver agendamentos associados.');">
+                                    <button type="submit" class="delete" data-tooltip="Excluir"><i class="fas fa-trash-alt"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="no-results-message">Nenhum treinamento encontrado.</p>
+                {% endif %}
+            </div>
 
-        <div class="back-link">
-            <a href="{{ url_for('seguranca_bp.seguranca_module') }}">Voltar para o Módulo Segurança</a>
+            <div class="back-button-container" style="display: none;"></div>
         </div>
     </div>
 </body>

@@ -6,150 +6,716 @@
     <title>Documentos e Contratos a Vencer - LUMOB</title>
     <link
       rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}"
-    />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/form.css') }}"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
     />
     <style>
-      table {
+      /* Reset e variáveis CSS do obras_module.html (nosso novo padrão) */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #34495e;
+        --accent-color: #3498db;
+        --success-color: #27ae60;
+        --warning-color: #f39c12; /* Amarelo */
+        --danger-color: #e74c3c;
+        --light-gray: #ecf0f1;
+        --medium-gray: #bdc3c7;
+        --dark-gray: #7f8c8d;
+        --text-dark: #2c3e50;
+        --text-light: #ffffff;
+        --glass-bg: rgba(255, 255, 255, 0.95);
+        --shadow-light: 0 4px 20px rgba(0, 0, 0, 0.08);
+        --shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.12);
+        --shadow-heavy: 0 16px 48px rgba(0, 0, 0, 0.15);
+        --shadow-intense: 0 20px 60px rgba(0, 0, 0, 0.25);
+        --glow-accent: 0 0 20px rgba(52, 152, 219, 0.3);
+        --glow-intense: 0 0 40px rgba(52, 152, 219, 0.5);
+        --orange-yellow: #f1c40f; /* Um tom entre amarelo e alaranjado */
+      }
+
+      /* Estilos globais do obras_module.html */
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+        color: var(--text-dark);
+        line-height: 1.6;
+        overflow-x: hidden;
+      }
+
+      /* Container principal do obras_module.html */
+      .main-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem 0.5rem;
+        position: relative;
+      }
+
+      /* Efeito de partículas de fundo do obras_module.html */
+      .main-container::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: radial-gradient(
+            circle at 20% 20%,
+            rgba(255, 255, 255, 0.3) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 80% 80%,
+            rgba(255, 255, 255, 0.3) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 40% 60%,
+            rgba(255, 255, 255, 0.15) 0%,
+            transparent 50%
+          );
+        pointer-events: none;
+      }
+
+      /* Container de conteúdo do obras_module.html */
+      .content-container {
+        max-width: 1700px; /* Mantido o ajuste de largura do obras_module.html */
         width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        box-shadow: var(--shadow-heavy);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 2.5rem;
+        position: relative;
+        z-index: 1;
+        animation: fadeInUp 0.5s ease-out;
+        min-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
       }
-      th,
-      td {
-        border: 1px solid #ddd;
-        padding: 8px;
-        text-align: left;
+
+      /* Animações (tempos mais curtos) */
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
-      th {
-        background-color: #f2f2f2;
+
+      @keyframes slideInLeft {
+        from {
+          opacity: 0;
+          transform: translateX(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
       }
-      .alert-info {
-        background-color: #d1ecf1;
-        color: #0c5460;
-        padding: 10px;
-        border-radius: 5px;
-        margin-bottom: 20px;
+
+      @keyframes scaleIn {
+        from {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
       }
-      /* Estilos para mensagens flash, se não estiverem em style.css */
+
+      /* Cabeçalho */
+      .header {
+        text-align: center;
+        margin-bottom: 2rem;
+        position: relative;
+      }
+
+      .title-band {
+        background: linear-gradient(
+          135deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        padding: 1.2rem;
+        border-radius: 16px;
+        margin-bottom: 0;
+        box-shadow: var(--shadow-medium);
+        animation: slideInLeft 0.5s ease-out 0.1s both;
+      }
+
+      .title-band h1 {
+        color: var(--text-light);
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.8rem;
+      }
+
+      .title-band h1 i {
+        font-size: 1.8rem;
+        opacity: 0.9;
+      }
+
+      /* Mensagens flash (adaptadas do obras_module.html) */
       .flash-messages {
         list-style: none;
         padding: 0;
-        margin-bottom: 20px;
+        margin: 0 0 1.5rem 0;
+        animation: scaleIn 0.4s ease-out 0.4s both;
       }
+
       .flash-messages li {
-        padding: 10px 15px;
-        margin-bottom: 10px;
-        border-radius: 5px;
-        font-weight: bold;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        padding: 0.8rem 1.2rem;
+        margin-bottom: 0.8rem;
+        border-radius: 10px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        box-shadow: var(--shadow-light);
+        border-left: 4px solid;
+        backdrop-filter: blur(10px);
+        animation: slideInLeft 0.4s ease-out;
       }
-      .flash-messages .success {
-        background-color: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
+
+      .flash-messages li.success {
+        background: rgba(39, 174, 96, 0.1);
+        color: var(--success-color);
+        border-left-color: var(--success-color);
       }
-      .flash-messages .danger {
-        background-color: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
+
+      .flash-messages li.danger {
+        background: rgba(231, 76, 60, 0.1);
+        color: var(--danger-color);
+        border-left-color: var(--danger-color);
       }
-      .flash-messages .warning {
-        background-color: #fff3cd;
-        color: #856404;
-        border: 1px solid #ffeeba;
+
+      .flash-messages li.info {
+        background: rgba(52, 152, 219, 0.1);
+        color: var(--accent-color);
+        border-left-color: var(--accent-color);
+      }
+
+      .flash-messages li.warning {
+        background: rgba(243, 156, 18, 0.1);
+        color: var(--warning-color);
+        border-left-color: var(--warning-color);
+      }
+
+      /* Botões de Ação (Adaptados para este módulo de relatório) */
+      .action-buttons {
+        display: flex;
+        justify-content: flex-end; /* Alinha os botões à direita */
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .print-button,
+      .export-excel-button,
+      .back-to-module-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.6rem 1rem;
+        color: white;
+        text-align: center;
+        text-decoration: none;
+        border-radius: 6px;
+        cursor: pointer;
+        border: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        box-shadow: var(--shadow-light);
+        transition: all 0.2s ease-in-out;
+      }
+
+      .print-button {
+        background-color: var(--accent-color);
+      }
+      .export-excel-button {
+        background-color: #1e7e34;
+      }
+      .back-to-module-button {
+        background-color: var(--dark-gray);
+      }
+
+      .print-button:hover {
+        background-color: #0056b3;
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-medium);
+      }
+      .export-excel-button:hover {
+        background-color: #17642a;
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-medium);
+      }
+      .back-to-module-button:hover {
+        background-color: #5a6268;
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-medium);
+      }
+
+      /* Estilo para a mensagem de alerta informativa */
+      .report-info-message {
+        background: rgba(52, 152, 219, 0.1); /* Cor de info suave */
+        color: var(--accent-color);
+        border-left-color: var(--accent-color);
+        border-left: 4px solid;
+        padding: 0.8rem 1.2rem;
+        margin-bottom: 1.5rem;
+        border-radius: 10px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        box-shadow: var(--shadow-light);
+        backdrop-filter: blur(10px);
+        animation: slideInLeft 0.4s ease-out;
+      }
+
+      /* Formulário de Filtro - Organização Aprimorada */
+      /* Este módulo não possui filtro no HTML, mas mantemos o estilo base caso seja adicionado */
+      .filter-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 15px 25px;
+        margin-bottom: 1.5rem;
+        padding: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.7);
+        box-shadow: var(--shadow-light);
+        backdrop-filter: blur(10px);
+      }
+
+      .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .filter-form label {
+        white-space: nowrap;
+        font-weight: 500;
+        color: var(--primary-color);
+        margin-right: 0;
+        align-self: flex-start;
+        font-size: 0.95rem;
+      }
+      .filter-form input,
+      .filter-form select {
+        padding: 9px;
+        border: 1px solid var(--medium-gray);
+        border-radius: 6px;
+        background-color: var(--light-gray);
+        color: var(--text-dark);
+        width: 100%;
+        font-size: 0.95rem;
+      }
+
+      /* Botões de Filtro e Limpar Filtros como Ícones */
+      .filter-buttons-group {
+        grid-column: span 1;
+        display: flex;
+        gap: 10px;
+        align-items: flex-end;
+        padding-top: 10px;
+      }
+
+      .filter-form button[type="submit"],
+      .filter-form .button-icon {
+        padding: 10px;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+        box-shadow: var(--shadow-light);
+        transition: all 0.2s ease-in-out;
+        position: relative;
+      }
+
+      .filter-form button[type="submit"] {
+        background-color: var(--accent-color);
+        color: white;
+      }
+      .filter-form button[type="submit"]:hover {
+        background-color: #0056b3;
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-medium);
+      }
+
+      .filter-form .button-icon {
+        background-color: var(--dark-gray);
+        color: white;
+      }
+      .filter-form .button-icon:hover {
+        background-color: #5a6268;
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-medium);
+      }
+
+      /* Tooltip para botões de filtro */
+      .filter-form .button-icon::after,
+      .filter-form button[type="submit"]::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 120%;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: var(--primary-color);
+        color: var(--text-light);
+        padding: 6px 10px;
+        border-radius: 6px;
+        white-space: nowrap;
+        font-size: 0.75rem;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+        z-index: 2;
+        box-shadow: var(--shadow-light);
+      }
+
+      .filter-form .button-icon:hover::after,
+      .filter-form button[type="submit"]:hover::after {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) translateY(-5px);
+      }
+
+      /* Tabela de Dados */
+      .table-container {
+        flex-grow: 1;
+        overflow-x: auto;
+        margin-bottom: 1.5rem;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: var(--shadow-medium);
+        animation: scaleIn 0.6s ease-out 0.4s both;
+        min-width: 800px; /* Ajustado para permitir mais compressão */
+      }
+
+      th,
+      td {
+        border: 1px solid rgba(var(--medium-gray), 0.3);
+        padding: 7px 10px; /* Reduzido o padding */
+        text-align: left;
+        white-space: nowrap;
+        font-size: 0.85rem; /* Diminuído o tamanho da fonte */
+      }
+
+      th {
+        background: linear-gradient(
+          135deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        color: var(--text-light);
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+
+      tbody tr:nth-child(even) {
+        background-color: rgba(255, 255, 255, 0.6);
+      }
+      tbody tr:hover {
+        background-color: rgba(52, 152, 219, 0.15);
+        cursor: pointer;
+      }
+
+      /* Nenhuma ação de linha na tabela de relatório */
+      .actions {
+        display: flex; /* Mantido para não quebrar layout, mesmo que vazio */
+        gap: 6px;
+        justify-content: flex-start;
+      }
+
+      /* Mensagem de nenhum registro encontrado */
+      .no-results-message {
+        text-align: center;
+        margin-top: 2rem;
+        font-size: 1.1rem;
+        color: var(--dark-gray);
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Botão Voltar (REMOVIDO da parte inferior) */
+      .back-button-container {
+        display: none; /* Esconde o container antigo */
+      }
+
+      /* Responsividade */
+      @media (max-width: 1200px) {
+        .content-container {
+          max-width: 95%;
+          padding: 2rem;
+        }
+        table {
+          min-width: 750px; /* Ajustado */
+        }
+      }
+
+      @media (max-width: 992px) {
+        .content-container {
+          max-width: 98%;
+          padding: 1.8rem;
+        }
+        .filter-form {
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 15px;
+        }
+        table {
+          min-width: 650px; /* Ajustado */
+          font-size: 0.8rem; /* Ajustado */
+        }
+        th,
+        td {
+          padding: 6px 8px; /* Ajustado */
+        }
+      }
+
+      @media (max-width: 768px) {
+        .main-container {
+          padding: 1rem 0.5rem;
+        }
+        .content-container {
+          padding: 1.5rem 1rem;
+          border-radius: 16px;
+          min-height: auto;
+        }
+
+        .title-band h1 {
+          font-size: 1.6rem;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .action-buttons {
+          justify-content: center;
+          gap: 6px;
+        }
+        .print-button,
+        .export-excel-button,
+        .back-to-module-button {
+          padding: 0.5rem 0.8rem;
+          font-size: 0.8rem;
+        }
+        .filter-form {
+          grid-template-columns: 1fr;
+          gap: 10px;
+          padding: 1rem;
+        }
+        .filter-group {
+          gap: 3px;
+        }
+        .filter-form label {
+          font-size: 0.9rem;
+        }
+        .filter-form input,
+        .filter-form select {
+          padding: 8px;
+          font-size: 0.9rem;
+        }
+        .filter-buttons-group {
+          justify-content: center;
+          gap: 8px;
+        }
+        .filter-form button[type="submit"],
+        .filter-form .button-icon {
+          width: 36px;
+          height: 36px;
+          font-size: 0.9rem;
+        }
+
+        table {
+          font-size: 0.75em; /* Ajustado */
+          min-width: 480px; /* Ajustado */
+        }
+        th,
+        td {
+          padding: 5px 7px; /* Ajustado */
+        }
+
+        .no-results-message {
+          font-size: 1rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .main-container {
+          padding: 0.8rem 0.5rem;
+          align-items: flex-start;
+        }
+        .content-container {
+          padding: 1.2rem 0.8rem;
+        }
+        .title-band {
+          padding: 0.8rem;
+        }
+        .title-band h1 {
+          font-size: 1.4rem;
+        }
+        .action-buttons {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .action-buttons > * {
+          margin: 4px 0;
+        }
+
+        .filter-form {
+          padding: 0.8rem;
+        }
+        .filter-form label,
+        .filter-form input,
+        .filter-form select {
+          font-size: 0.85rem;
+        }
+        .filter-form button[type="submit"],
+        .filter-form .button-icon {
+          width: 32px;
+          height: 32px;
+          font-size: 0.8rem;
+        }
+
+        table {
+          min-width: 340px; /* Ajustado para telas muito pequenas */
+          font-size: 0.7em; /* Ajustado */
+        }
+        th,
+        td {
+          padding: 4px 6px; /* Ajustado */
+        }
       }
     </style>
   </head>
   <body>
-    <header>
-      <h1>Documentos e Contratos a Vencer</h1>
-      <nav>
-        <a href="{{ url_for('welcome') }}">Início</a> |
-        <a href="{{ url_for('pessoal_bp.pessoal_module') }}">Módulo Pessoal</a>
-        |
-        <a href="{{ url_for('pessoal_bp.pessoal_dashboard') }}"
-          >Dashboard de Pessoal</a
-        >
-        |
-        <a href="{{ url_for('pessoal_bp.pessoal_aniversariantes') }}"
-          >Aniversariantes</a
-        >
-        |
-        <a href="{{ url_for('pessoal_bp.pessoal_experiencia_a_vencer') }}"
-          >Período de Experiência</a
-        >
-        |
-        <a href="{{ url_for('logout') }}">Sair</a>
-      </nav>
-    </header>
+    <div class="main-container">
+      <div class="content-container">
+        <div class="header">
+          <div class="title-band">
+            <h1>
+              <i class="fas fa-calendar-times"></i> {# Ícone apropriado para
+              Documentos a Vencer #} Documentos e Contratos a Vencer
+            </h1>
+          </div>
+        </div>
 
-    <main>
-      <h2>Alertas de Vencimento de Documentos e Contratos</h2>
-
-      {% with messages = get_flashed_messages(with_categories=true) %} {% if
-      messages %}
-      <ul class="flash-messages">
-        {% for category, message in messages %}
-        <li class="{{ category }}">{{ message }}</li>
-        {% endfor %}
-      </ul>
-      {% endif %} {% endwith %} {% if documentos_a_vencer %}
-      <div class="alert-info">
-        Funcionários com documentos ou contratos (CNHs) que vencem nos próximos
-        30 dias ou venceram nos últimos 7 dias.
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Matrícula</th>
-            <th>Nome Completo</th>
-            <th>Cargo</th>
-            <th>Tipo</th>
-            <th>Número</th>
-            <th>Data Vencimento</th>
-            <th>Dias Restantes</th>
-            <th>Status Funcionário</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for alerta in documentos_a_vencer %}
-          <tr>
-            <td>{{ alerta.Matricula }}</td>
-            <td>{{ alerta.Nome_Completo }}</td>
-            <td>{{ alerta.Nome_Cargo | default('N/A', true) }}</td>
-            <td>{{ alerta.Tipo_Documento_Contrato }}</td>
-            <td>
-              {{ alerta.Numero_Documento_Contrato | default('N/A', true) }}
-            </td>
-            <td>
-              {{ alerta.Data_Vencimento_Contrato.strftime('%d/%m/%m%Y') if
-              alerta.Data_Vencimento_Contrato else 'N/A' }}
-            </td>
-            <td>
-              {% if alerta.Dias_Restantes is not none %} {% if
-              alerta.Dias_Restantes >= 0 %} {{ alerta.Dias_Restantes }} dias {%
-              else %} Vencido há {{ alerta.Dias_Restantes | abs }} dias {% endif
-              %} {% else %} N/A {% endif %}
-            </td>
-            <td>{{ alerta.Status }}</td>
-          </tr>
+        {% with messages = get_flashed_messages(with_categories=true) %} {% if
+        messages %}
+        <ul class="flash-messages">
+          {% for category, message in messages %}
+          <li class="{{ category }}">{{ message }}</li>
           {% endfor %}
-        </tbody>
-      </table>
-      {% else %}
-      <p>
-        Não há documentos ou contratos (CNHs) próximos do vencimento ou
-        recém-vencidos nos períodos de alerta definidos.
-      </p>
-      {% endif %}
-    </main>
+        </ul>
+        {% endif %} {% endwith %}
 
-    <footer>
-      <p>&copy; 2025 LUMOB - Sistema de Gestão Interna</p>
-    </footer>
+        <div class="action-buttons">
+          {# Botão de imprimir: Existia no seu HTML original via onclick #}
+          <button type="button" onclick="window.print()" class="print-button">
+            <i class="fas fa-print"></i> Imprimir Relação
+          </button>
+          {# O botão de Exportar para Excel NÃO existia no seu HTML original
+          para esta tela. #} {# Ele NÃO será adicionado para manter a
+          funcionalidade intacta e evitar erros de rota. #} {# O botão "Voltar
+          ao Módulo Pessoal" foi adicionado para padronização de navegação. #}
+          <a
+            href="{{ url_for('pessoal_bp.pessoal_module') }}"
+            class="back-to-module-button"
+          >
+            <i class="fas fa-arrow-left"></i> Voltar ao Módulo Pessoal
+          </a>
+        </div>
+
+        {# O formulário de filtro NÃO existia no seu HTML original para esta
+        página. #} {# Portanto, NÃO será adicionado para manter a funcionalidade
+        intacta. #} {% if documentos_a_vencer %}
+        <div class="report-info-message">
+          {# Estilo para a div alert-info original #} Funcionários com
+          documentos ou contratos (CNHs) que vencem nos próximos 30 dias ou
+          venceram nos últimos 7 dias.
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Matrícula</th>
+                <th>Nome Completo</th>
+                <th>Cargo</th>
+                <th>Tipo</th>
+                <th>Número</th>
+                <th>Data Vencimento</th>
+                <th>Dias Restantes</th>
+                <th>Status Funcionário</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for alerta in documentos_a_vencer %}
+              <tr>
+                <td>{{ alerta.Matricula }}</td>
+                <td>{{ alerta.Nome_Completo }}</td>
+                <td>{{ alerta.Nome_Cargo | default('N/A', true) }}</td>
+                <td>{{ alerta.Tipo_Documento_Contrato }}</td>
+                <td>
+                  {{ alerta.Numero_Documento_Contrato | default('N/A', true) }}
+                </td>
+                <td>
+                  {{ alerta.Data_Vencimento_Contrato.strftime('%d/%m/%Y') if
+                  alerta.Data_Vencimento_Contrato else 'N/A' }}
+                </td>
+                <td>
+                  {% if alerta.Dias_Restantes is not none %} {% if
+                  alerta.Dias_Restantes >= 0 %} {{ alerta.Dias_Restantes }} dias
+                  {% else %} Vencido há {{ alerta.Dias_Restantes | abs }} dias
+                  {% endif %} {% else %} N/A {% endif %}
+                </td>
+                <td>{{ alerta.Status }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="no-results-message">
+          Não há documentos ou contratos (CNHs) próximos do vencimento ou
+          recém-vencidos nos períodos de alerta definidos.
+        </p>
+        {% endif %}
+
+        <div class="back-button-container" style="display: none"></div>
+        {# Mantido para consistência #}
+      </div>
+    </div>
   </body>
 </html>

@@ -6,9 +6,9 @@ from dotenv import load_dotenv
 from datetime import datetime, date
 
 # Para a adição da opção exportar para Excel no módulo Pessoal
-from flask import send_file # Adicione este import no topo do seu app.py
-import pandas as pd         # Adicione este import no topo do seu app.py
-from io import BytesIO      # Adicione este import no topo do seu app.py
+from flask import send_file
+import pandas as pd
+from io import BytesIO
 
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, Flask, session, get_flashed_messages, jsonify
 from flask_login import login_required, current_user, LoginManager, UserMixin, login_user, logout_user 
@@ -1719,6 +1719,11 @@ def export_salarios_excel():
 
             df = pd.DataFrame(salarios_data)
 
+            # Mova estas linhas para ANTES do df.rename
+            df['Periculosidade'] = df['Periculosidade'].apply(lambda x: 'Sim' if x else 'Não')
+            df['Insalubridade'] = df['Insalubridade'].apply(lambda x: 'Sim' if x else 'Não')
+            df['Cesta_Basica'] = df['Cesta_Basica'].apply(lambda x: 'Sim' if x else 'Não') # Esta linha agora está correta
+
             df = df.rename(columns={
                 'ID_Salarios': 'ID Salário',
                 'ID_Cargos': 'ID Cargo',
@@ -1737,10 +1742,6 @@ def export_salarios_excel():
                 'Data_Criacao': 'Data de Criação',
                 'Data_Modificacao': 'Última Modificação'
             })
-
-            df['Periculosidade'] = df['Periculosidade'].apply(lambda x: 'Sim' if x else 'Não')
-            df['Insalubridade'] = df['Insalubridade'].apply(lambda x: 'Sim' if x else 'Não')
-            df['Cesta_Basica'] = df['Cesta_Basica'].apply(lambda x: 'Sim' if x else 'Não')
 
             ordered_columns = [
                 'ID Salário', 'Cargo', 'Nível', 'Salário Base (R$)', 'Data de Vigência',
@@ -2614,7 +2615,8 @@ def pessoal_aniversariantes():
                 'pessoal/aniversariantes_module.html',
                 user=current_user,
                 aniversariantes=aniversariantes,
-                mes_referencia=nome_mes_pt
+                mes_referencia=nome_mes_pt,
+                today=date.today # Adicione esta linha para passar a função today para o template
             )
     except mysql.connector.Error as e:
         flash(f"Erro de banco de dados ao carregar aniversariantes: {e}", 'danger')
