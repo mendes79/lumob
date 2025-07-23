@@ -188,11 +188,15 @@ lumob/
 Em desenvolvimento:
 - [x] CRUD Pessoal completo
 - [x] CRUD Obras completo
-- [ ] Dashboard de obras
-- [ ] Módulo SSMA (base criada)
-- [ ] UI com Bootstrap/Tailwind
-- [ ] Gráficos com Chart.js
+- [x] CRUD Segurança Completo
+- [x] Dashboard de obras
+- [x] Dashboard de pessoal
+- [x] Dashboard de segurança
+- [x] UI com Bootstrap
+- [x] Página de login estilizada
+- [x] Gráficos com Chart.js
 - [ ] Controle de Ponto
+- [ ] Relatórios personalizados
 
 ---
 
