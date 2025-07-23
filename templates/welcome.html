@@ -1,29 +1,29 @@
 {% extends 'base.html' %} {% block title %}Bem vindo - LUMOB{% endblock %} {%
-block messages %}{% endblock %} {# Continua suprimindo as mensagens flash
-redundantes nesta página #} {% block content %}
-<div class="main-content">
-  {# Novo container para o conteúdo principal, excluindo o cabeçalho e rodapé
-  fixos #} {# Estrutura do Cabeçalho - Mensagem de boas-vindas e botão Sair #}
-  <header class="app-header">
-    <div class="header-content">
-      <h1 class="app-title">LUMOB</h1>
-      <div class="user-info">
-        <span class="welcome-message"
-          >Bem-vindo, <span class="username">{{ user.username }}</span></span
-        >
-        <a
-          href="{{ url_for('logout') }}"
-          class="btn btn-danger btn-sm logout-btn"
-          ><i class="fas fa-sign-out-alt"></i> Sair</a
-        >
+block messages %}{% endblock %} {# Suprime as mensagens flash #} {% block
+content %}
+<div class="lumob-main-container">
+  <div class="lumob-content-container">
+    <header class="lumob-header">
+      <div class="header-content">
+        <div class="title-info">
+          <h1 class="app-title">LUMOB</h1>
+          <p class="app-subtitle">Selecione um módulo para começar</p>
+        </div>
+        <div class="user-info">
+          <span class="welcome-message"
+            >Bem-vindo, <span class="username">{{ user.username }}</span></span
+          >
+          <a
+            href="{{ url_for('logout') }}"
+            class="btn btn-danger btn-sm logout-btn"
+          >
+            <i class="fas fa-sign-out-alt"></i> Sair
+          </a>
+        </div>
       </div>
-    </div>
-  </header>
+    </header>
 
-  <div class="container main-container-content mt-4">
-    <hr class="my-3" />
-    {# Linha separadora horizontal #} {# Cards dos Módulos #}
-    <div class="module-grid-new">
+    <div class="module-grid">
       {% for module in all_modules_db %} {% set module_name_display =
       module.Nome_Modulo %} {% set module_url = '#' %} {% set image_path_base =
       url_for('static', filename='img/') %} {% set module_image_file = '' %} {%
@@ -41,7 +41,7 @@ redundantes nesta página #} {% block content %}
       module_image_file = 'users_colorful.jpg' %} {% endif %}
 
       <div
-        class="module-card-new {% if is_restricted %}module-card-restricted{% endif %}"
+        class="module-card {% if is_restricted %}module-card-restricted{% endif %}"
         {%
         if
         not
@@ -52,10 +52,11 @@ redundantes nesta página #} {% block content %}
         %}
       >
         <div
-          class="module-image-wrapper"
+          class="card-hero-image"
           style="background-image: url('{{ image_path_base }}{{ module_image_file }}');"
         ></div>
-        <div class="module-content-overlay">
+
+        <div class="card-content">
           <h3 class="module-title">{{ module_name_display }}</h3>
           {% if is_restricted %}
           <span class="restricted-tag">Acesso Restrito</span>
@@ -64,80 +65,86 @@ redundantes nesta página #} {% block content %}
       </div>
       {% endfor %}
     </div>
+
+    <footer class="lumob-footer">
+      <p>&copy; {{ now.year }} LUMOB. Todos os direitos reservados.</p>
+      <p>Desenvolvido por Mendes Engenharia.</p>
+    </footer>
   </div>
 </div>
 
-<footer class="app-footer">
-  <div class="container">
-    <p>&copy; {{ now.year }} LUMOB. Todos os direitos reservados.</p>
-    {# CORREÇÃO: Removido os parênteses de 'now()' #}
-    <p>Desenvolvido por Mendes Engenharia.</p>
-  </div>
-</footer>
-
 <style>
-  /* Novas Variáveis para Cores e Sombras */
+  /* 1. ESTILOS BASE E VARIÁVEIS (Inspirado em obras_welcome.html) */
   :root {
-    --primary-blue: #3498db;
-    --dark-blue: #2c3e50;
-    --light-gray-bg: #ecf0f1;
-    --text-color: #34495e;
-    --hover-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
-    --card-bg-light: rgba(255, 255, 255, 0.95);
-    --border-light: rgba(255, 255, 255, 0.2);
+    --primary-color: #2c3e50;
+    --secondary-color: #34495e;
+    --accent-color: #3498db;
+    --danger-color: #e74c3c;
     --restricted-red: #e74c3c;
+    --light-gray: #ecf0f1;
+    --text-dark: #2c3e50;
+    --text-light: #ffffff;
+    --glass-bg: rgba(255, 255, 255, 0.95);
+    --shadow-light: 0 4px 20px rgba(0, 0, 0, 0.08);
+    --shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.12);
+    --shadow-heavy: 0 16px 48px rgba(0, 0, 0, 0.15);
+    --glow-accent: 0 0 20px rgba(52, 152, 219, 0.3);
   }
 
   body {
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    color: var(--text-dark);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* 2. LAYOUT PRINCIPAL (Container e Header) */
+  .lumob-main-container {
     min-height: 100vh;
     display: flex;
-    flex-direction: column; /* Para o rodapé fixo na parte inferior */
-    color: var(--text-color);
-  }
-
-  .main-content {
-    flex-grow: 1; /* Ocupa o espaço disponível, empurrando o rodapé para baixo */
-    display: flex;
-    flex-direction: column;
-    padding-top: 80px; /* Espaço para o cabeçalho fixo */
-    padding-bottom: 60px; /* Espaço para o rodapé fixo */
-  }
-
-  .main-container-content {
-    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
     padding: 2rem 1rem;
-    max-width: 1200px; /* Ajuste se necessário */
-    margin: 0 auto;
   }
 
-  /* Header da Aplicação */
-  .app-header {
-    background: linear-gradient(to right, #2c3e50, #34495e);
-    color: white;
-    padding: 0.8rem 2rem;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    position: fixed; /* Fixa o cabeçalho no topo */
-    top: 0;
-    left: 0;
+  .lumob-content-container {
+    max-width: 1200px;
     width: 100%;
-    z-index: 1000;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    box-shadow: var(--shadow-heavy);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 2rem 3rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .lumob-header {
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 0.5rem;
   }
 
   .header-content {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    max-width: 1200px;
-    margin: 0 auto;
+    flex-wrap: wrap; /* Para melhor responsividade */
   }
 
   .app-title {
-    margin: 0;
-    font-size: 1.8rem;
+    font-size: 2.5rem;
     font-weight: 700;
-    letter-spacing: 1px;
+    color: var(--primary-color);
+    margin: 0;
+  }
+
+  .app-subtitle {
+    font-size: 0.9rem;
+    color: var(--secondary-color);
+    margin-top: 0.25rem;
   }
 
   .user-info {
@@ -147,142 +154,109 @@ redundantes nesta página #} {% block content %}
   }
 
   .welcome-message {
-    font-size: 1rem;
-    font-weight: 400;
-    opacity: 0.9;
+    font-size: 0.9rem;
+    color: var(--text-dark);
   }
 
   .username {
     font-weight: 600;
-    color: var(--primary-blue);
+    color: var(--accent-color);
   }
 
   .logout-btn {
     background-color: var(--danger-color);
     border-color: var(--danger-color);
+    color: white;
     padding: 0.5rem 1rem;
     border-radius: 8px;
     transition: background-color 0.3s ease, transform 0.2s ease;
+    text-decoration: none;
   }
 
   .logout-btn:hover {
     background-color: #c0392b;
     transform: translateY(-2px);
+    color: white;
   }
 
-  /* Grid de Módulos (novo) */
-  .module-grid-new {
+  /* 3. GRADE E CARDS DE MÓDULOS (Novo Estilo) */
+  .module-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 25px; /* Espaçamento maior entre os cards */
-    padding: 20px 0;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 2rem;
+    padding-bottom: 2rem;
   }
 
-  /* Cards dos Módulos (novo estilo) */
-  .module-card-new {
-    background: var(--card-bg-light);
-    border-radius: 18px; /* Cantos arredondados */
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1); /* Sombra mais suave */
+  .module-card {
+    background: var(--text-light);
+    border-radius: 16px;
+    box-shadow: var(--shadow-medium);
     overflow: hidden;
     position: relative;
     cursor: pointer;
+    border: 1px solid transparent; /* Borda inicial transparente */
+    transition: transform 0.3s ease, box-shadow 0.3s ease,
+      border-color 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    min-height: 220px;
+  }
+
+  /* EFEITO DE HOVER (SELEÇÃO) */
+  .module-card:not(.module-card-restricted):hover {
+    transform: translateY(-10px);
+    box-shadow: var(--shadow-heavy), var(--glow-accent);
+    border-color: var(--accent-color);
+  }
+
+  /* IMAGEM DE CAPA (HERO IMAGE) */
+  .card-hero-image {
+    height: 30%; /* Ocupa 25% da altura do card */
+    width: 100%;
+    background-size: cover;
+    background-position: 50% 13%; /*parte da imagem que estará visivel no card p.e.: 50% 0% é center top*/
+    filter: grayscale(50%); /* Leve desaturação inicial */
+    transition: filter 0.3s ease;
+  }
+
+  .module-card:not(.module-card-restricted):hover .card-hero-image {
+    filter: grayscale(0%); /* Remove o filtro no hover */
+  }
+
+  /* CONTEÚDO DO CARD (TÍTULO CENTRALIZADO) */
+  .card-content {
+    flex-grow: 1; /* Ocupa o espaço restante */
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-end; /* Conteúdo na parte inferior */
-    padding-bottom: 20px; /* Espaço para o texto na parte inferior */
-    transition: transform 0.3s ease, box-shadow 0.3s ease,
-      border-color 0.3s ease;
-    min-height: 220px; /* Altura mínima para os cards */
-    text-decoration: none; /* Remove sublinhado de links */
-    color: inherit; /* Mantém a cor do texto padrão */
-    border: 1px solid var(--border-light); /* Borda sutil */
-  }
-
-  .module-card-new:hover {
-    transform: translateY(-10px) scale(1.03); /* Eleva e escala no hover */
-    box-shadow: var(--hover-shadow); /* Sombra intensa no hover */
-    border-color: var(--primary-blue); /* Borda azul no hover */
-  }
-
-  .module-image-wrapper {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-size: cover;
-    background-position: center;
-    opacity: 0.6; /* Opacidade inicial para a imagem */
-    filter: grayscale(80%); /* P&B inicial para a imagem */
-    transition: opacity 0.3s ease, filter 0.3s ease;
-    z-index: 1; /* Garante que a imagem esteja abaixo do overlay de conteúdo */
-  }
-
-  .module-card-new:not(.module-card-restricted):hover .module-image-wrapper {
-    opacity: 1; /* Imagem fica totalmente opaca no hover */
-    filter: grayscale(0%); /* Imagem fica colorida no hover */
-  }
-
-  .module-content-overlay {
-    position: relative; /* Para garantir que o z-index funcione */
-    z-index: 2; /* Acima da imagem */
-    background: linear-gradient(
-      to top,
-      rgba(0, 0, 0, 0.7) 0%,
-      rgba(0, 0, 0, 0.3) 50%,
-      transparent 100%
-    ); /* Gradiente na parte inferior para legibilidade do texto */
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end; /* Alinha o conteúdo na parte inferior */
-    padding: 1.5rem;
+    justify-content: center;
+    padding: 1rem;
     text-align: center;
-    transition: background 0.3s ease; /* Transição para o gradiente */
-  }
-
-  .module-card-new:not(.module-card-restricted):hover .module-content-overlay {
-    background: linear-gradient(
-      to top,
-      rgba(0, 0, 0, 0.8) 0%,
-      rgba(0, 0, 0, 0.4) 50%,
-      transparent 100%
-    ); /* Gradiente mais escuro no hover */
   }
 
   .module-title {
-    color: white;
-    font-size: 1.4rem;
+    font-size: 1.5rem;
     font-weight: 600;
-    margin-bottom: 0.5rem;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
-    transition: transform 0.3s ease, color 0.3s ease;
+    color: var(--primary-color);
+    margin: 0;
+    transition: color 0.3s ease;
   }
 
-  .module-card-new:not(.module-card-restricted):hover .module-title {
-    transform: translateY(-5px); /* Título sobe um pouco no hover */
-    color: var(--primary-blue); /* Cor do título muda no hover */
+  .module-card:not(.module-card-restricted):hover .module-title {
+    color: var(--accent-color);
   }
 
-  /* Estilos para cards restritos */
-  .module-card-new.module-card-restricted {
+  /* ESTILOS PARA CARDS RESTRITOS */
+  .module-card-restricted {
     cursor: not-allowed;
-    opacity: 0.6;
-    filter: grayscale(100%); /* Mantém em P&B */
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05); /* Sombra mais suave */
+    filter: grayscale(90%);
+    opacity: 0.7;
   }
 
-  .module-card-new.module-card-restricted .module-image-wrapper {
-    filter: grayscale(100%); /* Garante que a imagem seja P&B */
-    opacity: 0.4; /* Menor opacidade para restritos */
-  }
-
-  .module-card-new.module-card-restricted:hover {
-    transform: none; /* Remove o efeito de flutuar */
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1); /* Sombra permanece suave */
-    border-color: var(--border-light); /* Borda não muda */
+  .module-card-restricted:hover {
+    transform: none;
+    box-shadow: var(--shadow-medium);
+    border-color: transparent;
   }
 
   .restricted-tag {
@@ -296,89 +270,64 @@ redundantes nesta página #} {% block content %}
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   }
 
-  /* Rodapé da Aplicação */
-  .app-footer {
-    background-color: var(--dark-blue);
-    color: var(--light-gray-bg);
-    padding: 1.2rem 1rem;
+  /* 4. RODAPÉ */
+  .lumob-footer {
     text-align: center;
-    font-size: 0.85rem;
-    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.1);
-    position: fixed; /* Fixa o rodapé */
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    z-index: 999;
+    padding-top: 0.5rem;
+    margin-top: 1rem;
+    border-top: 1px solid #dee2e6;
+    font-size: 0.75rem;
+    color: var(--secondary-color);
   }
 
-  .app-footer p {
+  .lumob-footer p {
     margin: 0.2rem 0;
   }
 
-  /* Responsividade */
+  /* 5. RESPONSIVIDADE */
   @media (max-width: 768px) {
-    .app-header {
-      padding: 0.8rem 1rem;
+    .lumob-content-container {
+      padding: 1.5rem;
     }
     .header-content {
       flex-direction: column;
+      gap: 1rem;
       text-align: center;
     }
-    .user-info {
-      margin-top: 10px;
-      flex-direction: column;
-      gap: 8px;
+    .module-grid {
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.5rem;
     }
-    .app-title {
-      font-size: 1.6rem;
-    }
-    .welcome-message {
-      font-size: 0.9rem;
-    }
-    .main-content {
-      padding-top: 120px; /* Ajusta padding para header maior */
-    }
-    .module-card-new {
-      min-height: 180px;
+    .module-card {
+      min-height: 200px;
     }
     .module-title {
-      font-size: 1.2rem;
-    }
-    .restricted-tag {
-      font-size: 0.7rem;
+      font-size: 1.3rem;
     }
   }
 
   @media (max-width: 480px) {
-    .main-content {
-      padding-top: 100px;
-      padding-bottom: 50px;
+    .lumob-main-container {
+      padding: 1rem 0.5rem;
+    }
+    .lumob-content-container {
+      padding: 1rem;
     }
     .app-title {
-      font-size: 1.4rem;
+      font-size: 2rem;
     }
-    .welcome-message {
-      font-size: 0.8rem;
+    .app-subtitle {
+      font-size: 1rem;
     }
-    .module-grid-new {
-      gap: 15px;
+    .user-info {
+      flex-direction: column;
+      gap: 0.5rem;
     }
-    .module-card-new {
-      min-height: 160px;
+    .module-grid {
+      grid-template-columns: 1fr; /* Uma coluna em telas muito pequenas */
     }
-    .module-title {
-      font-size: 1.1rem;
-    }
-    .restricted-tag {
-      font-size: 0.65rem;
-    }
-    .logout-btn {
-      padding: 0.4rem 0.8rem;
-      font-size: 0.75rem;
-    }
-    .app-footer {
-      padding: 1rem 0.5rem;
-      font-size: 0.75rem;
+    .module-card {
+      min-height: 180px;
     }
   }
 </style>
