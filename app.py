@@ -240,4 +240,5 @@ app.register_blueprint(seguranca_bp)
 if __name__ == '__main__':
     # Carrega variáveis de ambiente do arquivo .env
     load_dotenv() # É boa prática carregar as variáveis de ambiente antes de usar osenv()
-    app.run(debug=True)
+    #app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
