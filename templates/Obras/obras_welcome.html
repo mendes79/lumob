@@ -9,7 +9,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
     />
     <style>
-      /* Reset e variáveis CSS - IDÊNTICO AO PESSOAL_WELCOME.HTML */
+      /* Reset e variáveis CSS */
       * {
         margin: 0;
         padding: 0;
@@ -132,22 +132,23 @@
         }
       }
 
-      /* REMOVIDAS: @keyframes pulseGlow, @keyframes floatUp, @keyframes shimmer */
-
       /* Cabeçalho */
       .header {
         text-align: center;
-        margin-bottom: 3rem;
+        margin-bottom: 2rem; /* Reduzido para aproximar o subtítulo */
         position: relative;
       }
 
       .title-band {
+        display: flex; /* Adicionado */
+        align-items: center; /* Adicionado */
+        justify-content: space-between; /* Adicionado */
         background: linear-gradient(
           135deg,
           var(--primary-color),
           var(--secondary-color)
         );
-        padding: 1.5rem;
+        padding: 1rem 1.5rem; /* Padding ajustado */
         border-radius: 16px;
         margin-bottom: 1rem;
         box-shadow: var(--shadow-medium);
@@ -161,8 +162,9 @@
         margin: 0;
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start; /* Alterado de 'center' */
         gap: 1rem;
+        flex-grow: 1; /* Permite que o título ocupe o espaço restante */
       }
 
       .title-band h1 i {
@@ -176,6 +178,35 @@
         font-weight: 400;
         margin-top: 0.5rem;
         animation: slideInLeft 0.8s ease-out 0.4s both;
+      }
+
+      /* Botão de voltar (dentro da faixa de título) */
+      .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1.2rem;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: var(--text-light);
+        text-decoration: none;
+        border-radius: 10px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        box-shadow: none;
+        transition: all 0.3s ease;
+        flex-shrink: 0; /* Impede que o botão encolha */
+      }
+
+      .back-button:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.4);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .back-button:active {
+        transform: translateY(0);
       }
 
       /* Mensagens flash */
@@ -227,7 +258,7 @@
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(224px, 1fr));
         gap: 1.5rem;
-        margin-bottom: 3rem;
+        margin-top: 2rem; /* Adicionado para garantir espaço após o cabeçalho */
       }
 
       /* Cards de módulos */
@@ -239,12 +270,12 @@
         border: 1px solid rgba(255, 255, 255, 0.3);
         box-shadow: var(--shadow-light);
         transition: transform 0.3s ease, box-shadow 0.3s ease,
-          border-color 0.3s ease; /* Transição para as novas propriedades */
+          border-color 0.3s ease;
         position: relative;
         overflow: hidden;
         animation: scaleIn 0.6s ease-out both;
         cursor: pointer;
-        z-index: 2; /* Garante que o card esteja acima de qualquer fundo */
+        z-index: 2;
       }
 
       .module-card:nth-child(1) {
@@ -278,16 +309,10 @@
         animation-delay: 1s;
       }
 
-      /* REMOVIDO: Efeito shimmer e brilho através de ::before e ::after */
-      /* Remova todo o bloco de código para .module-card::before e .module-card::after */
-      /* .module-card::before { ... } */
-      /* .module-card::after { ... } */
-
-      /* Hover effects - Nova implementação */
       .module-card:hover {
-        transform: translateY(-8px) scale(1.02); /* Eleva e escala ligeiramente */
-        box-shadow: var(--shadow-heavy), var(--glow-accent); /* Sombra mais intensa com brilho */
-        border-color: var(--accent-color); /* Borda destaca */
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: var(--shadow-heavy), var(--glow-accent);
+        border-color: var(--accent-color);
       }
 
       .module-card-icon {
@@ -301,19 +326,15 @@
         margin: 0 auto 1rem;
         box-shadow: var(--shadow-light);
         transition: transform 0.3s ease, box-shadow 0.3s ease,
-          background 0.3s ease; /* Transição para o ícone */
+          background 0.3s ease;
         position: relative;
         z-index: 2;
       }
 
       .module-card:hover .module-card-icon {
-        transform: scale(1.15); /* Ícone escala um pouco mais */
-        box-shadow: var(--glow-accent), 0 0 15px rgba(52, 152, 219, 0.4); /* Sombra do ícone com brilho */
-        background: linear-gradient(
-          135deg,
-          #5dade2,
-          var(--accent-color)
-        ); /* Inverte o gradiente */
+        transform: scale(1.15);
+        box-shadow: var(--glow-accent), 0 0 15px rgba(52, 152, 219, 0.4);
+        background: linear-gradient(135deg, #5dade2, var(--accent-color));
       }
 
       .module-card-icon i {
@@ -365,78 +386,20 @@
         transform: translateY(-1px);
       }
 
-      /* Botão de voltar */
-      .back-button-container {
-        display: flex;
-        justify-content: center;
-        margin-top: 2rem;
-      }
-
-      .back-button {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 1rem 2rem;
-        background: linear-gradient(
-          135deg,
-          var(--dark-gray),
-          var(--medium-gray)
-        );
-        color: var(--text-light);
-        text-decoration: none;
-        border-radius: 12px;
-        font-weight: 600;
-        font-size: 1rem;
-        box-shadow: var(--shadow-light);
-        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        position: relative;
-        overflow: hidden;
-        animation: scaleIn 0.6s ease-out 1.2s both;
-      }
-
-      .back-button::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-          90deg,
-          transparent,
-          rgba(255, 255, 255, 0.2),
-          transparent
-        );
-        transition: left 0.6s ease-in-out;
-      }
-
-      .back-button:hover {
-        transform: translateY(-3px);
-        box-shadow: var(--shadow-medium);
-        background: linear-gradient(
-          135deg,
-          var(--medium-gray),
-          var(--dark-gray)
-        );
-      }
-
-      .back-button:hover::before {
-        left: 100%;
-      }
-      .back-button:active {
-        transform: translateY(-1px);
-      }
-
       /* Responsividade */
       @media (max-width: 768px) {
         .content-container {
           padding: 2rem 1.5rem;
           border-radius: 16px;
         }
+        .title-band {
+          flex-direction: column;
+          gap: 1rem;
+          padding: 1.5rem;
+        }
         .title-band h1 {
           font-size: 1.8rem;
-          flex-direction: column;
-          gap: 0.5rem;
+          justify-content: center; /* Centraliza o título no mobile */
         }
         .module-grid {
           grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -467,14 +430,11 @@
         .content-container {
           padding: 1.5rem 1rem;
         }
-        .title-band {
-          padding: 1rem;
-        }
         .title-band h1 {
           font-size: 1.5rem;
         }
         .module-grid {
-          grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+          grid-template-columns: 1fr;
         }
         .module-card {
           padding: 1rem;
@@ -504,6 +464,10 @@
               <i class="fas fa-hard-hat"></i>
               Módulo de Obras
             </h1>
+            <a href="{{ url_for('welcome') }}" class="back-button">
+              <i class="fas fa-arrow-left"></i>
+              Voltar ao Início
+            </a>
           </div>
           <p class="subtitle">Planejamento, execução e controle de obras</p>
         </div>
@@ -651,13 +615,6 @@
               </p>
             </a>
           </div>
-        </div>
-
-        <div class="back-button-container">
-          <a href="{{ url_for('welcome') }}" class="back-button">
-            <i class="fas fa-arrow-left"></i>
-            Voltar para a Página Principal
-          </a>
         </div>
       </div>
     </div>

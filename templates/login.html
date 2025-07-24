@@ -143,9 +143,10 @@ content %}
   }
 
   .modal-content {
-    background-color: rgba(50, 50, 50, 0.05);
-    backdrop-filter: blur(8px);
-    border: 3px solid black;
+    /* Efeito de vidro escuro transparente, sem blur */
+    background-color: rgba(25, 25, 30, 0.65); /* ALTERADO */
+    backdrop-filter: none; /* ALTERADO: removido o blur */
+    border: 8px solid rgba(255, 255, 255, 0.2); /*border: 3px solid black;*/
     border-radius: 15px;
     padding: 25px 30px;
     width: 90%;
@@ -165,13 +166,18 @@ content %}
 
   .modal-title {
     font-family: "Grandview", sans-serif;
-    color: rgba(0, 0, 0, 0.3);
+    color: rgba(
+      255,
+      255,
+      255,
+      0.3
+    ); /* Cor do texto ajustada para o fundo escuro */
     text-transform: lowercase;
     text-align: center;
     margin-bottom: 10px;
     font-size: 4rem;
-    text-shadow: -1px -1px 0 #0000008b, 1px -1px 0 #0000008b,
-      -1px 1px 0 #0000008b, 1px 1px 0 #0000008b, 3px 3px 6px rgba(0, 0, 0, 0.5);
+    text-shadow: -1px -1px 0 #ffffff5b, 1px -1px 0 #ffffff5b,
+      -1px 1px 0 #ffffff5b, 1px 1px 0 #ffffff5b, 3px 3px 6px rgba(0, 0, 0, 0.5);
   }
 
   .modal-form-group {
@@ -181,7 +187,7 @@ content %}
   .modal-form-group label {
     font-family: "Grandview", sans-serif;
     display: block;
-    color: rgba(0, 0, 0);
+    color: rgba(255, 255, 255, 0.9); /* Cor do texto ajustada */
     text-transform: lowercase;
     margin-bottom: 5px;
     font-size: 0.9rem;
@@ -190,22 +196,27 @@ content %}
   .modal-form-group input {
     width: calc(100% - 20px);
     padding: 8px 10px;
-    border: 2px solid black;
-    border-radius: 5px;
-    background-color: rgba(30, 30, 30, 0.5);
+    border: 4px solid rgba(255, 255, 255, 0.2); /*border: 2px solid black;*/
+    border-radius: 10px;
+    background-color: rgba(
+      10,
+      10,
+      10,
+      0.7
+    ); /* ALTERADO: fundo do input mais escuro */
     color: white;
     font-family: "Grandview", sans-serif;
     font-size: 0.9rem;
     outline: none;
     transition: border-color 0.3s ease, background-color 0.3s ease,
       box-shadow 0.3s ease;
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+    box-shadow: 2px 2px 5px rgba(13, 13, 13, 0.3);
   }
 
   .modal-form-group input:focus {
-    border-color: black;
-    box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
-    background-color: rgba(30, 30, 30, 0.7);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 5px rgba(55, 54, 54, 0.2);
+    background-color: rgba(0, 0, 0, 0.2); /* Ajustado para o foco */
     box-shadow: 3px 3px 7px rgba(0, 0, 0, 0.4);
   }
 
@@ -232,7 +243,7 @@ content %}
   }
 
   .modal-button.enter:hover {
-    background-color: rgba(2, 68, 0, 0.477);
+    background-color: rgba(2, 68, 0, 0.4);
     border-color: rgba(0, 9, 0, 0.6);
     box-shadow: 3px 3px 7px rgba(0, 0, 0, 0.307);
   }
@@ -264,8 +275,6 @@ content %}
     visibility: visible;
   }
 
-  /* Removidos: Estilos para o flash-messages-container global, pois ele será removido do HTML */
-
   /* Responsividade */
   @media (max-width: 768px) {
     .lumob-text {
@@ -294,7 +303,6 @@ content %}
       font-size: 0.9rem;
       padding: 8px 18px;
     }
-    /* .flash-messages-list li (removido) */
   }
 
   @media (max-width: 480px) {
@@ -323,7 +331,6 @@ content %}
       font-size: 0.8rem;
       padding: 6px 15px;
     }
-    /* .flash-messages-list li (removido) */
   }
 </style>
 
@@ -378,9 +385,6 @@ content %}
   </div>
 </div>
 
-{# REMOVIDO COMPLETAMENTE: Container global para mensagens Flash #} {# Não há
-mais um div.flash-messages-container no HTML #}
-
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     const openLoginModalBtn = document.getElementById('openLoginModal');
@@ -390,23 +394,9 @@ mais um div.flash-messages-container no HTML #}
     const loginForm = document.getElementById('loginForm');
     const randomImageBand = document.getElementById('randomImageBand');
     const imageBandContainer = document.getElementById('imageBandContainer');
-    // NOVO: Referência à div de mensagem de erro dentro do modal
     const modalErrorMessageDiv = document.getElementById('modalErrorMessage');
 
 
-    /*
-     * Bloco de código para escolher uma imagem aleatória para a faixa central.
-     *
-     * Para ATIVAR a seleção aleatória de imagens:
-     * 1. Descomente a linha 'setRandomImage();' abaixo.
-     * 2. Certifique-se de que você tem imagens nomeadas de 1.jpg a 44.jpg (ou o range desejado)
-     * na pasta 'static/img/'.
-     * 3. Se precisar ajustar o número mínimo ou máximo de imagens, altere 'min' e 'max' na função 'setRandomImage'.
-     *
-     * Para DESATIVAR (exibir uma imagem fixa):
-     * 1. Mantenha 'setRandomImage();' comentado.
-     * 2. Defina o 'src' da imagem diretamente abaixo, com o caminho para a imagem desejada.
-     */
     function setRandomImage() {
       const min = 1;
       const max = 44;
@@ -415,22 +405,13 @@ mais um div.flash-messages-container no HTML #}
       randomImageBand.src = imageUrl;
     }
 
-    // ATUALMENTE DESATIVADO: Para exibir uma imagem fixa (ex: 2.jpg)
-    randomImageBand.src = '{{ url_for('static', filename='img/24.jpg') }}'; /* <<< Escolha da Imagem de capa */
+    randomImageBand.src = '{{ url_for('static', filename='img/24.jpg') }}';
 
-    // ATIVE ESTA LINHA para usar imagens aleatórias (descomente-a):
-    // setRandomImage();
-
-    // Removida a função toggleFlashMessagesVisibility, pois não será mais usada
-    // function toggleFlashMessagesVisibility(show) { ... }
-
-    // Função para exibir mensagem de erro DENTRO do modal
     function displayModalError(message) {
         modalErrorMessageDiv.textContent = message;
         modalErrorMessageDiv.classList.add('show');
     }
 
-    // Função para limpar mensagem de erro DENTRO do modal
     function clearModalError() {
         modalErrorMessageDiv.textContent = '';
         modalErrorMessageDiv.classList.remove('show');
@@ -440,23 +421,19 @@ mais um div.flash-messages-container no HTML #}
       loginModalOverlay.classList.add('show');
       lumobText.classList.add('animated');
       imageBandContainer.classList.add('expanded');
-      // Limpa qualquer mensagem de erro anterior ao abrir o modal
       clearModalError();
     });
 
     cancelLoginModalBtn.addEventListener('click', function() {
       window.location.href = '{{ url_for('index') }}';
-      // Este bloco de código abaixo será executado apenas se o redirecionamento não for instantâneo
       imageBandContainer.classList.remove('expanded');
     });
 
-    // Ao clicar fora do modal, reverter a animação do texto "lumob" E a expansão da imagem
     loginModalOverlay.addEventListener('click', function(event) {
       if (event.target === loginModalOverlay) {
         loginModalOverlay.classList.remove('show');
-        lumobText.classList.remove('animated'); // Remove a classe animated
+        lumobText.classList.remove('animated');
         imageBandContainer.classList.remove('expanded');
-        // Limpa a mensagem de erro ao fechar o modal
         clearModalError();
       }
     });
@@ -477,33 +454,21 @@ mais um div.flash-messages-container no HTML #}
       })
       .then(response => {
         if (!response.ok) {
-            // Se a resposta não for ok (status 4xx ou 5xx), trate como erro
             return response.json().then(err => { throw err; });
         }
-        return response.json(); // Se a resposta for ok, espera JSON de sucesso
+        return response.json();
       })
       .then(data => {
         if (data.success) {
           window.location.href = data.redirect_url;
         } else {
-          // Exibe a mensagem de erro DENTRO do modal
           displayModalError(data.message);
-          // Não fecha o modal para permitir nova tentativa
-          // O reset de animações e imagem expandida não acontece aqui em caso de erro
         }
       })
       .catch(error => {
-        // Exibe mensagem de erro de rede/outros DENTRO do modal
         displayModalError(error.message || 'Ocorreu um erro inesperado. Verifique sua conexão.');
-        // Não fecha o modal
       });
     });
-
-    // Removida a função displayGlobalFlashMessage, pois não é mais usada
-    // function displayGlobalFlashMessage(message, category) { ... }
-
-    // Removido o código que manipulava a visibilidade das mensagens na carga inicial
-    // if (globalFlashMessagesList && globalFlashMessagesList.children.length === 0) { ... }
   });
 </script>
 {% endblock %}
