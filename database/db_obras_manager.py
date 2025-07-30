@@ -995,6 +995,51 @@ class ObrasManager:
     # === MÉTODOS PARA DASHBOARD DE OBRAS ==============================================================================================
     # ==================================================================================================================================
 
+    # --- Métodos para o Dashboard da Obra ---
+    def get_avancos_by_obra_id(self, obra_id):
+        """
+        Retorna todos os registros de avanço físico para uma obra específica.
+        """
+        query = """
+            SELECT
+                Percentual_Avanco_Fisico,
+                Data_Avanco
+            FROM
+                avancos_fisicos
+            WHERE ID_Obras = %s
+            ORDER BY Data_Avanco ASC
+        """
+        results = self.db.execute_query(query, (obra_id,), fetch_results=True)
+        if results:
+            return [self._format_date_fields(item) for item in results]
+        return []
+
+    def get_medicoes_by_obra_id(self, obra_id):
+        """
+        Retorna todos os registros de medição para uma obra específica.
+        """
+        query = """
+            SELECT
+                Valor_Medicao,
+                Data_Medicao
+            FROM
+                medicoes
+            WHERE ID_Obras = %s AND Status_Medicao IN ('Aprovada', 'Paga')
+            ORDER BY Data_Medicao ASC
+        """
+        results = self.db.execute_query(query, (obra_id,), fetch_results=True)
+        if results:
+            # Tratamento explícito para o valor e formatação de data
+            for item in results:
+                value = item.get('Valor_Medicao')
+                if value is not None:
+                    try:
+                        item['Valor_Medicao'] = float(value)
+                    except (ValueError, TypeError):
+                        item['Valor_Medicao'] = 0.0
+            return [self._format_date_fields(item) for item in results]
+        return []
+
     def get_obra_status_counts(self):
         """
         Retorna a contagem de obras por status.

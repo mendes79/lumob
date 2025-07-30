@@ -764,11 +764,11 @@
                             <td>{{ medicao.ID_Medicoes }}</td>
                             <td>{{ medicao.Numero_Medicao }}</td>
                             <td>{{ medicao.Numero_Obra }} - {{ medicao.Nome_Obra }}</td>
-                            <td>R$ {{ "%.2f"|format(medicao.Valor_Medicao) }}</td>
+                            <td>{{ medicao.Valor_Medicao_Formatado }}</td>
                             <td>{{ medicao.Data_Medicao.strftime('%d/%m/%Y') if medicao.Data_Medicao else 'N/A' }}</td>
                             <td>{{ medicao.Mes_Referencia if medicao.Mes_Referencia else 'N/A' }}</td>
-                            <td>{{ medicao.Status_Medicao }}</td> {# Apenas o texto do status #}
-                            <td class="actions"> {# Coluna para as ações #}
+                            <td>{{ medicao.Status_Medicao }}</td>
+                            <td class="actions">
                                 <a href="{{ url_for('obras_bp.medicao_details', medicao_id=medicao.ID_Medicoes) }}" class="view" data-tooltip="Detalhes"><i class="fas fa-eye"></i></a>
                                 <a href="{{ url_for('obras_bp.edit_medicao', medicao_id=medicao.ID_Medicoes) }}" class="edit" data-tooltip="Editar"><i class="fas fa-edit"></i></a>
                                 <form action="{{ url_for('obras_bp.delete_medicao', medicao_id=medicao.ID_Medicoes) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir a Medição {{ medicao.Numero_Medicao }} da obra {{ medicao.Nome_Obra }}? Esta ação é irreversível.');">

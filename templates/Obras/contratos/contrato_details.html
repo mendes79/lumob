@@ -1,8 +1,6 @@
 {% extends 'base.html' %} {% block title %}Detalhes do Contrato - LUMOB{%
 endblock %} {% block messages %}{% endblock %} {% block content %}
 <div class="container custom-form-container mt-4 mb-4 p-4">
-  {# Container customizado, margens e padding #} {# Título dentro da faixa preta
-  #}
   <div class="title-band mb-2">
     <h1 class="text-white text-center mb-0">
       <i class="fas fa-file-signature me-3"></i>Detalhes do Contrato: {{
@@ -10,11 +8,8 @@ endblock %} {% block messages %}{% endblock %} {% block content %}
     </h1>
   </div>
 
-  {# Área de Detalhes do Contrato #}
   <div class="card card-body shadow-sm mb-4 custom-details-card">
-    {# Adicionada classe customizada para o card #}
     <h4 class="mb-3 custom-details-title">Informações Principais</h4>
-    {# Classe customizada para o título #}
     <div class="row mb-2">
       <div class="col-md-6">
         <p class="mb-0 fw-bold custom-details-label">ID do Contrato:</p>
@@ -45,8 +40,7 @@ endblock %} {% block messages %}{% endblock %} {% block content %}
       </div>
       <div class="col-md-6">
         <p class="mb-0 custom-details-value">
-          R$ {{ "%.2f"|format(contrato.Valor_Contrato) if
-          contrato.Valor_Contrato is not none else '0.00' }}
+          {{ contrato.Valor_Contrato_Formatado }}
         </p>
       </div>
     </div>
@@ -117,19 +111,10 @@ endblock %} {% block messages %}{% endblock %} {% block content %}
     </div>
   </div>
 
-  {# Botões de Ação #}
   <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-    {# Alinha os botões à direita #}
     <a
       href="{{ url_for('obras_bp.edit_contrato', contrato_id=contrato.ID_Contratos) }}"
       class="btn btn-info custom-submit-btn"
-      {#
-      Usando
-      custom-submit-btn
-      para
-      o
-      Editar
-      #}
       >Editar</a
     >
     <form
@@ -140,14 +125,6 @@ endblock %} {% block messages %}{% endblock %} {% block content %}
       <button
         type="submit"
         class="btn btn-danger custom-delete-btn"
-        {#
-        Nova
-        classe
-        para
-        o
-        botão
-        Excluir
-        #}
         onclick="return confirm('Tem certeza que deseja excluir este contrato? Esta ação é irreversível.');"
       >
         Excluir
@@ -158,7 +135,6 @@ endblock %} {% block messages %}{% endblock %} {% block content %}
       class="btn btn-secondary custom-cancel-btn"
       >Cancelar</a
     >
-    {# Botão Cancelar que retorna à lista #}
   </div>
 </div>
 

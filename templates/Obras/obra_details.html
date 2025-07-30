@@ -1,401 +1,354 @@
-{% extends 'base.html' %} {% block title %}Detalhes da Obra - LUMOB{% endblock
-%} {% block messages %}{% endblock %} {% block content %}
-<div class="container custom-form-container mt-4 mb-4 p-4">
-  {# Container customizado, margens e padding #} {# Título dentro da faixa preta
-  #}
-  <div class="title-band mb-2">
-    <h1 class="text-white text-center mb-0">
-      <i class="fas fa-building me-3"></i>Detalhes da Obra: {{ obra.Nome_Obra }}
-    </h1>
-  </div>
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard da Obra - {{ obra.Nome_Obra }}</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      /* Estilos gerais da aplicação (copiados/adaptados do seu design) */
+      :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #34495e;
+        --accent-color: #3498db;
+        --success-color: #27ae60;
+        --light-gray: #ecf0f1;
+        --text-dark: #2c3e50;
+        --text-light: #ffffff;
+        --glass-bg: rgba(255, 255, 255, 0.95);
+        --shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.12);
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        color: var(--text-dark);
+        line-height: 1.6;
+      }
+      .main-container {
+        max-width: 1400px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: var(--glass-bg);
+        border-radius: 24px;
+        box-shadow: var(--shadow-medium);
+      }
+      .header-band {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(
+          135deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        color: var(--text-light);
+        padding: 1.2rem 2rem;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+      }
+      .header-band h1 {
+        font-size: 1.8rem;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+      .back-button {
+        padding: 0.6rem 1.2rem;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: var(--text-light);
+        text-decoration: none;
+        border-radius: 10px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+      }
+      .back-button:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      .grid-container {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 2rem;
+      }
+      .card-custom {
+        background: #fff;
+        padding: 1.5rem;
+        border-radius: 16px;
+        box-shadow: var(--shadow-medium);
+      }
+      .card-custom h4 {
+        border-bottom: 2px solid var(--light-gray);
+        padding-bottom: 0.75rem;
+        margin-bottom: 1rem;
+        color: var(--primary-color);
+      }
+      .details-grid p {
+        margin-bottom: 0.75rem;
+        font-size: 0.9rem;
+      }
+      .details-grid strong {
+        color: var(--secondary-color);
+        display: block;
+        margin-bottom: 0.2rem;
+      }
+      .table-responsive {
+        margin-top: 1rem;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+      }
+      th,
+      td {
+        padding: 0.6rem;
+        text-align: center;
+        border: 1px solid var(--light-gray);
+      }
+      th {
+        background-color: var(--secondary-color);
+        color: var(--text-light);
+      }
+      tbody tr:nth-child(even) {
+        background-color: #f8f9fa;
+      }
+      td:first-child {
+        text-align: left;
+        font-weight: bold;
+      }
+      .chart-container {
+        margin-top: 2rem;
+      }
 
-  {# Área de Detalhes da Obra #}
-  <div class="card card-body shadow-sm mb-4 custom-details-card">
-    {# Adicionada classe customizada para o card #}
-    <h4 class="mb-3 custom-details-title">Informações Principais</h4>
-    {# Classe customizada para o título #}
-    <div class="row mb-2">
-      <div class="col-md-6">
-        <p class="mb-0 fw-bold custom-details-label">ID da Obra:</p>
+      @media (max-width: 992px) {
+        .grid-container {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main-container">
+      <div class="header-band">
+        <h1>
+          <i class="fas fa-tachometer-alt"></i> Dashboard da Obra: {{
+          obra.Nome_Obra }}
+        </h1>
+        <a
+          href="{{ url_for('obras_bp.gerenciar_obras_lista') }}"
+          class="back-button"
+        >
+          <i class="fas fa-arrow-left"></i> Voltar à Lista de Obras
+        </a>
       </div>
-      <div class="col-md-6">
-        <p class="mb-0 custom-details-value">{{ obra.ID_Obras }}</p>
+
+      <div class="grid-container">
+        <div class="card-custom">
+          <h4><i class="fas fa-info-circle"></i> Informações Gerais</h4>
+          <div class="details-grid">
+            <p><strong>ID da Obra:</strong> #{{ obra.ID_Obras }}</p>
+            <p>
+              <strong>Número:</strong> {{ obra.Numero_Obra|default('N/A') }}
+            </p>
+            <p>
+              <strong>Cliente:</strong> {{ obra.Nome_Cliente|default('N/A') }}
+            </p>
+            <p>
+              <strong>Contrato:</strong> {{ obra.Numero_Contrato|default('N/A')
+              }}
+            </p>
+            <p>
+              <strong>Status:</strong> {{ obra.Status_Obra|default('N/A') }}
+            </p>
+            <p>
+              <strong>Valor Total (Obra + Aditivos):</strong> R$ {{
+              "%.2f"|format(obra.Valor_Obra + obra.Valor_Aditivo_Total) if
+              obra.Valor_Obra is not none else '0.00' }}
+            </p>
+            <p>
+              <strong>Data Início Prevista:</strong> {{
+              obra.Data_Inicio_Prevista.strftime('%d/%m/%Y') if
+              obra.Data_Inicio_Prevista else 'N/A' }}
+            </p>
+            <p>
+              <strong>Data Fim Prevista:</strong> {{
+              obra.Data_Fim_Prevista.strftime('%d/%m/%Y') if
+              obra.Data_Fim_Prevista else 'N/A' }}
+            </p>
+          </div>
+        </div>
+
+        <div class="card-custom">
+          <h4>
+            <i class="fas fa-calendar-alt"></i> Resumo Mensal - {{
+            dashboard_data.year }}
+          </h4>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  {% for month in dashboard_data.months %}
+                  <th>{{ month }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Avanço Físico (%)</td>
+                  {% for value in dashboard_data.monthly_physical %}
+                  <td>{{ "%.2f"|format(value) }}%</td>
+                  {% endfor %}
+                </tr>
+                <tr>
+                  <td>Avanço Financeiro (R$)</td>
+                  {% for value in dashboard_data.monthly_financial %}
+                  <td>R$ {{ "%.2f"|format(value)|replace('.', ',') }}</td>
+                  {% endfor %}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="chart-container">
+            <h4><i class="fas fa-chart-line"></i> Evolução do Avanço Físico</h4>
+            <canvas id="physicalProgressChart"></canvas>
+          </div>
+
+          <div class="chart-container">
+            <h4>
+              <i class="fas fa-chart-bar"></i> Evolução do Avanço Financeiro
+              (Medições)
+            </h4>
+            <canvas id="financialProgressChart"></canvas>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="row mb-2">
-      <div class="col-md-6">
-        <p class="mb-0 fw-bold custom-details-label">Número da Obra:</p>
-      </div>
-      <div class="col-md-6">
-        <p class="mb-0 custom-details-value">
-          {{ obra.Numero_Obra|default('N/A') }}
-        </p>
-      </div>
-    </div>
-    <div class="row mb-2">
-      <div class="col-md-6">
-        <p class="mb-0 fw-bold custom-details-label">Nome da Obra:</p>
-      </div>
-      <div class="col-md-6">
-        <p class="mb-0 custom-details-value">
-          {{ obra.Nome_Obra|default('N/A') }}
-        </p>
-      </div>
-    </div>
-    <div class="row mb-2">
-      <div class="col-md-6">
-        <p class="mb-0 fw-bold custom-details-label">Contrato Associado:</p>
-      </div>
-      <div class="col-md-6">
-        <p class="mb-0 custom-details-value">
-          {{ obra.Numero_Contrato|default('N/A') }} (Cliente: {{
-          obra.Nome_Cliente|default('N/A') }})
-        </p>
-      </div>
-    </div>
-    <div class="row mb-2">
-      <div class="col-md-6">
-        <p class="mb-0 fw-bold custom-details-label">Endereço:</p>
-      </div>
-      <div class="col-md-6">
-        <p class="mb-0 custom-details-value">
-          {{ obra.Endereco_Obra|default('N/A') }}
-        </p>
-      </div>
-    </div>
-    <div class="row mb-2">
-      <div class="col-md-6">
-        <p class="mb-0 fw-bold custom-details-label">Escopo:</p>
-      </div>
-      <div class="col-md-6">
-        <p class="mb-0 custom-details-value">
-          {{ obra.Escopo_Obra|default('N/A') }}
-        </p>
-      </div>
-    </div>
-    <div class="row mb-2">
-      <div class="col-md-6">
-        <p class="mb-0 fw-bold custom-details-label">Valor da Obra:</p>
-      </div>
-      <div class="col-md-6">
-        <p class="mb-0 custom-details-value">
-          R$ {{ "%.2f"|format(obra.Valor_Obra) if obra.Valor_Obra is not none
-          else '0.00' }}
-        </p>
-      </div>
-    </div>
-    <div class="row mb-2">
-      <div class="col-md-6">
-        <p class="mb-0 fw-bold custom-details-label">Valor Aditivos:</p>
-      </div>
-      <div class="col-md-6">
-        <p class="mb-0 custom-details-value">
-          R$ {{ "%.2f"|format(obra.Valor_Aditivo_Total) if
-          obra.Valor_Aditivo_Total is not none else '0.00' }}
-        </p>
-      </div>
-    </div>
-    <div class="row mb-2">
-      <div class="col-md-6">
-        <p class="mb-0 fw-bold custom-details-label">Status:</p>
-      </div>
-      <div class="col-md-6">
-        <p class="mb-0 custom-details-value">
-          {{ obra.Status_Obra|default('N/A') }}
-        </p>
-      </div>
-    </div>
-    <div class="row mb-2">
-      <div class="col-md-6">
-        <p class="mb-0 fw-bold custom-details-label">Data Início Prevista:</p>
-      </div>
-      <div class="col-md-6">
-        <p class="mb-0 custom-details-value">
-          {{ obra.Data_Inicio_Prevista.strftime('%d/%m/%Y') if
-          obra.Data_Inicio_Prevista else 'N/A' }}
-        </p>
-      </div>
-    </div>
-    <div class="row mb-2">
-      <div class="col-md-6">
-        <p class="mb-0 fw-bold custom-details-label">Data Fim Prevista:</p>
-      </div>
-      <div class="col-md-6">
-        <p class="mb-0 custom-details-value">
-          {{ obra.Data_Fim_Prevista.strftime('%d/%m/%Y') if
-          obra.Data_Fim_Prevista else 'N/A' }}
-        </p>
-      </div>
-    </div>
-  </div>
 
-  {# Botões de Ação #}
-  <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-    {# Alinha os botões à direita #}
-    <a
-      href="{{ url_for('obras_bp.edit_obra', obra_id=obra.ID_Obras) }}"
-      class="btn btn-info custom-submit-btn"
-      {#
-      Usando
-      custom-submit-btn
-      para
-      o
-      Editar
-      #}
-      >Editar</a
-    >
-    <form
-      action="{{ url_for('obras_bp.delete_obra', obra_id=obra.ID_Obras) }}"
-      method="POST"
-      class="d-inline"
-    >
-      <button
-        type="submit"
-        class="btn btn-danger custom-delete-btn"
-        {#
-        Nova
-        classe
-        para
-        o
-        botão
-        Excluir
-        #}
-        onclick="return confirm('Tem certeza que deseja excluir esta obra? Esta ação é irreversível.');"
-      >
-        Excluir
-      </button>
-    </form>
-    <a
-      href="{{ url_for('obras_bp.gerenciar_obras_lista') }}"
-      class="btn btn-secondary custom-cancel-btn"
-      >Cancelar</a
-    >
-    {# Botão Cancelar que retorna à lista #}
-  </div>
-</div>
+    <script>
+      // Passando dados do Flask (Python) para o JavaScript
+      const dashboardData = {{ dashboard_data|tojson }};
 
-<style>
-  /* Estilos Customizados para o Título como Faixa */
-  .title-band {
-    background-color: #212529; /* Preto ou cinza escuro */
-    padding: 0.75rem;
-    border-radius: 0.5rem;
-    margin-bottom: 1.5rem;
-  }
-  .title-band h1 {
-    color: white;
-    margin-bottom: 0;
-    font-size: 1.5rem; /* Título menor para design minimalista */
-  }
+      // Configuração do Gráfico de Avanço Físico (COM ESCALA FIXA EM 100%)
+      const ctxPhysical = document.getElementById('physicalProgressChart').getContext('2d');
+      new Chart(ctxPhysical, {
+          type: 'bar', // Tipo base do gráfico
+          data: {
+              labels: dashboardData.months,
+              datasets: [{
+                  type: 'bar',
+                  label: 'Avanço Físico Mensal (%)',
+                  data: dashboardData.monthly_physical,
+                  backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                  borderColor: 'rgba(52, 152, 219, 1)',
+                  borderWidth: 1
+              }, {
+                  type: 'line',
+                  label: 'Avanço Físico Acumulado (%)',
+                  data: dashboardData.accumulated_physical,
+                  borderColor: 'rgba(231, 76, 60, 1)',
+                  backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                  fill: false,
+                  tension: 0.1,
+                  yAxisID: 'y'
+              }]
+          },
+          options: {
+              responsive: true,
+              plugins: {
+                  title: {
+                      display: true,
+                      text: 'Avanço Físico Mensal vs. Acumulado (%)'
+                  }
+              },
+              scales: {
+                  y: {
+                      beginAtZero: true,
+                      max: 100, // Define o valor máximo do eixo Y para 100
+                      ticks: {
+                          stepSize: 10, // Define as divisões do eixo Y de 10 em 10
+                          // Adiciona o símbolo de '%' aos rótulos do eixo Y
+                          callback: function(value) {
+                              return value + '%';
+                          }
+                      },
+                      title: {
+                          display: true,
+                          text: 'Percentual (%)'
+                      }
+                  }
+              }
+          }
+      });
 
-  /* Estilos para o Container Principal do Formulário (Fumê, Estreito, 3D) */
-  .custom-form-container {
-    max-width: 700px; /* Um pouco mais largo que os formulários de adição/edição para caber os detalhes */
-    margin-left: auto;
-    margin-right: auto; /* Centralizado */
-    background-color: rgba(
-      33,
-      37,
-      41,
-      0.85
-    ); /* Fundo preto com transparência (vidro fumê) */
-    border: 1px solid #000000; /* Borda preta fina */
-    border-radius: 0.75rem; /* Cantos arredondados */
-    box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.3),
-      0 0.25rem 0.5rem rgba(0, 0, 0, 0.2); /* Efeito 3D mais pronunciado */
-    padding: 1.5rem; /* Padding interno reduzido */
-    position: relative;
-    transform: translateY(-3px); /* Leve elevação */
-  }
-
-  /* Estilos para o Card de Detalhes dentro do container */
-  .custom-details-card {
-    background-color: rgba(
-      255,
-      255,
-      255,
-      0.9
-    ); /* Fundo branco semi-transparente para o card */
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 0.5rem;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    color: #212529; /* Cor do texto padrão para o card */
-  }
-
-  /* Estilos para o título dentro do card de detalhes */
-  .custom-details-title {
-    color: #212529; /* Cor do título dentro do card */
-    font-weight: 600;
-    margin-bottom: 1.5rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    padding-bottom: 0.5rem;
-  }
-
-  /* Estilos para as labels (negrito) e valores dos detalhes */
-  .custom-details-label {
-    color: #343a40; /* Cor para as labels dos detalhes */
-    font-size: 0.9rem;
-  }
-
-  .custom-details-value {
-    color: #495057; /* Cor para os valores dos detalhes */
-    font-size: 0.9rem;
-  }
-
-  /* Estilos para os Botões "Salvar/Editar" e "Cancelar" (Mais Sofisticados) */
-  .custom-submit-btn,
-  .custom-cancel-btn,
-  .custom-delete-btn {
-    /* Incluindo o delete aqui */
-    padding: 0.6rem 1.2rem; /* Padding reduzido */
-    border-radius: 0.5rem; /* Cantos arredondados */
-    font-size: 0.9rem; /* Tamanho de fonte menor */
-    font-weight: 600; /* Peso da fonte maior */
-    transition: all 0.3s ease-in-out; /* Transição suave */
-    border: none; /* Remove borda padrão */
-    cursor: pointer; /* Cursor de pointer */
-    position: relative; /* Para efeitos de posicionamento */
-    overflow: hidden; /* Para efeitos de animação */
-    margin-left: 0.5rem; /* Margem entre botões */
-  }
-
-  .custom-submit-btn {
-    background: linear-gradient(135deg, #198754, #157347); /* Gradiente verde */
-    color: white;
-    box-shadow: 0 0.25rem 0.5rem rgba(25, 135, 84, 0.3);
-  }
-  .custom-submit-btn:hover {
-    background: linear-gradient(
-      135deg,
-      #157347,
-      #146c43
-    ); /* Gradiente mais escuro */
-    transform: translateY(-3px); /* Elevação no hover */
-    box-shadow: 0 0.5rem 1rem rgba(25, 135, 84, 0.4); /* Sombra mais pronunciada */
-  }
-  .custom-submit-btn:active {
-    transform: translateY(-1px); /* Menos elevação no click */
-  }
-
-  .custom-cancel-btn {
-    background: linear-gradient(135deg, #6c757d, #5c636a); /* Gradiente cinza */
-    color: white;
-    box-shadow: 0 0.25rem 0.5rem rgba(108, 117, 125, 0.3);
-  }
-  .custom-cancel-btn:hover {
-    background: linear-gradient(
-      135deg,
-      #5c636a,
-      #565e64
-    ); /* Gradiente mais escuro */
-    transform: translateY(-3px); /* Elevação no hover */
-    box-shadow: 0 0.5rem 1rem rgba(108, 117, 125, 0.4); /* Sombra mais pronunciada */
-  }
-  .custom-cancel-btn:active {
-    transform: translateY(-1px); /* Menos elevação no click */
-  }
-
-  /* Novo estilo para o botão Excluir */
-  .custom-delete-btn {
-    background: linear-gradient(
-      135deg,
-      #dc3545,
-      #c82333
-    ); /* Gradiente vermelho */
-    color: white;
-    box-shadow: 0 0.25rem 0.5rem rgba(220, 53, 69, 0.3);
-  }
-  .custom-delete-btn:hover {
-    background: linear-gradient(
-      135deg,
-      #c82333,
-      #bd2130
-    ); /* Gradiente vermelho mais escuro */
-    transform: translateY(-3px); /* Elevação no hover */
-    box-shadow: 0 0.5rem 1rem rgba(220, 53, 69, 0.4); /* Sombra mais pronunciada */
-  }
-  .custom-delete-btn:active {
-    transform: translateY(-1px); /* Menos elevação no click */
-  }
-
-  /* Efeito adicional de brilho nos botões */
-  .custom-submit-btn::before,
-  .custom-cancel-btn::before,
-  .custom-delete-btn::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.3),
-      transparent
-    );
-    transition: left 0.5s ease-in-out;
-  }
-  .custom-submit-btn:hover::before,
-  .custom-cancel-btn:hover::before,
-  .custom-delete-btn:hover::before {
-    left: 100%;
-  }
-
-  /* Ajustes para responsividade */
-  @media (max-width: 768px) {
-    .custom-form-container {
-      max-width: 95%;
-      margin: 0 auto;
-      padding: 1rem;
-    }
-    .title-band h1 {
-      font-size: 1.3rem;
-    }
-    .custom-details-label,
-    .custom-details-value {
-      font-size: 0.85rem;
-    }
-    .d-md-flex {
-      flex-direction: column;
-      align-items: stretch;
-    }
-    .custom-submit-btn,
-    .custom-cancel-btn,
-    .custom-delete-btn {
-      margin-left: 0 !important;
-      margin-bottom: 0.5rem; /* Espaçamento entre botões empilhados */
-    }
-  }
-
-  /* Adaptação dos estilos flash messages se já não estiverem no base.html */
-  .flash-messages {
-    list-style: none;
-    padding: 0;
-    margin-bottom: 1rem;
-  }
-  .flash-messages li {
-    padding: 0.75rem 1.25rem;
-    margin-bottom: 1rem;
-    border: 1px solid transparent;
-    border-radius: 0.25rem;
-    font-weight: bold;
-  }
-  .flash-messages li.success {
-    color: #155724;
-    background-color: #d4edda;
-    border-color: #c3e6cb;
-  }
-  .flash-messages li.danger {
-    color: #721c24;
-    background-color: #f8d7da;
-    border-color: #f5c6cb;
-  }
-  .flash-messages li.info {
-    color: #0c5460;
-    background-color: #d1ecf1;
-    border-color: #bee5eb;
-  }
-</style>
-{% endblock %}
+      // Configuração do Gráfico de Avanço Financeiro
+      const ctxFinancial = document.getElementById('financialProgressChart').getContext('2d');
+      new Chart(ctxFinancial, {
+          type: 'bar', // Tipo base do gráfico
+          data: {
+              labels: dashboardData.months,
+              datasets: [{
+                  type: 'bar',
+                  label: 'Avanço Financeiro Mensal (R$)',
+                  data: dashboardData.monthly_financial,
+                  backgroundColor: 'rgba(39, 174, 96, 0.7)',
+                  borderColor: 'rgba(39, 174, 96, 1)',
+                  borderWidth: 1
+              }, {
+                  type: 'line',
+                  label: 'Avanço Financeiro Acumulado (R$)',
+                  data: dashboardData.accumulated_financial,
+                  borderColor: 'rgba(243, 156, 18, 1)',
+                  backgroundColor: 'rgba(243, 156, 18, 0.2)',
+                  fill: false,
+                  tension: 0.1,
+                  yAxisID: 'y'
+              }]
+          },
+          options: {
+              responsive: true,
+              plugins: {
+                  title: {
+                      display: true,
+                      text: 'Avanço Financeiro Mensal vs. Acumulado (R$)'
+                  },
+                  tooltip: {
+                      callbacks: {
+                          label: function(context) {
+                              let label = context.dataset.label || '';
+                              if (label) {
+                                  label += ': ';
+                              }
+                              if (context.parsed.y !== null) {
+                                  label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed.y);
+                              }
+                              return label;
+                          }
+                      }
+                  }
+              },
+              scales: {
+                  y: {
+                      beginAtZero: true,
+                      title: {
+                          display: true,
+                          text: 'Valor (R$)'
+                      },
+                      ticks: {
+                         callback: function(value, index, values) {
+                             return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+                         }
+                      }
+                  }
+              }
+          }
+      });
+    </script>
+  </body>
+</html>

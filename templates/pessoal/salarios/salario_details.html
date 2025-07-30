@@ -1,8 +1,6 @@
 {% extends 'base.html' %} {% block title %}Detalhes do Pacote Salarial - LUMOB{%
 endblock %} {% block messages %}{% endblock %} {% block content %}
 <div class="container custom-form-container mt-4 mb-4 p-4">
-  {# Container customizado, margens e padding #} {# Título dentro da faixa preta
-  #}
   <div class="title-band mb-2">
     <h1 class="text-white text-center mb-0">
       <i class="fas fa-money-bill-wave me-3"></i>Detalhes do Pacote Salarial
@@ -10,11 +8,8 @@ endblock %} {% block messages %}{% endblock %} {% block content %}
     </h1>
   </div>
 
-  {# Área de Detalhes do Pacote Salarial #}
   <div class="card card-body shadow-sm mb-4 custom-details-card">
-    {# Adicionada classe customizada para o card #}
     <h4 class="mb-3 custom-details-title">Informações Principais</h4>
-    {# Classe customizada para o título #}
     <div class="row mb-2">
       <div class="col-md-6">
         <p class="mb-0 fw-bold custom-details-label">ID do Pacote Salarial:</p>
@@ -45,8 +40,7 @@ endblock %} {% block messages %}{% endblock %} {% block content %}
       </div>
       <div class="col-md-6">
         <p class="mb-0 custom-details-value">
-          R$ {{ "%.2f"|format(salario.Salario_Base) if salario.Salario_Base is
-          not none else '0.00' }}
+          {{ salario.Salario_Base_Formatado }}
         </p>
       </div>
     </div>
@@ -76,8 +70,7 @@ endblock %} {% block messages %}{% endblock %} {% block content %}
       </div>
       <div class="col-md-6">
         <p class="mb-0 custom-details-value">
-          R$ {{ "%.2f"|format(salario.Ajuda_De_Custo) if salario.Ajuda_De_Custo
-          is not none else '0.00' }}
+          {{ salario.Ajuda_De_Custo_Formatado }}
         </p>
       </div>
     </div>
@@ -87,8 +80,7 @@ endblock %} {% block messages %}{% endblock %} {% block content %}
       </div>
       <div class="col-md-6">
         <p class="mb-0 custom-details-value">
-          R$ {{ "%.2f"|format(salario.Vale_Refeicao) if salario.Vale_Refeicao is
-          not none else '0.00' }}
+          {{ salario.Vale_Refeicao_Formatado }}
         </p>
       </div>
     </div>
@@ -98,8 +90,7 @@ endblock %} {% block messages %}{% endblock %} {% block content %}
       </div>
       <div class="col-md-6">
         <p class="mb-0 custom-details-value">
-          R$ {{ "%.2f"|format(salario.Gratificacao) if salario.Gratificacao is
-          not none else '0.00' }}
+          {{ salario.Gratificacao_Formatado }}
         </p>
       </div>
     </div>
@@ -137,19 +128,10 @@ endblock %} {% block messages %}{% endblock %} {% block content %}
     </div>
   </div>
 
-  {# Botões de Ação #}
   <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-    {# Alinha os botões à direita #}
     <a
       href="{{ url_for('pessoal_bp.edit_salario', salario_id=salario.ID_Salarios) }}"
       class="btn btn-info custom-submit-btn"
-      {#
-      Usando
-      custom-submit-btn
-      para
-      o
-      Editar
-      #}
       >Editar</a
     >
     <form
@@ -160,14 +142,6 @@ endblock %} {% block messages %}{% endblock %} {% block content %}
       <button
         type="submit"
         class="btn btn-danger custom-delete-btn"
-        {#
-        Nova
-        classe
-        para
-        o
-        botão
-        Excluir
-        #}
         onclick="return confirm('Tem certeza que deseja excluir este pacote salarial? Esta ação é irreversível.');"
       >
         Excluir
@@ -178,7 +152,6 @@ endblock %} {% block messages %}{% endblock %} {% block content %}
       class="btn btn-secondary custom-cancel-btn"
       >Cancelar</a
     >
-    {# Botão Cancelar que retorna à lista #}
   </div>
 </div>
 

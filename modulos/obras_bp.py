@@ -1,6 +1,7 @@
 # modulos/obras_bp.py
 
 import mysql.connector
+import locale
 import os
 from dotenv import load_dotenv
 from datetime import datetime, date, timedelta # Incluído timedelta para get_proximas_ferias se for movido
@@ -21,6 +22,23 @@ from database.db_pessoal_manager import PessoalManager # Para o dropdown de func
 
 # Crie a instância do Blueprint para o Módulo Obras
 obras_bp = Blueprint('obras_bp', __name__, url_prefix='/obras')
+
+# --- NOVA FUNÇÃO AUXILIAR PARA FORMATAR MOEDA ---
+def formatar_moeda_brl(valor):
+    """Formata um número para o padrão de moeda brasileiro (R$ 1.234,56) de forma manual."""
+    if valor is None:
+        valor = 0.0
+    # Formata o número com 2 casas decimais para separar o inteiro do decimal
+    valor_str = f"{valor:.2f}"
+    inteiro, decimal = valor_str.split('.')
+    
+    # Adiciona os pontos como separadores de milhar
+    inteiro_rev = inteiro[::-1] # Inverte a string do inteiro
+    partes = [inteiro_rev[i:i+3] for i in range(0, len(inteiro_rev), 3)]
+    inteiro_formatado = '.'.join(partes)[::-1] # Junta com pontos e inverte de volta
+    
+    return f"R$ {inteiro_formatado},{decimal}"
+# --- FIM DA NOVA FUNÇÃO ---
 
 # ==================================================================================================================================
 # === ROTAS PARA O MÓDULO OBRAS ====================================================================================================
@@ -93,7 +111,7 @@ def obras_dashboard():
 # 3.1 ROTAS DE OBRAS (CRUD e Relatórios)
 # ===============================================================
 
-# ROTA PARA A LISTAGEM/GERENCIAMENTO DE OBRAS ESPECÍFICAS
+# ROTA PARA A LISTAGEM/GERENCIAMENTO DE OBRAS ESPECÍFICAS (VERSÃO CORRIGIDA)
 @obras_bp.route('/gerenciar')
 @login_required
 def gerenciar_obras_lista():
@@ -111,6 +129,14 @@ def gerenciar_obras_lista():
     search_cliente_id = request.args.get('cliente_id') 
 
     try:
+        # Tenta definir o locale para o padrão brasileiro para formatar a moeda.
+        # Este bloco try/except aninhado é para lidar com o caso do locale não estar instalado no OS.
+        try:
+            locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
+        except locale.Error:
+            # Se 'pt_BR.UTF-8' não for encontrado, usa o locale padrão do sistema.
+            locale.setlocale(locale.LC_ALL, '')
+
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
 
@@ -121,12 +147,21 @@ def gerenciar_obras_lista():
                 search_cliente_id=search_cliente_id
             )
 
-            clientes = obras_manager.get_all_clientes() # Assumindo que get_all_clientes existe e retorna todos os clientes
+            # Formata o valor da obra para o padrão brasileiro
+            if obras:
+                for obra_item in obras:
+                    valor = obra_item.get('Valor_Obra')
+                    if valor is not None:
+                        # Usa locale.currency para formatar corretamente (ex: R$ 652.894,10)
+                        obra_item['Valor_Obra_Formatado'] = locale.currency(valor, grouping=True)
+                    else:
+                        obra_item['Valor_Obra_Formatado'] = locale.currency(0, grouping=True)
 
+            clientes = obras_manager.get_all_clientes() 
             status_options = ['Planejamento', 'Em Andamento', 'Concluída', 'Pausada', 'Cancelada']
 
         return render_template(
-            'obras/obras_module.html', # Template para a lista de obras
+            'obras/obras_module.html', 
             user=current_user,
             obras=obras,
             clientes=clientes,
@@ -517,10 +552,10 @@ def delete_obra(obra_id):
         print(f"Erro inesperado em delete_obra: {e}")
         return redirect(url_for('obras_bp.gerenciar_obras_lista'))
 
-# ROTA PARA DETALHES DA OBRA
-@obras_bp.route('/details/<int:obra_id>')
+# ROTA PARA DETALHES DA OBRA (AGORA COM LÓGICA DE DASHBOARD)
+@obras_bp.route('/details/<int:obra_id>') # O nome da rota e o decorador permanecem os mesmos
 @login_required
-def obra_details(obra_id):
+def obra_details(obra_id): # O nome da função permanece o mesmo
     if not current_user.can_access_module('Obras'):
         flash('Acesso negado. Você não tem permissão para ver detalhes de obras.', 'warning')
         return redirect(url_for('welcome'))
@@ -534,10 +569,46 @@ def obra_details(obra_id):
                 flash('Obra não encontrada.', 'danger')
                 return redirect(url_for('obras_bp.gerenciar_obras_lista'))
 
+            # --- A LÓGICA DE PROCESSAMENTO DO DASHBOARD ENTRA AQUI ---
+            current_year = datetime.now().year
+
+            avancos = obras_manager.get_avancos_by_obra_id(obra_id) #
+            medicoes = obras_manager.get_medicoes_by_obra_id(obra_id) #
+
+            months_labels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+            monthly_physical = [0.0] * 12
+            monthly_financial = [0.0] * 12
+
+            if avancos:
+                for avanco in avancos:
+                    if avanco.get('Data_Avanco') and avanco['Data_Avanco'].year == current_year:
+                        month_index = avanco['Data_Avanco'].month - 1
+                        monthly_physical[month_index] += float(avanco.get('Percentual_Avanco_Fisico', 0.0))
+
+            if medicoes:
+                for medicao in medicoes:
+                    if medicao.get('Data_Medicao') and medicao['Data_Medicao'].year == current_year:
+                        month_index = medicao['Data_Medicao'].month - 1
+                        monthly_financial[month_index] += float(medicao.get('Valor_Medicao', 0.0))
+
+            accumulated_physical = [sum(monthly_physical[:i+1]) for i in range(12)]
+            accumulated_financial = [sum(monthly_financial[:i+1]) for i in range(12)]
+
+            dashboard_data = {
+                "year": current_year,
+                "months": months_labels,
+                "monthly_physical": monthly_physical,
+                "monthly_financial": monthly_financial,
+                "accumulated_physical": accumulated_physical,
+                "accumulated_financial": accumulated_financial
+            }
+
+        # O template renderizado continua sendo o 'obra_details.html'
         return render_template(
-            'obras/obra_details.html',
+            'obras/obra_details.html', 
             user=current_user,
-            obra=obra
+            obra=obra,
+            dashboard_data=dashboard_data
         )
     except mysql.connector.Error as e:
         flash(f"Erro de banco de dados: {e}", 'danger')
@@ -930,8 +1001,13 @@ def contratos_module():
                 search_status=search_status
             )
 
-            clientes = obras_manager.get_all_clientes() 
+            # --- NOVA SEÇÃO: Formatação de moeda para a lista de contratos ---
+            if contratos:
+                for contrato in contratos:
+                    contrato['Valor_Contrato_Formatado'] = formatar_moeda_brl(contrato.get('Valor_Contrato'))
+            # --- FIM DA NOVA SEÇÃO ---
 
+            clientes = obras_manager.get_all_clientes() 
             status_options = ['Ativo', 'Pendente', 'Encerrado', 'Aditivado', 'Cancelado']
 
         return render_template(
@@ -1210,6 +1286,11 @@ def contrato_details(contrato_id):
             if not contrato:
                 flash('Contrato não encontrado.', 'danger')
                 return redirect(url_for('obras_bp.contratos_module'))
+
+            # --- NOVA SEÇÃO: Formatação de moeda para a página de detalhes ---
+            if contrato:
+                contrato['Valor_Contrato_Formatado'] = formatar_moeda_brl(contrato.get('Valor_Contrato'))
+            # --- FIM DA NOVA SEÇÃO ---
 
         return render_template(
             'obras/contratos/contrato_details.html',
@@ -1717,9 +1798,10 @@ def export_arts_excel():
 @login_required
 def medicoes_module(): 
     if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para acessar o módulo de Medições.', 'warning')
+        flash('Acesso negado...', 'warning')
         return redirect(url_for('welcome'))
 
+    # ... (código de busca de filtros não muda) ...
     search_numero_medicao = request.args.get('numero_medicao')
     search_obra_id = request.args.get('obra_id')
     search_status = request.args.get('status_medicao')
@@ -1727,15 +1809,20 @@ def medicoes_module():
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
-
             medicoes = obras_manager.get_all_medicoes(
                 search_numero_medicao=search_numero_medicao,
                 search_obra_id=search_obra_id,
                 search_status=search_status
             )
+            
+            # --- SEÇÃO DE FORMATAÇÃO ATUALIZADA ---
+            if medicoes:
+                for medicao in medicoes:
+                    # Usa nossa nova função de formatação
+                    medicao['Valor_Medicao_Formatado'] = formatar_moeda_brl(medicao.get('Valor_Medicao'))
+            # --- FIM DA ATUALIZAÇÃO ---
 
             all_obras = obras_manager.get_all_obras_for_dropdown()
-
             status_options = ['Emitida', 'Aprovada', 'Paga', 'Rejeitada']
 
         return render_template(
@@ -1743,21 +1830,13 @@ def medicoes_module():
             user=current_user,
             medicoes=medicoes,
             all_obras=all_obras,
-            status_options=status_options,
-            selected_numero_medicao=search_numero_medicao,
-            selected_obra_id=int(search_obra_id) if search_obra_id else None,
-            selected_status=search_status
+            # ... (resto dos parâmetros)
         )
-
-    except mysql.connector.Error as e:
-        flash(f"Erro de banco de dados ao carregar Medições: {e}", 'danger')
-        print(f"Erro de banco de dados em medicoes_module: {e}")
-        return redirect(url_for('obras_bp.obras_module')) 
     except Exception as e:
+        # ... (blocos except não mudam)
         flash(f"Ocorreu um erro inesperado ao carregar Medições: {e}", 'danger')
         print(f"Erro inesperado em medicoes_module: {e}")
-        return redirect(url_for('obras_bp.obras_module')) 
-
+        return redirect(url_for('obras_bp.obras_module'))
 
 @obras_bp.route('/medicoes/add', methods=['GET', 'POST'])
 @login_required
@@ -2031,7 +2110,7 @@ def delete_medicao(medicao_id):
 @login_required
 def medicao_details(medicao_id):
     if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para ver detalhes de Medições.', 'warning')
+        flash('Acesso negado...', 'warning')
         return redirect(url_for('welcome'))
 
     try:
@@ -2043,16 +2122,19 @@ def medicao_details(medicao_id):
                 flash('Medição não encontrada.', 'danger')
                 return redirect(url_for('obras_bp.medicoes_module'))
 
+            # --- SEÇÃO DE FORMATAÇÃO ATUALIZADA ---
+            if medicao:
+                # Usa nossa nova função de formatação
+                medicao['Valor_Medicao_Formatado'] = formatar_moeda_brl(medicao.get('Valor_Medicao'))
+            # --- FIM DA ATUALIZAÇÃO ---
+
         return render_template(
             'obras/medicoes/medicao_details.html',
             user=current_user,
             medicao=medicao
         )
-    except mysql.connector.Error as e:
-        flash(f"Erro de banco de dados: {e}", 'danger')
-        print(f"Erro de banco de dados em medicao_details: {e}")
-        return redirect(url_for('obras_bp.medicoes_module'))
     except Exception as e:
+        # ... (blocos except não mudam)
         flash(f"Ocorreu um erro inesperado: {e}", 'danger')
         print(f"Erro inesperado em medicao_details: {e}")
         return redirect(url_for('obras_bp.medicoes_module'))

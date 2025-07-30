@@ -6,7 +6,7 @@
     <title>LUMOB - Contratos</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* Reset e variáveis CSS do obras_module.html (nosso novo padrão) */
+        /* Estilos CSS (mantidos os mesmos do padrão) */
         * {
             margin: 0;
             padding: 0;
@@ -680,7 +680,7 @@
             <div class="header">
                 <div class="title-band">
                     <h1>
-                        <i class="fas fa-file-signature"></i> {# Ícone apropriado para Contratos #}
+                        <i class="fas fa-file-signature"></i>
                         Gerenciamento de Contratos
                     </h1>
                 </div>
@@ -765,7 +765,7 @@
                             <td>{{ contrato.ID_Contratos }}</td>
                             <td>{{ contrato.Numero_Contrato }}</td>
                             <td>{{ contrato.Nome_Cliente }}</td>
-                            <td>R$ {{ "%.2f"|format(contrato.Valor_Contrato) }}</td>
+                            <td>{{ contrato.Valor_Contrato_Formatado }}</td>
                             <td>{{ contrato.Data_Assinatura.strftime('%d/%m/%Y') if contrato.Data_Assinatura else 'N/A' }}</td>
                             <td>{{ contrato.Data_Ordem_Inicio.strftime('%d/%m/%Y') if contrato.Data_Ordem_Inicio else 'N/A' }}</td>
                             <td>{{ contrato.Data_Termino_Previsto.strftime('%d/%m/%Y') if contrato.Data_Termino_Previsto else 'N/A' }}</td>

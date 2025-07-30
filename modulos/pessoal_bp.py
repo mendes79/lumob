@@ -33,6 +33,20 @@ def calculate_age(born_date):
     print(f"DEBUG_CALCULATE_AGE: Data Nascimento: {born_date}, Hoje: {today}, Idade Calculada: {age}")
     return age
 
+# --- NOVA FUNÇÃO AUXILIAR PARA FORMATAR MOEDA ---
+# (Adicione esta função no início do arquivo, após os imports)
+def formatar_moeda_brl(valor):
+    """Formata um número para o padrão de moeda brasileiro (R$ 1.234,56) de forma manual."""
+    if valor is None:
+        valor = 0.0
+    valor_str = f"{valor:.2f}"
+    inteiro, decimal = valor_str.split('.')
+    inteiro_rev = inteiro[::-1]
+    partes = [inteiro_rev[i:i+3] for i in range(0, len(inteiro_rev), 3)]
+    inteiro_formatado = '.'.join(partes)[::-1]
+    return f"R$ {inteiro_formatado},{decimal}"
+# --- FIM DA NOVA FUNÇÃO ---
+
 # ---------------------------------------------------------------
 # 2. MÓDULO PESSOAL - HUB
 # ---------------------------------------------------------------
@@ -1415,6 +1429,12 @@ def salarios_module():
                 search_nivel_id=int(search_nivel_id) if search_nivel_id else None
             )
 
+            # --- NOVA SEÇÃO: Formatação de moeda para a lista de salários ---
+            if salarios:
+                for salario in salarios:
+                    salario['Salario_Base_Formatado'] = formatar_moeda_brl(salario.get('Salario_Base'))
+            # --- FIM DA NOVA SEÇÃO ---
+
             all_cargos = pessoal_manager.get_all_cargos_for_dropdown()
             all_niveis = pessoal_manager.get_all_niveis_for_dropdown()
 
@@ -1676,6 +1696,14 @@ def salario_details(salario_id):
             if not salario:
                 flash('Pacote salarial não encontrado.', 'danger')
                 return redirect(url_for('pessoal_bp.salarios_module'))
+
+            # --- NOVA SEÇÃO: Formatação de todos os campos de moeda ---
+            if salario:
+                salario['Salario_Base_Formatado'] = formatar_moeda_brl(salario.get('Salario_Base'))
+                salario['Ajuda_De_Custo_Formatado'] = formatar_moeda_brl(salario.get('Ajuda_De_Custo'))
+                salario['Vale_Refeicao_Formatado'] = formatar_moeda_brl(salario.get('Vale_Refeicao'))
+                salario['Gratificacao_Formatado'] = formatar_moeda_brl(salario.get('Gratificacao'))
+            # --- FIM DA NOVA SEÇÃO ---
 
         return render_template(
             'pessoal/salarios/salario_details.html',

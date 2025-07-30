@@ -47,8 +47,7 @@ endblock %} {% block messages %}{% endblock %} {% block content %}
       </div>
       <div class="col-md-6">
         <p class="mb-0 custom-details-value">
-          R$ {{ "%.2f"|format(medicao.Valor_Medicao) if medicao.Valor_Medicao is
-          not none else '0.00' }}
+          {{ medicao.Valor_Medicao_Formatado }}
         </p>
       </div>
     </div>
