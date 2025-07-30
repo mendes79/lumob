@@ -176,6 +176,37 @@
             font-size: 1rem;
             opacity: 0.9;
         }
+        
+        /* Botões de Ação (para o botão Voltar) */
+        .action-buttons {
+            display: flex;
+            justify-content: flex-end; /* Alinha os botões à direita */
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .back-to-module-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.6rem 1.0rem;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: var(--shadow-light);
+            transition: all 0.2s ease-in-out;
+            background-color: var(--dark-gray);
+        }
+
+        .back-to-module-button:hover {
+             background-color: #5a6268; transform: translateY(-1px); box-shadow: var(--shadow-medium);
+        }
 
         /* Cards */
         .card {
@@ -237,48 +268,71 @@
         }
 
         .filter-buttons-group {
-            grid-column: span 1; /* Garante que o grupo de botões ocupe 1 coluna */
+            grid-column: span 1; 
             display: flex;
             gap: 10px;
-            align-items: flex-end; /* Alinha os botões ao final do seu grid-cell */
-            padding-top: 10px; /* Adiciona um pouco de espaço acima dos botões */
+            align-items: flex-end;
+            padding-top: 10px; 
         }
 
-        /* Botões */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            padding: 0.6rem 1.0rem;
-            color: white;
-            text-align: center;
-            text-decoration: none;
+        /* Botões de Filtro Ícone */
+        .filter-form button[type="submit"],
+        .filter-form .button-icon {
+            padding: 10px;
             border-radius: 6px;
+            font-weight: 600;
             cursor: pointer;
             border: none;
-            font-weight: 600;
-            font-size: 0.9rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
             box-shadow: var(--shadow-light);
             transition: all 0.2s ease-in-out;
-            position: relative; /* Para o tooltip */
+            position: relative;
         }
 
-        .btn-primary {
+        .filter-form button[type="submit"] {
             background-color: var(--accent-color);
+            color: white;
         }
-        .btn-primary:hover {
-            background-color: #0056b3;
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-medium);
+        .filter-form button[type="submit"]:hover { background-color: #0056b3; transform: translateY(-1px); box-shadow: var(--shadow-medium); }
+
+        .filter-form .button-icon {
+            background-color: var(--dark-gray);
+            color: white;
+        }
+        .filter-form .button-icon:hover { background-color: #5a6268; transform: translateY(-1px); box-shadow: var(--shadow-medium); }
+        
+        /* Tooltip para botões de filtro */
+        .filter-form .button-icon::after,
+        .filter-form button[type="submit"]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 120%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            padding: 6px 10px;
+            border-radius: 6px;
+            white-space: nowrap;
+            font-size: 0.75rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+            z-index: 2;
+            box-shadow: var(--shadow-light);
         }
 
-        .btn-secondary {
-            background-color: var(--dark-gray);
-        }
-        .btn-secondary:hover {
-            background-color: #5a6268;
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-medium);
+        .filter-form .button-icon:hover::after,
+        .filter-form button[type="submit"]:hover::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-5px);
         }
 
         /* Tabela de Dados */
@@ -338,23 +392,9 @@
             box-shadow: var(--shadow-light);
         }
 
-        /* Botão Voltar (estilizado como os outros botões de ação) */
+        /* Botão Voltar (estilo antigo removido) */
         .back-link {
-            text-align: right; /* Alinha à direita, como os botões de ação */
-            margin-top: 2rem;
-        }
-
-        .back-link .btn {
-            background-color: var(--dark-gray);
-            color: white;
-            padding: 0.6rem 1.0rem;
-            border-radius: 6px;
-            box-shadow: var(--shadow-light);
-        }
-        .back-link .btn:hover {
-            background-color: #5a6268;
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-medium);
+            display: none;
         }
 
 
@@ -385,7 +425,7 @@
             th, td {
                 padding: 6px 8px;
             }
-            .btn {
+            .back-to-module-button {
                 padding: 0.5rem 0.8rem;
                 font-size: 0.85rem;
             }
@@ -408,6 +448,10 @@
             }
             .title-band p {
                 font-size: 0.9rem;
+            }
+
+            .action-buttons {
+                justify-content: center;
             }
 
             .card {
@@ -435,15 +479,15 @@
                 font-size: 0.9rem;
             }
             .filter-buttons-group {
-                flex-direction: column;
-                align-items: stretch;
-                padding-top: 0;
+                flex-direction: row; /* Mantém os botões em linha */
+                justify-content: center;
+                gap: 8px;
             }
-            .btn {
-                width: 100%;
-                margin-top: 5px;
+            .filter-form button[type="submit"], .filter-form .button-icon {
+                width: 40px;
+                height: 40px;
             }
-
+            
             table {
                 font-size: 0.75em;
                 min-width: 550px; /* Ajuste */
@@ -454,9 +498,6 @@
             .no-results-message {
                 font-size: 1rem;
                 padding: 15px;
-            }
-            .back-link {
-                text-align: center; /* Centraliza o botão de voltar em telas menores */
             }
         }
 
@@ -476,6 +517,13 @@
             }
             .title-band p {
                 font-size: 0.8rem;
+            }
+            .action-buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .action-buttons > * {
+                margin: 4px 0;
             }
             .card {
                 padding: 0.8rem;
@@ -512,6 +560,12 @@
                 </div>
             </div>
 
+            <div class="action-buttons">
+                 <a href="{{ url_for('seguranca_bp.seguranca_module') }}" class="back-to-module-button">
+                    <i class="fas fa-arrow-left"></i> Voltar ao Módulo Segurança
+                </a>
+            </div>
+
             <div class="card">
                 <div class="card-header">
                     <i class="fas fa-filter"></i> Filtrar Relatório
@@ -545,8 +599,8 @@
                             <input type="text" id="matricula_participante" name="matricula_participante" value="{{ selected_matricula_participante or '' }}" placeholder="Ex: F001">
                         </div>
                         <div class="filter-buttons-group">
-                            <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Aplicar Filtros</button>
-                            <a href="{{ url_for('seguranca_bp.seguranca_relatorio_treinamentos') }}" class="btn btn-secondary"><i class="fas fa-eraser"></i> Limpar Filtros</a>
+                            <button type="submit" data-tooltip="Filtrar"><i class="fas fa-filter"></i></button>
+                            <a href="{{ url_for('seguranca_bp.seguranca_relatorio_treinamentos') }}" class="button-icon" data-tooltip="Limpar Filtros"><i class="fas fa-eraser"></i></a>
                         </div>
                     </form>
                 </div>
@@ -610,10 +664,7 @@
                 </div>
             </div>
 
-            <div class="back-link">
-                <a href="{{ url_for('seguranca_bp.seguranca_module') }}" class="btn">
-                    <i class="fas fa-arrow-left"></i> Voltar ao Módulo Segurança
-                </a>
+            <div class="back-link" style="display: none;">
             </div>
         </div>
     </div>

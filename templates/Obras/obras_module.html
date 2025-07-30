@@ -707,18 +707,18 @@
                     <i class="fas fa-file-excel"></i> Exportar para Excel
                 </a>
                 <a href="{{ url_for('obras_bp.obras_module') }}" class="back-to-module-button">
-                    <i class="fas fa-arrow-left"></i> Voltar ao Dashboard
+                    <i class="fas fa-arrow-left"></i> Voltar ao Módulo Obras
                 </a>
             </div>
 
             <form id="filter-form" method="GET" class="filter-form" action="{{ url_for('obras_bp.gerenciar_obras_lista') }}">
                 <div class="filter-group">
                     <label for="numero_obra">Número da Obra:</label>
-                    <input type="text" id="numero_obra" name="numero_obra" value="{{ selected_numero|default('') }}" placeholder="Buscar por Número">
+                    <input type="text" id="numero_obra" name="numero_obra" value="{{ selected_numero or '' }}" placeholder="Ex: 2023-001">
                 </div>
                 <div class="filter-group">
                     <label for="nome_obra">Nome:</label>
-                    <input type="text" id="nome_obra" name="nome_obra" value="{{ selected_nome|default('') }}" placeholder="Buscar por Nome">
+                    <input type="text" id="nome_obra" name="nome_obra" value="{{ selected_nome or '' }}" placeholder="Ex: Edifício Alpha">
                 </div>
                 <div class="filter-group">
                     <label for="status_obra">Status:</label>
