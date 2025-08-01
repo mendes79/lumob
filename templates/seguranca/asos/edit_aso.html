@@ -23,6 +23,7 @@
     {% endwith %}
 
     <form action="{{ url_for('seguranca_bp.edit_aso', aso_id=aso.ID_ASO) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="mb-3"> {# mb-3 para Bootstrap spacing #}
             <label for="aso_id" class="form-label custom-form-label">ID do ASO:</label>
             <input type="text" id="aso_id" name="aso_id" class="form-control custom-form-control" value="{{ aso.ID_ASO }}" readonly>

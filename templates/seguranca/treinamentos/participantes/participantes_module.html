@@ -773,6 +773,7 @@
                                 <a href="{{ url_for('seguranca_bp.treinamento_participante_details', participante_id=participante.ID_Participante) }}" class="view" data-tooltip="Detalhes"><i class="fas fa-eye"></i></a>
                                 <a href="{{ url_for('seguranca_bp.edit_treinamento_participante', participante_id=participante.ID_Participante) }}" class="edit" data-tooltip="Editar"><i class="fas fa-edit"></i></a>
                                 <form action="{{ url_for('seguranca_bp.delete_treinamento_participante', participante_id=participante.ID_Participante) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este participante (ID: {{ participante.ID_Participante }})? Esta ação é irreversível.');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="delete" data-tooltip="Excluir"><i class="fas fa-trash-alt"></i></button>
                                 </form>
                             </td>

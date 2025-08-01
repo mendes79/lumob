@@ -23,6 +23,7 @@
     {% endwith %}
 
     <form action="{{ url_for('seguranca_bp.add_incidente_acidente') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="mb-3"> {# mb-3 para Bootstrap spacing #}
             <label for="tipo_registro" class="form-label custom-form-label">Tipo de Registro:</label>
             <select id="tipo_registro" name="tipo_registro" class="form-select custom-form-control" required>

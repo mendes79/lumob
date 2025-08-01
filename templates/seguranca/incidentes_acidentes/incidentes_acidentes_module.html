@@ -789,6 +789,7 @@
                                 <a href="{{ url_for('seguranca_bp.incidente_acidente_details', incidente_id=incidente.ID_Incidente_Acidente) }}" class="view" data-tooltip="Detalhes"><i class="fas fa-eye"></i></a>
                                 <a href="{{ url_for('seguranca_bp.edit_incidente_acidente', incidente_id=incidente.ID_Incidente_Acidente) }}" class="edit" data-tooltip="Editar"><i class="fas fa-edit"></i></a>
                                 <form action="{{ url_for('seguranca_bp.delete_incidente_acidente', incidente_id=incidente.ID_Incidente_Acidente) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este registro (ID: {{ incidente.ID_Incidente_Acidente }})? Esta ação é irreversível.');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="delete" data-tooltip="Excluir"><i class="fas fa-trash-alt"></i></button>
                                 </form>
                             </td>

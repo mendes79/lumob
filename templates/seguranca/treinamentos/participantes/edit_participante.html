@@ -23,6 +23,7 @@
     {% endwith %}
 
     <form action="{{ url_for('seguranca_bp.edit_treinamento_participante', participante_id=participante.ID_Participante) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="mb-3"> {# mb-3 para Bootstrap spacing #}
             <label for="participante_id" class="form-label custom-form-label">ID do Participante:</label>
             <input type="text" id="participante_id" name="participante_id" class="form-control custom-form-control" value="{{ participante.ID_Participante }}" readonly>
