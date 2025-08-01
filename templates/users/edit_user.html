@@ -11,6 +11,7 @@
     </div>
 
     <form method="POST" action="{{ url_for('users_bp.edit_user', user_id=user_to_edit.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="mb-3">
             <label for="username" class="form-label custom-form-label">Nome de Usuário:</label>
             <input type="text" id="username" name="username" class="form-control custom-form-control" value="{{ user_to_edit.username | default('') }}" required />

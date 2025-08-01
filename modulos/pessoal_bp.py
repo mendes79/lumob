@@ -17,6 +17,9 @@ from flask_login import login_required, current_user, LoginManager, UserMixin, l
 from database.db_base import DatabaseManager
 from database.db_pessoal_manager import PessoalManager
 
+# Conversão da moeda para o padrão brasileiro R$ 1.234,56
+from utils import formatar_moeda_brl
+
 # Crie a instância do Blueprint para o Módulo Pessoal
 pessoal_bp = Blueprint('pessoal_bp', __name__, url_prefix='/pessoal')
 
@@ -32,20 +35,6 @@ def calculate_age(born_date):
     age = today.year - born_date.year - ((today.month, today.day) < (born_date.month, born_date.day))
     print(f"DEBUG_CALCULATE_AGE: Data Nascimento: {born_date}, Hoje: {today}, Idade Calculada: {age}")
     return age
-
-# --- NOVA FUNÇÃO AUXILIAR PARA FORMATAR MOEDA ---
-# (Adicione esta função no início do arquivo, após os imports)
-def formatar_moeda_brl(valor):
-    """Formata um número para o padrão de moeda brasileiro (R$ 1.234,56) de forma manual."""
-    if valor is None:
-        valor = 0.0
-    valor_str = f"{valor:.2f}"
-    inteiro, decimal = valor_str.split('.')
-    inteiro_rev = inteiro[::-1]
-    partes = [inteiro_rev[i:i+3] for i in range(0, len(inteiro_rev), 3)]
-    inteiro_formatado = '.'.join(partes)[::-1]
-    return f"R$ {inteiro_formatado},{decimal}"
-# --- FIM DA NOVA FUNÇÃO ---
 
 # ---------------------------------------------------------------
 # 2. MÓDULO PESSOAL - HUB

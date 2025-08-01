@@ -19,6 +19,7 @@ endblock %} {% block messages %}{% endblock %} {% block content %}
     method="POST"
     action="{{ url_for('users_bp.manage_user_permissions', user_id=user_to_manage.id) }}"
   >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
     <div class="mb-3">
       <label class="form-label custom-form-label">Módulos:</label>
       <div class="checkbox-group">

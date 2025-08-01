@@ -61,6 +61,11 @@
                 style="display: inline"
                 onsubmit="return confirm('Tem certeza que deseja resetar a senha de {{ user_item.username }} para a padrão?');"
               >
+                <input
+                  type="hidden"
+                  name="csrf_token"
+                  value="{{ csrf_token() }}"
+                />
                 <button
                   type="submit"
                   class="reset"
@@ -76,6 +81,11 @@
                 style="display: inline"
                 onsubmit="return confirm('Tem certeza que deseja deletar o usuário {{ user_item.username }}? Esta ação é irreversível.');"
               >
+                <input
+                  type="hidden"
+                  name="csrf_token"
+                  value="{{ csrf_token() }}"
+                />
                 <button type="submit" class="delete" data-tooltip="Excluir">
                   <i class="fas fa-trash-alt"></i>
                 </button>

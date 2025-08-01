@@ -19,26 +19,11 @@ from database.db_base import DatabaseManager
 from database.db_obras_manager import ObrasManager
 from database.db_pessoal_manager import PessoalManager # Para o dropdown de funcionários se necessário (em Segurança, por exemplo)
 
+# Conversão da moeda para o padrão brasileiro R$ 1.234,56
+from utils import formatar_moeda_brl
 
 # Crie a instância do Blueprint para o Módulo Obras
 obras_bp = Blueprint('obras_bp', __name__, url_prefix='/obras')
-
-# --- NOVA FUNÇÃO AUXILIAR PARA FORMATAR MOEDA ---
-def formatar_moeda_brl(valor):
-    """Formata um número para o padrão de moeda brasileiro (R$ 1.234,56) de forma manual."""
-    if valor is None:
-        valor = 0.0
-    # Formata o número com 2 casas decimais para separar o inteiro do decimal
-    valor_str = f"{valor:.2f}"
-    inteiro, decimal = valor_str.split('.')
-    
-    # Adiciona os pontos como separadores de milhar
-    inteiro_rev = inteiro[::-1] # Inverte a string do inteiro
-    partes = [inteiro_rev[i:i+3] for i in range(0, len(inteiro_rev), 3)]
-    inteiro_formatado = '.'.join(partes)[::-1] # Junta com pontos e inverte de volta
-    
-    return f"R$ {inteiro_formatado},{decimal}"
-# --- FIM DA NOVA FUNÇÃO ---
 
 # ==================================================================================================================================
 # === ROTAS PARA O MÓDULO OBRAS ====================================================================================================
@@ -3139,8 +3124,13 @@ def seguros_module():
                 search_tipo=search_tipo
             )
 
-            all_obras = obras_manager.get_all_obras_for_dropdown()
+            # --- NOVA SEÇÃO: Formatação de moeda para a lista de seguros ---
+            if seguros:
+                for seguro in seguros:
+                    seguro['Valor_Segurado_Formatado'] = formatar_moeda_brl(seguro.get('Valor_Segurado'))
+            # --- FIM DA NOVA SEÇÃO ---
 
+            all_obras = obras_manager.get_all_obras_for_dropdown()
             status_options = ['Ativo', 'Vencido', 'Cancelado', 'Em Renovação']
             tipo_seguro_options = ['Responsabilidade Civil', 'Riscos de Engenharia', 'Garantia', 'Frota', 'Outros']
 
@@ -3164,8 +3154,7 @@ def seguros_module():
     except Exception as e:
         flash(f"Ocorreu um erro inesperado: {e}", 'danger')
         print(f"Erro inesperado em seguros_module: {e}")
-        return redirect(url_for('obras_bp.obras_module')) 
-
+        return redirect(url_for('obras_bp.obras_module'))
 
 @obras_bp.route('/seguros/add', methods=['GET', 'POST'])
 @login_required
@@ -3437,6 +3426,11 @@ def seguro_details(seguro_id):
             if not seguro:
                 flash('Seguro não encontrado.', 'danger')
                 return redirect(url_for('obras_bp.seguros_module'))
+
+            # --- NOVA SEÇÃO: Formatação de moeda para a página de detalhes ---
+            if seguro:
+                seguro['Valor_Segurado_Formatado'] = formatar_moeda_brl(seguro.get('Valor_Segurado'))
+            # --- FIM DA NOVA SEÇÃO ---
 
         return render_template(
             'obras/seguros/seguro_details.html',

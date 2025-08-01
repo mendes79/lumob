@@ -675,12 +675,12 @@
     </style>
 </head>
 <body>
-    <div class="main-container"> {# Substituído .container por .main-container #}
-        <div class="content-container"> {# Adicionado .content-container #}
-            <div class="header"> {# Adicionado .header para a barra de título #}
+    <div class="main-container">
+        <div class="content-container">
+            <div class="header">
                 <div class="title-band">
                     <h1>
-                        <i class="fas fa-shield-alt"></i> {# Ícone apropriado para Seguros #}
+                        <i class="fas fa-shield-alt"></i>
                         Gerenciamento de Seguros
                     </h1>
                 </div>
@@ -712,12 +712,12 @@
             </div>
 
             <form method="GET" class="filter-form" action="{{ url_for('obras_bp.seguros_module') }}">
-                <div class="filter-group"> {# Agrupando label e input #}
+                <div class="filter-group">
                     <label for="numero_apolice">Número Apólice:</label>
                     <input type="text" id="numero_apolice" name="numero_apolice" value="{{ selected_numero_apolice if selected_numero_apolice else '' }}" placeholder="Buscar por Nº Apólice">
                 </div>
                 
-                <div class="filter-group"> {# Agrupando label e select #}
+                <div class="filter-group">
                     <label for="obra_id">Obra:</label>
                     <select id="obra_id" name="obra_id">
                         <option value="">Todas as Obras</option>
@@ -727,7 +727,7 @@
                     </select>
                 </div>
 
-                <div class="filter-group"> {# Agrupando label e select #}
+                <div class="filter-group">
                     <label for="tipo_seguro">Tipo de Seguro:</label>
                     <select id="tipo_seguro" name="tipo_seguro">
                         <option value="">Todos os Tipos</option>
@@ -737,7 +737,7 @@
                     </select>
                 </div>
 
-                <div class="filter-group"> {# Agrupando label e select #}
+                <div class="filter-group">
                     <label for="status_seguro">Status:</label>
                     <select id="status_seguro" name="status_seguro">
                         <option value="">Todos os Status</option>
@@ -747,7 +747,7 @@
                     </select>
                 </div>
 
-                <div class="filter-buttons-group"> {# Agrupando botões de filtro #}
+                <div class="filter-buttons-group">
                     <button type="submit" data-tooltip="Filtrar"><i class="fas fa-filter"></i></button>
                     <a href="{{ url_for('obras_bp.seguros_module') }}" class="button-icon" data-tooltip="Limpar Filtros"><i class="fas fa-eraser"></i></a>
                 </div>
@@ -778,7 +778,7 @@
                             <td>{{ seguro.Seguradora }}</td>
                             <td>{{ seguro.Tipo_Seguro }}</td>
                             <td>{{ seguro.Numero_Obra }} - {{ seguro.Nome_Obra }}</td>
-                            <td>R$ {{ "%.2f"|format(seguro.Valor_Segurado) if seguro.Valor_Segurado is not none else '0.00' }}</td>
+                            <td>{{ seguro.Valor_Segurado_Formatado }}</td>
                             <td>{{ seguro.Data_Inicio_Vigencia.strftime('%d/%m/%Y') if seguro.Data_Inicio_Vigencia else 'N/A' }}</td>
                             <td>{{ seguro.Data_Fim_Vigencia.strftime('%d/%m/%Y') if seguro.Data_Fim_Vigencia else 'N/A' }}</td>
                             <td>{{ seguro.Status_Seguro if seguro.Status_Seguro else 'N/A' }}</td>
@@ -798,8 +798,7 @@
                 <p class="no-results-message">Nenhum Seguro encontrado.</p>
                 {% endif %}
             </div>
-
-            <div class="back-button-container" style="display: none;"></div> {# Mantido para consistência #}
+            <div class="back-button-container" style="display: none;"></div>
         </div>
     </div>
 </body>

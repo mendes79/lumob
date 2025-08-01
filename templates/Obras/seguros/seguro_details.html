@@ -1,8 +1,6 @@
 {% extends 'base.html' %} {% block title %}Detalhes do Seguro - LUMOB{% endblock
 %} {% block messages %}{% endblock %} {% block content %}
 <div class="container custom-form-container mt-4 mb-4 p-4">
-  {# Container customizado, margens e padding #} {# Título dentro da faixa preta
-  #}
   <div class="title-band mb-2">
     <h1 class="text-white text-center mb-0">
       <i class="fas fa-shield-alt me-3"></i>Detalhes do Seguro: {{
@@ -10,11 +8,8 @@
     </h1>
   </div>
 
-  {# Área de Detalhes do Seguro #}
   <div class="card card-body shadow-sm mb-4 custom-details-card">
-    {# Adicionada classe customizada para o card #}
     <h4 class="mb-3 custom-details-title">Informações Principais</h4>
-    {# Classe customizada para o título #}
     <div class="row mb-2">
       <div class="col-md-6">
         <p class="mb-0 fw-bold custom-details-label">ID do Seguro:</p>
@@ -63,8 +58,7 @@
       </div>
       <div class="col-md-6">
         <p class="mb-0 custom-details-value">
-          R$ {{ "%.2f"|format(seguro.Valor_Segurado) if seguro.Valor_Segurado is
-          not none else '0.00' }}
+          {{ seguro.Valor_Segurado_Formatado }}
         </p>
       </div>
     </div>
@@ -110,19 +104,10 @@
     </div>
   </div>
 
-  {# Botões de Ação #}
   <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-    {# Alinha os botões à direita #}
     <a
       href="{{ url_for('obras_bp.edit_seguro', seguro_id=seguro.ID_Seguros) }}"
       class="btn btn-info custom-submit-btn"
-      {#
-      Usando
-      custom-submit-btn
-      para
-      o
-      Editar
-      #}
       >Editar</a
     >
     <form
@@ -134,14 +119,6 @@
       <button
         type="submit"
         class="btn btn-danger custom-delete-btn"
-        {#
-        Nova
-        classe
-        para
-        o
-        botão
-        Excluir
-        #}
         onclick="return confirm('Tem certeza que deseja excluir este Seguro? Esta ação é irreversível.');"
       >
         Excluir
@@ -152,7 +129,6 @@
       class="btn btn-secondary custom-cancel-btn"
       >Cancelar</a
     >
-    {# Botão Cancelar que retorna à lista #}
   </div>
 </div>
 
