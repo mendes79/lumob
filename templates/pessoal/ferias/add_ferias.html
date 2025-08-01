@@ -23,6 +23,7 @@
     {% endwith %}
 
     <form action="{{ url_for('pessoal_bp.add_ferias') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="mb-3"> {# mb-3 para Bootstrap spacing #}
             <label for="matricula_funcionario" class="form-label custom-form-label">Funcionário:</label>
             <select id="matricula_funcionario" name="matricula_funcionario" class="form-select custom-form-control" required>

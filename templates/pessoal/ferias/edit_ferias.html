@@ -23,6 +23,7 @@
     {% endwith %}
 
     <form action="{{ url_for('pessoal_bp.edit_ferias', ferias_id=ferias.ID_Ferias) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="mb-3"> {# mb-3 para Bootstrap spacing #}
             <label for="ferias_id" class="form-label custom-form-label">ID do Registro:</label>
             <input type="text" id="ferias_id" name="ferias_id" class="form-control custom-form-control" value="{{ ferias.ID_Ferias }}" readonly>

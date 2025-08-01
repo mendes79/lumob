@@ -774,6 +774,7 @@
                                 <a href="{{ url_for('pessoal_bp.dependente_details', dependente_id=dep.ID_Dependente) }}" class="view" data-tooltip="Detalhes"><i class="fas fa-eye"></i></a>
                                 <a href="{{ url_for('pessoal_bp.edit_dependente', dependente_id=dep.ID_Dependente) }}" class="edit" data-tooltip="Editar"><i class="fas fa-edit"></i></a>
                                 <form action="{{ url_for('pessoal_bp.delete_dependente', dependente_id=dep.ID_Dependente) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este dependente ({{ dep.Nome_Completo }})? Esta ação é irreversível.');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="delete" data-tooltip="Excluir"><i class="fas fa-trash-alt"></i></button>
                                 </form>
                             </td>

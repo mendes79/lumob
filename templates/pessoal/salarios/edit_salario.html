@@ -23,6 +23,7 @@
     {% endwith %}
 
     <form action="{{ url_for('pessoal_bp.edit_salario', salario_id=salario.ID_Salarios) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="mb-3"> {# mb-3 para Bootstrap spacing #}
             <label for="salario_id" class="form-label custom-form-label">ID do Pacote Salarial:</label>
             <input type="text" id="salario_id" name="salario_id" class="form-control custom-form-control" value="{{ salario.ID_Salarios }}" readonly>

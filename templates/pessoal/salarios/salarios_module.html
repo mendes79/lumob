@@ -642,6 +642,7 @@
                                 <a href="{{ url_for('pessoal_bp.salario_details', salario_id=salario.ID_Salarios) }}" class="view" data-tooltip="Detalhes"><i class="fas fa-eye"></i></a>
                                 <a href="{{ url_for('pessoal_bp.edit_salario', salario_id=salario.ID_Salarios) }}" class="edit" data-tooltip="Editar"><i class="fas fa-edit"></i></a>
                                 <form action="{{ url_for('pessoal_bp.delete_salario', salario_id=salario.ID_Salarios) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este pacote salarial (ID: {{ salario.ID_Salarios }})? Esta ação é irreversível.');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="delete" data-tooltip="Excluir"><i class="fas fa-trash-alt"></i></button>
                                 </form>
                             </td>

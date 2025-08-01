@@ -23,6 +23,7 @@
     {% endwith %}
 
     <form action="{{ url_for('pessoal_bp.add_salario') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="mb-3"> {# mb-3 para Bootstrap spacing #}
             <label for="id_cargos" class="form-label custom-form-label">Cargo:</label>
             <select id="id_cargos" name="id_cargos" class="form-select custom-form-control" required>

@@ -23,6 +23,7 @@
     {% endwith %}
 
     <form action="{{ url_for('pessoal_bp.add_funcionario') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="section-title custom-section-title">Dados Cadastrais</div>
         <div class="mb-3">
             <label for="matricula" class="form-label custom-form-label">Matrícula:</label>

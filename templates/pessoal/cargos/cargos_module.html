@@ -858,6 +858,11 @@
                     style="display: inline"
                     onsubmit="return confirm('Tem certeza que deseja excluir o cargo {{ cargo.Nome_Cargo }}? Esta ação é irreversível e impedirá a exclusão se houver funcionários associados.');"
                   >
+                    <input
+                      type="hidden"
+                      name="csrf_token"
+                      value="{{ csrf_token() }}"
+                    />
                     <button type="submit" class="delete" data-tooltip="Excluir">
                       <i class="fas fa-trash-alt"></i>
                     </button>

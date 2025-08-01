@@ -22,6 +22,7 @@
   {% endif %} {% endwith %}
 
   <form action="{{ url_for('pessoal_bp.add_nivel') }}" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
     <div class="mb-3">
       {# mb-3 para Bootstrap spacing #}
       <label for="nome_nivel" class="form-label custom-form-label"

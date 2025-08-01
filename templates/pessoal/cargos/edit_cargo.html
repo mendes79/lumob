@@ -25,6 +25,7 @@ block messages %}{% endblock %} {% block content %}
     action="{{ url_for('pessoal_bp.edit_cargo', cargo_id=cargo.ID_Cargos) }}"
     method="POST"
   >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
     <div class="mb-3">
       {# mb-3 para Bootstrap spacing #}
       <label for="cargo_id" class="form-label custom-form-label"
