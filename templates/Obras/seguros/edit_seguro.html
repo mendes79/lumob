@@ -21,6 +21,7 @@
     {% endwith %}
 
     <form action="{{ url_for('obras_bp.edit_seguro', seguro_id=seguro.ID_Seguros) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="mb-3">
             <label for="seguro_id" class="form-label custom-form-label">ID do Seguro:</label>
             <input type="text" id="seguro_id" name="seguro_id" class="form-control custom-form-control" value="{{ seguro.ID_Seguros }}" readonly>

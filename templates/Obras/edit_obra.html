@@ -12,6 +12,7 @@
     </div>
 
     <form action="{{ url_for('obras_bp.edit_obra', obra_id=obra.ID_Obras) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="mb-3">
             <label for="obra_id" class="form-label custom-form-label">ID da Obra:</label>
             <input type="text" id="obra_id" name="obra_id" class="form-control custom-form-control" value="{{ obra.ID_Obras|string }}" readonly>

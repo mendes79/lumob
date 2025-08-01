@@ -2,6 +2,7 @@
 # rev01 - integração do campo email da tabela usuarios no app.py
 # rev02 - Correção do erro 'now is undefined' no template welcome.html
 # rev03 - Suporte a requisições AJAX e respostas JSON na rota /login para o novo layout de login
+# rev04 - Implantação do CSRFProtect nas requisições tipo POST/DELETE dos templates HTML contra CSRF (Cross-Site Request Forgery)
 
 #################################################################
 # 0. CONFIGURAÇÕES INICIAIS
@@ -19,6 +20,7 @@ from flask import Flask, render_template, redirect, url_for, request, flash, ses
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 import mysql.connector              # Para a classe Error do MySQL
 from datetime import datetime, date # Garante que datetime e date estejam disponíveis
+from flask_wtf.csrf import CSRFProtect
 
 # Para a adição da opção exportar para Excel no módulo Pessoal
 from flask import send_file # Adicione este import no topo do seu app.py
@@ -43,6 +45,7 @@ from modulos.seguranca_bp import seguranca_bp
 # 0.2 CONFIGURAÇÃO DA APLICAÇÃO
 # ===============================================================
 app = Flask(__name__)
+csrf = CSRFProtect(app)
 
 # **IMPORTANTE: A CHAVE SECRETA É LIDA DE VARIÁVEL DE AMBIENTE**
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback_secret_key_dev_only')

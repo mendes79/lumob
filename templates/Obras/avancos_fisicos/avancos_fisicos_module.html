@@ -761,6 +761,7 @@
                                 <a href="{{ url_for('obras_bp.avanco_fisico_details', avanco_id=avanco.ID_Avancos_Fisicos) }}" class="view" data-tooltip="Detalhes"><i class="fas fa-eye"></i></a>
                                 <a href="{{ url_for('obras_bp.edit_avanco_fisico', avanco_id=avanco.ID_Avancos_Fisicos) }}" class="edit" data-tooltip="Editar"><i class="fas fa-edit"></i></a>
                                 <form action="{{ url_for('obras_bp.delete_avanco_fisico', avanco_id=avanco.ID_Avancos_Fisicos) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este Avanço Físico? Esta ação é irreversível.');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="delete" data-tooltip="Excluir"><i class="fas fa-trash-alt"></i></button>
                                 </form>
                             </td>

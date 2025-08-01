@@ -786,6 +786,7 @@
                                 <a href="{{ url_for('obras_bp.seguro_details', seguro_id=seguro.ID_Seguros) }}" class="view" data-tooltip="Detalhes"><i class="fas fa-eye"></i></a>
                                 <a href="{{ url_for('obras_bp.edit_seguro', seguro_id=seguro.ID_Seguros) }}" class="edit" data-tooltip="Editar"><i class="fas fa-edit"></i></a>
                                 <form action="{{ url_for('obras_bp.delete_seguro', seguro_id=seguro.ID_Seguros) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir o seguro {{ seguro.Numero_Apolice }}? Esta ação é irreversível.');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="delete" data-tooltip="Excluir"><i class="fas fa-trash-alt"></i></button>
                                 </form>
                             </td>

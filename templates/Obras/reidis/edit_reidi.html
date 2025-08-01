@@ -23,6 +23,7 @@
     {% endwith %}
 
     <form action="{{ url_for('obras_bp.edit_reidi', reidi_id=reidi.ID_Reidis) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="mb-3"> {# mb-3 para Bootstrap spacing #}
             <label for="reidi_id" class="form-label custom-form-label">ID do REIDI:</label>
             <input type="text" id="reidi_id" name="reidi_id" class="form-control custom-form-control" value="{{ reidi.ID_Reidis }}" readonly>

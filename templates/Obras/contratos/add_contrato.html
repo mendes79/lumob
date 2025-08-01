@@ -23,6 +23,7 @@
     {% endwith %}
 
     <form action="{{ url_for('obras_bp.add_contrato') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="mb-3"> {# mb-3 para Bootstrap spacing #}
             <label for="id_clientes" class="form-label custom-form-label">Cliente:</label>
             <select id="id_clientes" name="id_clientes" class="form-select custom-form-control" required>

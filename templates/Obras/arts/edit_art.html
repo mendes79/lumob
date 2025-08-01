@@ -23,6 +23,7 @@
     {% endwith %}
 
     <form action="{{ url_for('obras_bp.edit_art', art_id=art['art_id']) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="mb-3"> {# mb-3 para Bootstrap spacing #}
             <label for="art_id" class="form-label custom-form-label">ID da ART:</label>
             <input type="text" id="art_id" name="art_id" value="{{ art['art_id'] }}" readonly class="form-control custom-form-control">

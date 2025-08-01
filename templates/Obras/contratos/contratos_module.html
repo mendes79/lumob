@@ -774,6 +774,7 @@
                                 <a href="{{ url_for('obras_bp.contrato_details', contrato_id=contrato.ID_Contratos) }}" class="view" data-tooltip="Detalhes"><i class="fas fa-eye"></i></a>
                                 <a href="{{ url_for('obras_bp.edit_contrato', contrato_id=contrato.ID_Contratos) }}" class="edit" data-tooltip="Editar"><i class="fas fa-edit"></i></a>
                                 <form action="{{ url_for('obras_bp.delete_contrato', contrato_id=contrato.ID_Contratos) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir o contrato {{ contrato.Numero_Contrato }}? Esta ação é irreversível.');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="delete" data-tooltip="Excluir"><i class="fas fa-trash-alt"></i></button>
                                 </form>
                             </td>

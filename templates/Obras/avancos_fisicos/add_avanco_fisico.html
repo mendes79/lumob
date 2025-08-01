@@ -23,6 +23,7 @@
     {% endwith %}
 
     <form action="{{ url_for('obras_bp.add_avanco_fisico') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         {# CAMPOS DO FORMULÁRIO #}
         <div class="mb-3"> {# mb-3 para Bootstrap spacing #}
             <label for="id_obras" class="form-label custom-form-label">Obra:</label>

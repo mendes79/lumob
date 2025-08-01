@@ -23,6 +23,7 @@
     {% endwith %}
 
     <form action="{{ url_for('obras_bp.edit_medicao', medicao_id=medicao['medicao_id']) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="mb-3"> {# mb-3 para Bootstrap spacing #}
             <label for="medicao_id" class="form-label custom-form-label">ID da Medição:</label>
             <input type="text" id="medicao_id" name="medicao_id" class="form-control custom-form-control" value="{{ medicao['medicao_id'] }}" readonly>
