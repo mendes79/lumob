@@ -5,6 +5,7 @@ import locale
 import os
 from dotenv import load_dotenv
 from datetime import datetime, date, timedelta # Incluído timedelta para get_proximas_ferias se for movido
+from decimal import Decimal, InvalidOperation
 
 # Para a adição da opção exportar para Excel no módulo Pessoal
 from flask import send_file # Adicione este import no topo do seu app.py
@@ -3181,7 +3182,10 @@ def add_seguro():
                 numero_apolice = request.form['numero_apolice'].strip()
                 seguradora = request.form['seguradora'].strip()
                 tipo_seguro = request.form['tipo_seguro'].strip()
-                valor_segurado = float(request.form.get('valor_segurado', '0').replace(',', '.'))
+                #valor_segurado = float(request.form.get('valor_segurado', '0').replace(',', '.'))
+                # VERSÃO CORRIGIDA:
+                valor_segurado_str = request.form.get('valor_segurado', '0').replace(',', '.')
+                valor_segurado = Decimal(valor_segurado_str)                
                 data_inicio_vigencia_str = request.form.get('data_inicio_vigencia', '').strip()
                 data_fim_vigencia_str = request.form.get('data_fim_vigencia', '').strip()
                 status_seguro = request.form.get('status_seguro', '').strip()
@@ -3276,10 +3280,10 @@ def edit_seguro(seguro_id):
             status_options = ['Ativo', 'Vencido', 'Cancelado', 'Em Renovação']
             tipo_seguro_options = ['Responsabilidade Civil', 'Riscos de Engenharia', 'Garantia', 'Frota', 'Outros']
 
-            form_data = {} # Inicializa o dicionário de dados do formulário
+            form_data = {}
 
             if request.method == 'POST':
-                form_data = request.form.to_dict() # Pega os dados brutos do formulário
+                form_data = request.form.to_dict()
                 is_valid = True
 
                 id_obras_str = form_data.get('id_obras')
@@ -3292,19 +3296,21 @@ def edit_seguro(seguro_id):
                 status_seguro = form_data.get('status_seguro', '').strip()
                 observacoes_seguro = form_data.get('observacoes_seguro', '').strip()
 
-                # --- VALIDAÇÕES ---
                 if not all([id_obras_str, numero_apolice, seguradora, tipo_seguro, data_inicio_vigencia_str]):
                     flash('Campos obrigatórios (Obra, Apólice, Seguradora, Tipo, Início Vigência) não podem ser vazios.', 'danger')
                     is_valid = False
 
                 id_obras = int(id_obras_str) if id_obras_str else None
                 
+                # --- ÁREA DA CORREÇÃO ---
                 try:
-                    valor_segurado = float(valor_segurado_str.replace(',', '.')) if valor_segurado_str else 0.0
-                except ValueError:
+                    # Usamos Decimal em vez de float para manter a precisão
+                    valor_segurado = Decimal(valor_segurado_str.replace(',', '.')) if valor_segurado_str else Decimal('0.0')
+                except InvalidOperation: # Usamos InvalidOperation para o erro de conversão do Decimal
                     flash('Valor Segurado inválido. Use apenas números.', 'danger')
                     is_valid = False
-                    valor_segurado = 0.0
+                    valor_segurado = Decimal('0.0')
+                # --- FIM DA CORREÇÃO ---
 
                 data_inicio_vigencia = None
                 try:
@@ -3328,19 +3334,16 @@ def edit_seguro(seguro_id):
                     is_valid = False
 
                 if not is_valid:
-                    # Se a validação falhar, renderiza o template novamente,
-                    # passando os dados que o usuário já tinha inserido em 'form_data'
                     return render_template(
                         'obras/seguros/edit_seguro.html',
                         user=current_user,
-                        seguro=seguro_from_db, # Os dados originais para o título, etc.
-                        form_data=form_data, # Os dados do formulário com erro para repopular os campos
+                        seguro=seguro_from_db,
+                        form_data=form_data,
                         all_obras=all_obras,
                         status_options=status_options,
                         tipo_seguro_options=tipo_seguro_options
                     )
 
-                # --- ATUALIZAÇÃO NO BANCO ---
                 success = obras_manager.update_seguro(
                     seguro_id, id_obras, numero_apolice, seguradora, tipo_seguro, valor_segurado, 
                     data_inicio_vigencia, data_fim_vigencia, status_seguro, observacoes_seguro
@@ -3351,14 +3354,13 @@ def edit_seguro(seguro_id):
                 else:
                     flash('Erro ao atualizar seguro.', 'danger')
             
-            # --- LÓGICA PARA GET REQUEST ---
-            # Preenche o 'form_data' com os dados do banco para a primeira exibição
+            # GET request
             form_data = {
                 'id_obras': seguro_from_db.get('ID_Obras'),
                 'numero_apolice': seguro_from_db.get('Numero_Apolice', ''),
                 'seguradora': seguro_from_db.get('Seguradora', ''),
                 'tipo_seguro': seguro_from_db.get('Tipo_Seguro', ''),
-                'valor_segurado': seguro_from_db.get('Valor_Segurado'),
+                'valor_segurado': f"{seguro_from_db.get('Valor_Segurado'):.2f}" if seguro_from_db.get('Valor_Segurado') is not None else '0.00', # Formatado como string para o input
                 'data_inicio_vigencia': seguro_from_db.get('Data_Inicio_Vigencia').strftime('%Y-%m-%d') if seguro_from_db.get('Data_Inicio_Vigencia') else '',
                 'data_fim_vigencia': seguro_from_db.get('Data_Fim_Vigencia').strftime('%Y-%m-%d') if seguro_from_db.get('Data_Fim_Vigencia') else '',
                 'status_seguro': seguro_from_db.get('Status_Seguro', ''),
@@ -3368,8 +3370,8 @@ def edit_seguro(seguro_id):
             return render_template(
                 'obras/seguros/edit_seguro.html',
                 user=current_user,
-                seguro=seguro_from_db, # Dados originais para o título, etc.
-                form_data=form_data,   # Dados para popular os campos do formulário
+                seguro=seguro_from_db,
+                form_data=form_data,
                 all_obras=all_obras,
                 status_options=status_options,
                 tipo_seguro_options=tipo_seguro_options
