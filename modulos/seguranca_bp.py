@@ -15,6 +15,8 @@ from database.db_obras_manager import ObrasManager # Para dropdown de obras em I
 from database.db_pessoal_manager import PessoalManager # Para dropdown de funcionários em Incidentes/Acidentes e ASOs
 from database.db_seguranca_manager import SegurancaManager
 
+# Importação da função de análise de permissão do usuário aos módulos através do decorator @module_required('Segurança')
+from utils import module_required
 
 # Crie a instância do Blueprint para o Módulo Segurança
 seguranca_bp = Blueprint('seguranca_bp', __name__, url_prefix='/seguranca')
@@ -26,15 +28,13 @@ seguranca_bp = Blueprint('seguranca_bp', __name__, url_prefix='/seguranca')
 # ROTA HUB PRINCIPAL DO MÓDULO SEGURANÇA
 @seguranca_bp.route('/')
 @login_required
+@module_required('Segurança')
 def seguranca_module():
     """
     Rota principal do módulo Segurança.
     Serve como hub de navegação para os submódulos.
     """
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para acessar o módulo de Segurança.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             seguranca_manager = SegurancaManager(db_base)
@@ -60,14 +60,12 @@ def seguranca_module():
 # ===============================================================
 @seguranca_bp.route('/dashboard')
 @login_required
+@module_required('Segurança')
 def seguranca_dashboard():
     """
     Rota para o Dashboard de Segurança, exibindo KPIs e resumos.
     """
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para acessar o Dashboard de Segurança.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             seguranca_manager = SegurancaManager(db_base)
@@ -105,11 +103,9 @@ def seguranca_dashboard():
 # ===============================================================
 @seguranca_bp.route('/incidentes_acidentes')
 @login_required
+@module_required('Segurança')
 def incidentes_acidentes_module():
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para acessar a Gestão de Incidentes e Acidentes.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     search_tipo = request.args.get('tipo_registro')
     search_status = request.args.get('status_registro')
     search_obra_id = request.args.get('obra_id')
@@ -161,11 +157,9 @@ def incidentes_acidentes_module():
 # ---------------------------------------------------------------
 @seguranca_bp.route('/incidentes_acidentes/add', methods=['GET', 'POST'])
 @login_required
+@module_required('Segurança')
 def add_incidente_acidente():
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para adicionar Incidentes/Acidentes.', 'warning')
-        return redirect(url_for('welcome'))
-
+   
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             seguranca_manager = SegurancaManager(db_base)
@@ -257,11 +251,9 @@ def add_incidente_acidente():
 # ---------------------------------------------------------------
 @seguranca_bp.route('/incidentes_acidentes/edit/<int:incidente_id>', methods=['GET', 'POST'])
 @login_required
+@module_required('Segurança')
 def edit_incidente_acidente(incidente_id):
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para editar Incidentes/Acidentes.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             seguranca_manager = SegurancaManager(db_base)
@@ -412,11 +404,9 @@ def edit_incidente_acidente(incidente_id):
 # ---------------------------------------------------------------
 @seguranca_bp.route('/incidentes_acidentes/delete/<int:incidente_id>', methods=['POST'])
 @login_required
+@module_required('Segurança')
 def delete_incidente_acidente(incidente_id):
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para excluir Incidentes/Acidentes.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             seguranca_manager = SegurancaManager(db_base)
@@ -440,11 +430,9 @@ def delete_incidente_acidente(incidente_id):
 # ---------------------------------------------------------------
 @seguranca_bp.route('/incidentes_acidentes/details/<int:incidente_id>')
 @login_required
+@module_required('Segurança')
 def incidente_acidente_details(incidente_id):
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para ver detalhes de Incidentes/Acidentes.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             seguranca_manager = SegurancaManager(db_base)
@@ -473,11 +461,9 @@ def incidente_acidente_details(incidente_id):
 # ---------------------------------------------------------------
 @seguranca_bp.route('/incidentes_acidentes/export/excel')
 @login_required
+@module_required('Segurança')
 def export_incidentes_acidentes_excel():
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para exportar dados de Incidentes/Acidentes.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             seguranca_manager = SegurancaManager(db_base)
@@ -551,11 +537,9 @@ def export_incidentes_acidentes_excel():
 # ===============================================================
 @seguranca_bp.route('/asos')
 @login_required
+@module_required('Segurança')
 def asos_module():
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para acessar a Gestão de ASOs.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     search_matricula = request.args.get('matricula')
     search_tipo = request.args.get('tipo_aso')
     search_resultado = request.args.get('resultado')
@@ -607,11 +591,9 @@ def asos_module():
 # ---------------------------------------------------------------
 @seguranca_bp.route('/asos/add', methods=['GET', 'POST'])
 @login_required
+@module_required('Segurança')
 def add_aso():
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para adicionar ASOs.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             seguranca_manager = SegurancaManager(db_base)
@@ -692,11 +674,9 @@ def add_aso():
 # ---------------------------------------------------------------
 @seguranca_bp.route('/asos/edit/<int:aso_id>', methods=['GET', 'POST'])
 @login_required
+@module_required('Segurança')
 def edit_aso(aso_id):
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para editar ASOs.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             seguranca_manager = SegurancaManager(db_base)
@@ -787,11 +767,9 @@ def edit_aso(aso_id):
 # ---------------------------------------------------------------
 @seguranca_bp.route('/asos/delete/<int:aso_id>', methods=['POST'])
 @login_required
+@module_required('Segurança')
 def delete_aso(aso_id):
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para excluir ASOs.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             seguranca_manager = SegurancaManager(db_base)
@@ -815,11 +793,9 @@ def delete_aso(aso_id):
 # ---------------------------------------------------------------
 @seguranca_bp.route('/asos/details/<int:aso_id>')
 @login_required
+@module_required('Segurança')
 def aso_details(aso_id):
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para ver detalhes de ASOs.', 'warning')
-        return redirect(url_for('welcome'))
-
+   
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             seguranca_manager = SegurancaManager(db_base)
@@ -848,11 +824,9 @@ def aso_details(aso_id):
 # ---------------------------------------------------------------
 @seguranca_bp.route('/asos/export/excel')
 @login_required
+@module_required('Segurança')
 def export_asos_excel():
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para exportar dados de ASOs.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             seguranca_manager = SegurancaManager(db_base)
@@ -920,11 +894,9 @@ def export_asos_excel():
 # ===============================================================
 @seguranca_bp.route('/treinamentos')
 @login_required
+@module_required('Segurança')
 def treinamentos_module():
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para acessar o Catálogo de Treinamentos.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     search_nome = request.args.get('nome_treinamento')
     search_tipo = request.args.get('tipo_treinamento')
 
@@ -961,11 +933,9 @@ def treinamentos_module():
 # ---------------------------------------------------------------
 @seguranca_bp.route('/treinamentos/add', methods=['GET', 'POST'])
 @login_required
+@module_required('Segurança')
 def add_treinamento():
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para adicionar Treinamentos.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             seguranca_manager = SegurancaManager(db_base)
@@ -1032,11 +1002,9 @@ def add_treinamento():
 # ---------------------------------------------------------------
 @seguranca_bp.route('/treinamentos/edit/<int:treinamento_id>', methods=['GET', 'POST'])
 @login_required
+@module_required('Segurança')
 def edit_treinamento(treinamento_id):
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para editar Treinamentos.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             seguranca_manager = SegurancaManager(db_base)
@@ -1166,11 +1134,9 @@ def edit_treinamento(treinamento_id):
 # ---------------------------------------------------------------
 @seguranca_bp.route('/treinamentos/delete/<int:treinamento_id>', methods=['POST'])
 @login_required
+@module_required('Segurança')
 def delete_treinamento(treinamento_id):
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para excluir Treinamentos.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             seguranca_manager = SegurancaManager(db_base)
@@ -1196,11 +1162,9 @@ def delete_treinamento(treinamento_id):
 # ---------------------------------------------------------------
 @seguranca_bp.route('/treinamentos/details/<int:treinamento_id>')
 @login_required
+@module_required('Segurança')
 def treinamento_details(treinamento_id):
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para ver detalhes de Treinamentos.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             seguranca_manager = SegurancaManager(db_base)
@@ -1229,11 +1193,9 @@ def treinamento_details(treinamento_id):
 # ---------------------------------------------------------------
 @seguranca_bp.route('/treinamentos/export/excel')
 @login_required
+@module_required('Segurança')
 def export_treinamentos_excel():
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para exportar dados de Treinamentos.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             seguranca_manager = SegurancaManager(db_base)
@@ -1286,14 +1248,12 @@ def export_treinamentos_excel():
 # ---------------------------------------------------------------
 @seguranca_bp.route('/relatorio_treinamentos')
 @login_required
+@module_required('Segurança')
 def seguranca_relatorio_treinamentos():
     """
     Rota para o relatório de treinamentos de segurança, com filtros.
     """
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para acessar o Relatório de Treinamentos de Segurança.', 'warning')
-        return redirect(url_for('welcome'))
-
+  
     search_nome_treinamento = request.args.get('nome_treinamento')
     search_tipo_treinamento = request.args.get('tipo_treinamento')
     search_status_agendamento = request.args.get('status_agendamento')
@@ -1344,11 +1304,9 @@ def seguranca_relatorio_treinamentos():
 # ---------------------------------------------------------------
 @seguranca_bp.route('/treinamentos/agendamentos')
 @login_required
+@module_required('Segurança')
 def treinamentos_agendamentos_module():
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para acessar a Gestão de Agendamentos de Treinamentos.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     search_treinamento_id = request.args.get('treinamento_id')
     search_status = request.args.get('status_agendamento')
     search_data_inicio_str = request.args.get('data_inicio')
@@ -1407,11 +1365,9 @@ def treinamentos_agendamentos_module():
 # ·······························································
 @seguranca_bp.route('/treinamentos/agendamentos/add', methods=['GET', 'POST'])
 @login_required
+@module_required('Segurança')
 def add_treinamento_agendamento():
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para adicionar Agendamentos de Treinamentos.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             seguranca_manager = SegurancaManager(db_base)
@@ -1493,11 +1449,9 @@ def add_treinamento_agendamento():
 # ·······························································
 @seguranca_bp.route('/treinamentos/agendamentos/edit/<int:agendamento_id>', methods=['GET', 'POST'])
 @login_required
+@module_required('Segurança')
 def edit_treinamento_agendamento(agendamento_id):
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para editar Agendamentos de Treinamentos.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             seguranca_manager = SegurancaManager(db_base)
@@ -1589,11 +1543,9 @@ def edit_treinamento_agendamento(agendamento_id):
 # ·······························································
 @seguranca_bp.route('/treinamentos/agendamentos/delete/<int:agendamento_id>', methods=['POST'])
 @login_required
+@module_required('Segurança')
 def delete_treinamento_agendamento(agendamento_id):
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para excluir Agendamentos de Treinamentos.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             seguranca_manager = SegurancaManager(db_base)
@@ -1619,11 +1571,9 @@ def delete_treinamento_agendamento(agendamento_id):
 # ·······························································
 @seguranca_bp.route('/treinamentos/agendamentos/details/<int:agendamento_id>')
 @login_required
+@module_required('Segurança')
 def treinamento_agendamento_details(agendamento_id):
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para ver detalhes de Agendamentos de Treinamentos.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             seguranca_manager = SegurancaManager(db_base)
@@ -1654,11 +1604,9 @@ def treinamento_agendamento_details(agendamento_id):
 # ·······························································
 @seguranca_bp.route('/treinamentos/agendamentos/export/excel')
 @login_required
+@module_required('Segurança')
 def export_treinamentos_agendamentos_excel():
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para exportar dados de Agendamentos de Treinamentos.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             seguranca_manager = SegurancaManager(db_base)
@@ -1727,11 +1675,9 @@ def export_treinamentos_agendamentos_excel():
 # ---------------------------------------------------------------
 @seguranca_bp.route('/treinamentos/participantes')
 @login_required
+@module_required('Segurança')
 def treinamentos_participantes_module():
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para acessar a Gestão de Participantes de Treinamentos.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     search_agendamento_id = request.args.get('agendamento_id')
     search_matricula = request.args.get('matricula')
     search_presenca = request.args.get('presenca') # String 'True', 'False' ou None
@@ -1786,11 +1732,9 @@ def treinamentos_participantes_module():
 # ·······························································
 @seguranca_bp.route('/treinamentos/participantes/add', methods=['GET', 'POST'])
 @login_required
+@module_required('Segurança')
 def add_treinamento_participante():
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para adicionar Participantes de Treinamentos.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             seguranca_manager = SegurancaManager(db_base)
@@ -1880,11 +1824,9 @@ def add_treinamento_participante():
 # ·······························································
 @seguranca_bp.route('/treinamentos/participantes/edit/<int:participante_id>', methods=['GET', 'POST'])
 @login_required
+@module_required('Segurança')
 def edit_treinamento_participante(participante_id):
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para editar Participantes de Treinamentos.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             seguranca_manager = SegurancaManager(db_base)
@@ -1984,11 +1926,9 @@ def edit_treinamento_participante(participante_id):
 # ·······························································
 @seguranca_bp.route('/treinamentos/participantes/delete/<int:participante_id>', methods=['POST'])
 @login_required
+@module_required('Segurança')
 def delete_treinamento_participante(participante_id):
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para excluir Participantes de Treinamentos.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             seguranca_manager = SegurancaManager(db_base)
@@ -2012,11 +1952,9 @@ def delete_treinamento_participante(participante_id):
 # ·······························································
 @seguranca_bp.route('/treinamentos/participantes/details/<int:participante_id>')
 @login_required
+@module_required('Segurança')
 def treinamento_participante_details(participante_id):
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para ver detalhes de Participantes de Treinamentos.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             seguranca_manager = SegurancaManager(db_base)
@@ -2045,11 +1983,9 @@ def treinamento_participante_details(participante_id):
 # ·······························································
 @seguranca_bp.route('/treinamentos/participantes/export/excel')
 @login_required
+@module_required('Segurança')
 def export_treinamentos_participantes_excel():
-    if not current_user.can_access_module('Segurança'):
-        flash('Acesso negado. Você não tem permissão para exportar dados de Participantes de Treinamentos.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             seguranca_manager = SegurancaManager(db_base)

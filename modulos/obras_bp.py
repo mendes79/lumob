@@ -23,6 +23,9 @@ from database.db_pessoal_manager import PessoalManager # Para o dropdown de func
 # Conversão da moeda para o padrão brasileiro R$ 1.234,56
 from utils import formatar_moeda_brl
 
+# Importação da função de análise de permissão do usuário aos módulos através do decorator @module_required('Obras')
+from utils import module_required
+
 # Crie a instância do Blueprint para o Módulo Obras
 obras_bp = Blueprint('obras_bp', __name__, url_prefix='/obras')
 
@@ -33,27 +36,23 @@ obras_bp = Blueprint('obras_bp', __name__, url_prefix='/obras')
 # ROTA HUB PRINCIPAL DO MÓDULO OBRAS
 @obras_bp.route('/')
 @login_required
+@module_required('Obras')
 def obras_module():
     """
     Rota principal do módulo Obras.
     Serve como hub de navegação para os submódulos de Obras.
     """
-    if not current_user.can_access_module('Obras'):
-        flash('Acesso negado. Você não tem permissão para acessar o Módulo Obras.', 'warning')
-        return redirect(url_for('welcome')) # Rota 'welcome' é global
-
+    
     return render_template('obras/obras_welcome.html', user=current_user)
 
 @obras_bp.route('/dashboard')
 @login_required
+@module_required('Obras')
 def obras_dashboard():
     """
     Rota para o Dashboard de Obras, exibindo KPIs e resumos.
     """
-    if not current_user.can_access_module('Obras'):
-        flash('Acesso negado. Você não tem permissão para acessar o Dashboard de Obras.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base) 
@@ -100,15 +99,13 @@ def obras_dashboard():
 # ROTA PARA A LISTAGEM/GERENCIAMENTO DE OBRAS ESPECÍFICAS (VERSÃO CORRIGIDA)
 @obras_bp.route('/gerenciar')
 @login_required
+@module_required('Obras')
 def gerenciar_obras_lista():
     """
     Rota para a listagem e filtragem de obras.
     Esta rota concentra a lógica que antes estava na 'obras_module'.
     """
-    if not current_user.can_access_module('Obras'):
-        flash('Acesso negado. Você não tem permissão para acessar a gestão de Obras.', 'warning')
-        return redirect(url_for('welcome'))
-
+   
     search_numero = request.args.get('numero_obra')
     search_nome = request.args.get('nome_obra')
     search_status = request.args.get('status_obra')
@@ -170,14 +167,12 @@ def gerenciar_obras_lista():
 # ROTA PARA O RELATÓRIO DE ANDAMENTO DE OBRAS
 @obras_bp.route('/relatorio_andamento')
 @login_required
+@module_required('Obras')
 def obras_relatorio_andamento():
     """
     Rota para o relatório de andamento de obras, com filtros.
     """
-    if not current_user.can_access_module('Obras'):
-        flash('Acesso negado. Você não tem permissão para acessar o Relatório de Andamento de Obras.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     search_numero = request.args.get('numero_obra')
     search_nome = request.args.get('nome_obra')
     search_status = request.args.get('status_obra')
@@ -221,11 +216,9 @@ def obras_relatorio_andamento():
 # ROTA PARA ADICIONAR OBRA
 @obras_bp.route('/add', methods=['GET', 'POST'])
 @login_required
+@module_required('Obras')
 def add_obra():
-    if not current_user.can_access_module('Obras'):
-        flash('Acesso negado. Você não tem permissão para adicionar obras.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -316,12 +309,10 @@ def add_obra():
 # ROTA PARA EDITAR OBRA
 @obras_bp.route('/edit/<int:obra_id>', methods=['GET', 'POST']) # Sua rota existente
 @login_required
+@module_required('Obras')
 def edit_obra(obra_id):
     print(f"DEBUG_EDIT_OBRA: Início da função edit_obra para ID: {obra_id}")
-    if not current_user.can_access_module('Obras'):
-        flash('Acesso negado. Você não tem permissão para editar obras.', 'warning')
-        print("DEBUG_EDIT_OBRA: Acesso negado por permissão.")
-        return redirect(url_for('welcome'))
+    
 
     # Inicializa obra_from_db fora do try/except para que esteja sempre no escopo para depuração final
     # se necessário, embora não deva ser o caso mais
@@ -513,11 +504,9 @@ def edit_obra(obra_id):
 # ROTA PARA DELETAR OBRA
 @obras_bp.route('/delete/<int:obra_id>', methods=['POST'])
 @login_required
+@module_required('Obras')
 def delete_obra(obra_id):
-    if not current_user.can_access_module('Obras'):
-        flash('Acesso negado. Você não tem permissão para excluir obras.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -541,11 +530,9 @@ def delete_obra(obra_id):
 # ROTA PARA DETALHES DA OBRA (AGORA COM LÓGICA DE DASHBOARD)
 @obras_bp.route('/details/<int:obra_id>') # O nome da rota e o decorador permanecem os mesmos
 @login_required
+@module_required('Obras')
 def obra_details(obra_id): # O nome da função permanece o mesmo
-    if not current_user.can_access_module('Obras'):
-        flash('Acesso negado. Você não tem permissão para ver detalhes de obras.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -608,11 +595,9 @@ def obra_details(obra_id): # O nome da função permanece o mesmo
 # ROTA PARA EXPORTAR OBRAS PARA EXCEL
 @obras_bp.route('/export/excel')
 @login_required
+@module_required('Obras')
 def export_obras_excel():
-    if not current_user.can_access_module('Obras'):
-        flash('Acesso negado. Você não tem permissão para exportar dados de obras.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -681,11 +666,9 @@ def export_obras_excel():
 
 @obras_bp.route('/clientes')
 @login_required
+@module_required('Obras')
 def clientes_module(): 
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para acessar o módulo de Clientes.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     search_nome = request.args.get('nome_cliente')
     search_cnpj = request.args.get('cnpj_cliente')
 
@@ -717,11 +700,9 @@ def clientes_module():
 
 @obras_bp.route('/clientes/add', methods=['GET', 'POST'])
 @login_required
+@module_required('Obras')
 def add_cliente():
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para adicionar clientes.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -777,11 +758,9 @@ def add_cliente():
 
 @obras_bp.route('/clientes/edit/<int:cliente_id>', methods=['GET', 'POST'])
 @login_required
+@module_required('Obras')
 def edit_cliente(cliente_id):
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para editar clientes.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -845,10 +824,8 @@ def edit_cliente(cliente_id):
 
 @obras_bp.route('/clientes/delete/<int:cliente_id>', methods=['POST'])
 @login_required
+@module_required('Obras')
 def delete_cliente(cliente_id):
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para excluir clientes.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -873,10 +850,8 @@ def delete_cliente(cliente_id):
 
 @obras_bp.route('/clientes/details/<int:cliente_id>')
 @login_required
+@module_required('Obras')
 def cliente_details(cliente_id):
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para ver detalhes de clientes.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -904,10 +879,8 @@ def cliente_details(cliente_id):
 
 @obras_bp.route('/clientes/export/excel')
 @login_required
+@module_required('Obras')
 def export_clientes_excel():
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para exportar dados de clientes.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -968,10 +941,8 @@ def export_clientes_excel():
 
 @obras_bp.route('/contratos')
 @login_required
+@module_required('Obras')
 def contratos_module(): 
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para acessar o módulo de Contratos.', 'warning')
-        return redirect(url_for('welcome'))
 
     search_numero = request.args.get('numero_contrato')
     search_cliente_id = request.args.get('cliente_id')
@@ -1019,10 +990,8 @@ def contratos_module():
 
 @obras_bp.route('/contratos/add', methods=['GET', 'POST'])
 @login_required
+@module_required('Obras')
 def add_contrato():
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para adicionar contratos.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -1109,10 +1078,8 @@ def add_contrato():
 
 @obras_bp.route('/contratos/edit/<int:contrato_id>', methods=['GET', 'POST'])
 @login_required
+@module_required('Obras')
 def edit_contrato(contrato_id):
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para editar contratos.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -1231,10 +1198,8 @@ def edit_contrato(contrato_id):
 
 @obras_bp.route('/contratos/delete/<int:contrato_id>', methods=['POST'])
 @login_required
+@module_required('Obras')
 def delete_contrato(contrato_id):
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para excluir contratos.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -1259,10 +1224,8 @@ def delete_contrato(contrato_id):
 
 @obras_bp.route('/contratos/details/<int:contrato_id>')
 @login_required
+@module_required('Obras')
 def contrato_details(contrato_id):
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para ver detalhes de contratos.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -1295,11 +1258,9 @@ def contrato_details(contrato_id):
 
 @obras_bp.route('/contratos/export/excel')
 @login_required
+@module_required('Obras')
 def export_contratos_excel():
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para exportar dados de contratos.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -1365,11 +1326,9 @@ def export_contratos_excel():
 
 @obras_bp.route('/arts')
 @login_required
+@module_required('Obras')
 def arts_module(): 
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para acessar o módulo de ARTs.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     search_numero = request.args.get('numero_art')
     search_obra_id = request.args.get('obra_id')
     search_status = request.args.get('status_art')
@@ -1411,11 +1370,9 @@ def arts_module():
 
 @obras_bp.route('/arts/add', methods=['GET', 'POST'])
 @login_required
+@module_required('Obras')
 def add_art():
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para adicionar ARTs.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -1527,11 +1484,9 @@ def add_art():
 
 @obras_bp.route('/arts/edit/<int:art_id>', methods=['GET', 'POST'])
 @login_required
+@module_required('Obras')
 def edit_art(art_id):
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para editar ARTs.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -1658,11 +1613,9 @@ def edit_art(art_id):
 
 @obras_bp.route('/arts/delete/<int:art_id>', methods=['POST'])
 @login_required
+@module_required('Obras')
 def delete_art(art_id):
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para excluir ARTs.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -1684,11 +1637,9 @@ def delete_art(art_id):
 
 @obras_bp.route('/arts/details/<int:art_id>')
 @login_required
+@module_required('Obras')
 def art_details(art_id):
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para ver detalhes de ARTs.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -1715,11 +1666,9 @@ def art_details(art_id):
 
 @obras_bp.route('/arts/export/excel')
 @login_required
+@module_required('Obras')
 def export_arts_excel():
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para exportar dados de ARTs.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -1782,10 +1731,8 @@ def export_arts_excel():
 
 @obras_bp.route('/medicoes')
 @login_required
+@module_required('Obras')
 def medicoes_module(): 
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado...', 'warning')
-        return redirect(url_for('welcome'))
 
     # ... (código de busca de filtros não muda) ...
     search_numero_medicao = request.args.get('numero_medicao')
@@ -1826,11 +1773,9 @@ def medicoes_module():
 
 @obras_bp.route('/medicoes/add', methods=['GET', 'POST'])
 @login_required
+@module_required('Obras')
 def add_medicao():
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para adicionar Medições.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -1915,11 +1860,9 @@ def add_medicao():
 
 @obras_bp.route('/medicoes/edit/<int:medicao_id>', methods=['GET', 'POST'])
 @login_required
+@module_required('Obras')
 def edit_medicao(medicao_id):
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para editar Medições.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -2068,11 +2011,9 @@ def edit_medicao(medicao_id):
 
 @obras_bp.route('/medicoes/delete/<int:medicao_id>', methods=['POST'])
 @login_required
+@module_required('Obras')
 def delete_medicao(medicao_id):
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para excluir Medições.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -2094,11 +2035,9 @@ def delete_medicao(medicao_id):
 
 @obras_bp.route('/medicoes/details/<int:medicao_id>')
 @login_required
+@module_required('Obras')
 def medicao_details(medicao_id):
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado...', 'warning')
-        return redirect(url_for('welcome'))
-
+   
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -2128,10 +2067,8 @@ def medicao_details(medicao_id):
 
 @obras_bp.route('/medicoes/export/excel')
 @login_required
+@module_required('Obras')
 def export_medicoes_excel():
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para exportar dados de Medições.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -2198,11 +2135,9 @@ def export_medicoes_excel():
 
 @obras_bp.route('/avancos_fisicos')
 @login_required
+@module_required('Obras')
 def avancos_fisicos_module(): 
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para acessar o módulo de Avanços Físicos.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     search_obra_id = request.args.get('obra_id')
     search_data_inicio_str = request.args.get('data_inicio')
     search_data_fim_str = request.args.get('data_fim')
@@ -2253,10 +2188,8 @@ def avancos_fisicos_module():
 
 @obras_bp.route('/avancos_fisicos/add', methods=['GET', 'POST'])
 @login_required
+@module_required('Obras')
 def add_avanco_fisico():
-    if not current_user.can_access_module('Obras'):
-        flash('Acesso negado. Você não tem permissão para adicionar Avanços Físicos.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -2377,11 +2310,9 @@ def add_avanco_fisico():
 
 @obras_bp.route('/avancos_fisicos/edit/<int:avanco_id>', methods=['GET', 'POST'])
 @login_required
+@module_required('Obras')
 def edit_avanco_fisico(avanco_id):
-    if not current_user.can_access_module('Obras'):
-        flash('Acesso negado. Você não tem permissão para editar Avanços Físicos.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -2524,11 +2455,9 @@ def edit_avanco_fisico(avanco_id):
 
 @obras_bp.route('/avancos_fisicos/delete/<int:avanco_id>', methods=['POST'])
 @login_required
+@module_required('Obras')
 def delete_avanco_fisico(avanco_id):
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para excluir Avanços Físicos.', 'warning')
-        return redirect(url_for('welcome'))
-
+  
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -2550,11 +2479,9 @@ def delete_avanco_fisico(avanco_id):
 
 @obras_bp.route('/avancos_fisicos/details/<int:avanco_id>', methods=['GET'])
 @login_required
+@module_required('Obras')
 def avanco_fisico_details(avanco_id):
-    if not current_user.can_access_module('Obras'):
-        flash('Acesso negado. Você não tem permissão para visualizar detalhes de Avanços Físicos.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -2591,11 +2518,9 @@ def avanco_fisico_details(avanco_id):
 
 @obras_bp.route('/avancos_fisicos/export/excel')
 @login_required
+@module_required('Obras')
 def export_avancos_fisicos_excel():
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para exportar dados de Avanços Físicos.', 'warning')
-        return redirect(url_for('welcome'))
-
+   
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -2692,11 +2617,9 @@ def get_acumulado_obra(obra_id, avanco_id_excluir=None):
 
 @obras_bp.route('/reidis')
 @login_required
+@module_required('Obras')
 def reidis_module(): 
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para acessar o módulo de REIDIs.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     search_numero_portaria = request.args.get('numero_portaria')
     search_numero_ato = request.args.get('numero_ato')
     search_obra_id = request.args.get('obra_id')
@@ -2740,11 +2663,9 @@ def reidis_module():
 
 @obras_bp.route('/reidis/add', methods=['GET', 'POST'])
 @login_required
+@module_required('Obras')
 def add_reidi():
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para adicionar REIDIs.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -2845,11 +2766,9 @@ def add_reidi():
 
 @obras_bp.route('/reidis/edit/<int:reidi_id>', methods=['GET', 'POST'])
 @login_required
+@module_required('Obras')
 def edit_reidi(reidi_id):
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para editar REIDIs.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -2976,11 +2895,9 @@ def edit_reidi(reidi_id):
 
 @obras_bp.route('/reidis/delete/<int:reidi_id>', methods=['POST'])
 @login_required
+@module_required('Obras')
 def delete_reidi(reidi_id):
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para excluir REIDIs.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -3002,10 +2919,8 @@ def delete_reidi(reidi_id):
 
 @obras_bp.route('/reidis/details/<int:reidi_id>')
 @login_required
+@module_required('Obras')
 def reidi_details(reidi_id):
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para ver detalhes de REIDIs.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -3033,11 +2948,9 @@ def reidi_details(reidi_id):
 
 @obras_bp.route('/reidis/export/excel')
 @login_required
+@module_required('Obras')
 def export_reidis_excel():
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para exportar dados de REIDIs.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -3104,11 +3017,9 @@ def export_reidis_excel():
 
 @obras_bp.route('/seguros')
 @login_required
+@module_required('Obras')
 def seguros_module(): 
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para acessar o módulo de Seguros.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     search_numero_apolice = request.args.get('numero_apolice')
     search_obra_id = request.args.get('obra_id')
     search_status = request.args.get('status_seguro')
@@ -3159,11 +3070,9 @@ def seguros_module():
 
 @obras_bp.route('/seguros/add', methods=['GET', 'POST'])
 @login_required
+@module_required('Obras')
 def add_seguro():
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para adicionar Seguros.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -3262,11 +3171,9 @@ def add_seguro():
 
 @obras_bp.route('/seguros/edit/<int:seguro_id>', methods=['GET', 'POST'])
 @login_required
+@module_required('Obras')
 def edit_seguro(seguro_id):
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para editar Seguros.', 'warning')
-        return redirect(url_for('welcome'))
-
+   
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -3389,11 +3296,9 @@ def edit_seguro(seguro_id):
 
 @obras_bp.route('/seguros/delete/<int:seguro_id>', methods=['POST'])
 @login_required
+@module_required('Obras')
 def delete_seguro(seguro_id):
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para excluir Seguros.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -3415,11 +3320,9 @@ def delete_seguro(seguro_id):
 
 @obras_bp.route('/seguros/details/<int:seguro_id>')
 @login_required
+@module_required('Obras')
 def seguro_details(seguro_id):
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para ver detalhes de Seguros.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)
@@ -3451,11 +3354,9 @@ def seguro_details(seguro_id):
 
 @obras_bp.route('/seguros/export/excel')
 @login_required
+@module_required('Obras')
 def export_seguros_excel():
-    if not current_user.can_access_module('Obras'): 
-        flash('Acesso negado. Você não tem permissão para exportar dados de Seguros.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             obras_manager = ObrasManager(db_base)

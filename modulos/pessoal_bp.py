@@ -20,6 +20,9 @@ from database.db_pessoal_manager import PessoalManager
 # Conversão da moeda para o padrão brasileiro R$ 1.234,56
 from utils import formatar_moeda_brl
 
+# Decorator de validação de permissão de acesso aos módulos
+from utils import module_required
+
 # Crie a instância do Blueprint para o Módulo Pessoal
 pessoal_bp = Blueprint('pessoal_bp', __name__, url_prefix='/pessoal')
 
@@ -41,11 +44,9 @@ def calculate_age(born_date):
 # ---------------------------------------------------------------
 @pessoal_bp.route('/')
 @login_required
+@module_required('Pessoal') # <-- DECORATOR APLICADO AQUI (se repete em todas as rotas - validação da permissão)
 def pessoal_module():
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para acessar o Módulo Pessoal.', 'warning')
-        return redirect(url_for('welcome')) # Redireciona para uma rota geral no app.py
-
+    
     return render_template('pessoal/pessoal_welcome.html', user=current_user)
 
 # ===============================================================
@@ -53,11 +54,9 @@ def pessoal_module():
 # ===============================================================
 @pessoal_bp.route('/funcionarios')
 @login_required
+@module_required('Pessoal')
 def funcionarios_module():
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para acessar a Gestão de Funcionários.', 'warning')
-        return redirect(url_for('welcome'))
-
+   
     search_matricula = request.args.get('matricula')
     search_nome = request.args.get('nome')
     search_status = request.args.get('status')
@@ -102,11 +101,9 @@ def funcionarios_module():
 # ---------------------------------------------------------------
 @pessoal_bp.route('/funcionarios/add', methods=['GET', 'POST'])
 @login_required
+@module_required('Pessoal')
 def add_funcionario():
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para adicionar funcionários.', 'warning')
-        return redirect(url_for('welcome'))
-
+   
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             pessoal_manager = PessoalManager(db_base)
@@ -371,11 +368,9 @@ def add_funcionario():
 # ---------------------------------------------------------------
 @pessoal_bp.route('/funcionarios/edit/<string:matricula>', methods=['GET', 'POST'])
 @login_required
+@module_required('Pessoal')
 def edit_funcionario(matricula):
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para editar funcionários.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             pessoal_manager = PessoalManager(db_base)
@@ -714,11 +709,9 @@ def edit_funcionario(matricula):
 # ---------------------------------------------------------------
 @pessoal_bp.route('/funcionarios/delete/<string:matricula>', methods=['POST'])
 @login_required
+@module_required('Pessoal')
 def delete_funcionario(matricula):
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para excluir funcionários.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             pessoal_manager = PessoalManager(db_base) 
@@ -742,11 +735,9 @@ def delete_funcionario(matricula):
 # ---------------------------------------------------------------
 @pessoal_bp.route('/funcionarios/details/<string:matricula>')
 @login_required
+@module_required('Pessoal')
 def funcionario_details(matricula):
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para ver detalhes de funcionários.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             pessoal_manager = PessoalManager(db_base)
@@ -781,11 +772,9 @@ def funcionario_details(matricula):
 # ---------------------------------------------------------------
 @pessoal_bp.route('/funcionarios/export/excel')
 @login_required
+@module_required('Pessoal')
 def export_funcionarios_excel():
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para exportar dados de funcionários.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
             pessoal_manager = PessoalManager(db_base) 
@@ -886,11 +875,9 @@ def export_funcionarios_excel():
 # ===============================================================
 @pessoal_bp.route('/cargos')
 @login_required
+@module_required('Pessoal')
 def cargos_module():
-    if not current_user.can_access_module('Pessoal'): 
-        flash('Acesso negado. Você não tem permissão para acessar a Gestão de Cargos.', 'warning')
-        return redirect(url_for('welcome'))
-
+    
     search_nome = request.args.get('nome_cargo')
 
     try:
@@ -918,10 +905,8 @@ def cargos_module():
 # ---------------------------------------------------------------
 @pessoal_bp.route('/cargos/add', methods=['GET', 'POST'])
 @login_required
+@module_required('Pessoal')
 def add_cargo():
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para adicionar cargos.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -974,10 +959,8 @@ def add_cargo():
 # ---------------------------------------------------------------
 @pessoal_bp.route('/cargos/edit/<int:cargo_id>', methods=['GET', 'POST'])
 @login_required
+@module_required('Pessoal')
 def edit_cargo(cargo_id):
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para editar cargos.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -1038,10 +1021,8 @@ def edit_cargo(cargo_id):
 # ---------------------------------------------------------------
 @pessoal_bp.route('/cargos/delete/<int:cargo_id>', methods=['POST'])
 @login_required
+@module_required('Pessoal')
 def delete_cargo(cargo_id):
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para excluir cargos.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -1066,10 +1047,8 @@ def delete_cargo(cargo_id):
 # ---------------------------------------------------------------
 @pessoal_bp.route('/cargos/details/<int:cargo_id>')
 @login_required
+@module_required('Pessoal')
 def cargo_details(cargo_id):
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para ver detalhes de cargos.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -1099,10 +1078,8 @@ def cargo_details(cargo_id):
 # ---------------------------------------------------------------
 @pessoal_bp.route('/cargos/export/excel')
 @login_required
+@module_required('Pessoal')
 def export_cargos_excel():
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para exportar dados de cargos.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -1145,10 +1122,8 @@ def export_cargos_excel():
 # ===============================================================
 @pessoal_bp.route('/niveis')
 @login_required
+@module_required('Pessoal')
 def niveis_module():
-    if not current_user.can_access_module('Pessoal'): 
-        flash('Acesso negado. Você não tem permissão para acessar a Gestão de Níveis.', 'warning')
-        return redirect(url_for('welcome'))
 
     search_nome = request.args.get('nome_nivel')
 
@@ -1177,10 +1152,8 @@ def niveis_module():
 # ---------------------------------------------------------------
 @pessoal_bp.route('/niveis/add', methods=['GET', 'POST'])
 @login_required
+@module_required('Pessoal')
 def add_nivel():
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para adicionar níveis.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -1232,10 +1205,8 @@ def add_nivel():
 # ---------------------------------------------------------------
 @pessoal_bp.route('/niveis/edit/<int:nivel_id>', methods=['GET', 'POST'])
 @login_required
+@module_required('Pessoal')
 def edit_nivel(nivel_id):
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para editar níveis.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -1295,10 +1266,8 @@ def edit_nivel(nivel_id):
 # ---------------------------------------------------------------
 @pessoal_bp.route('/niveis/delete/<int:nivel_id>', methods=['POST'])
 @login_required
+@module_required('Pessoal')
 def delete_nivel(nivel_id):
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para excluir níveis.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -1323,10 +1292,8 @@ def delete_nivel(nivel_id):
 # ---------------------------------------------------------------
 @pessoal_bp.route('/niveis/details/<int:nivel_id>')
 @login_required
+@module_required('Pessoal')
 def nivel_details(nivel_id):
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para ver detalhes de níveis.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -1356,10 +1323,8 @@ def nivel_details(nivel_id):
 # ---------------------------------------------------------------
 @pessoal_bp.route('/niveis/export/excel')
 @login_required
+@module_required('Pessoal')
 def export_niveis_excel():
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para exportar dados de níveis.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -1401,10 +1366,8 @@ def export_niveis_excel():
 # ===============================================================
 @pessoal_bp.route('/salarios')
 @login_required
+@module_required('Pessoal')
 def salarios_module():
-    if not current_user.can_access_module('Pessoal'): 
-        flash('Acesso negado. Você não tem permissão para acessar a Gestão de Salários.', 'warning')
-        return redirect(url_for('welcome'))
 
     search_cargo_id = request.args.get('cargo_id')
     search_nivel_id = request.args.get('nivel_id')
@@ -1450,10 +1413,8 @@ def salarios_module():
 # ---------------------------------------------------------------
 @pessoal_bp.route('/salarios/add', methods=['GET', 'POST'])
 @login_required
+@module_required('Pessoal')
 def add_salario():
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para adicionar Salários.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -1547,10 +1508,8 @@ def add_salario():
 # ---------------------------------------------------------------
 @pessoal_bp.route('/salarios/edit/<int:salario_id>', methods=['GET', 'POST'])
 @login_required
+@module_required('Pessoal')
 def edit_salario(salario_id):
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para editar Salários.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -1644,10 +1603,8 @@ def edit_salario(salario_id):
 # ---------------------------------------------------------------
 @pessoal_bp.route('/salarios/delete/<int:salario_id>', methods=['POST'])
 @login_required
+@module_required('Pessoal')
 def delete_salario(salario_id):
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para excluir Salários.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -1672,10 +1629,8 @@ def delete_salario(salario_id):
 # ---------------------------------------------------------------
 @pessoal_bp.route('/salarios/details/<int:salario_id>')
 @login_required
+@module_required('Pessoal')
 def salario_details(salario_id):
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para ver detalhes de Salários.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -1713,10 +1668,8 @@ def salario_details(salario_id):
 # ---------------------------------------------------------------
 @pessoal_bp.route('/salarios/export/excel')
 @login_required
+@module_required('Pessoal')
 def export_salarios_excel():
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para exportar dados de Salários.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -1789,10 +1742,8 @@ def export_salarios_excel():
 # ===============================================================
 @pessoal_bp.route('/ferias')
 @login_required
+@module_required('Pessoal')
 def ferias_module():
-    if not current_user.can_access_module('Pessoal'): 
-        flash('Acesso negado. Você não tem permissão para acessar a Gestão de Férias.', 'warning')
-        return redirect(url_for('welcome'))
 
     search_matricula = request.args.get('matricula')
     search_status = request.args.get('status')
@@ -1839,10 +1790,8 @@ def ferias_module():
 # ---------------------------------------------------------------
 @pessoal_bp.route('/ferias/add', methods=['GET', 'POST'])
 @login_required
+@module_required('Pessoal')
 def add_ferias():
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para adicionar Férias.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -1940,10 +1889,8 @@ def add_ferias():
 # ---------------------------------------------------------------
 @pessoal_bp.route('/ferias/edit/<int:ferias_id>', methods=['GET', 'POST'])
 @login_required
+@module_required('Pessoal')
 def edit_ferias(ferias_id):
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para editar Férias.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -2055,10 +2002,8 @@ def edit_ferias(ferias_id):
 # ---------------------------------------------------------------
 @pessoal_bp.route('/ferias/delete/<int:ferias_id>', methods=['POST'])
 @login_required
+@module_required('Pessoal')
 def delete_ferias(ferias_id):
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para excluir Férias.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -2083,10 +2028,8 @@ def delete_ferias(ferias_id):
 # ---------------------------------------------------------------
 @pessoal_bp.route('/ferias/details/<int:ferias_id>')
 @login_required
+@module_required('Pessoal')
 def ferias_details(ferias_id):
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para ver detalhes de Férias.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -2118,10 +2061,8 @@ def ferias_details(ferias_id):
 # ---------------------------------------------------------------
 @pessoal_bp.route('/ferias/export/excel')
 @login_required
+@module_required('Pessoal')
 def export_ferias_excel():
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para exportar dados de Férias.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -2204,10 +2145,8 @@ def calculate_age(born_date):
 
 @pessoal_bp.route('/dependentes')
 @login_required
+@module_required('Pessoal')
 def dependentes_module():
-    if not current_user.can_access_module('Pessoal'): 
-        flash('Acesso negado. Você não tem permissão para acessar a Gestão de Dependentes.', 'warning')
-        return redirect(url_for('welcome'))
 
     search_matricula = request.args.get('matricula')
     search_nome = request.args.get('nome')
@@ -2257,10 +2196,8 @@ def dependentes_module():
 # ---------------------------------------------------------------
 @pessoal_bp.route('/dependentes/add', methods=['GET', 'POST'])
 @login_required
+@module_required('Pessoal')
 def add_dependente():
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para adicionar Dependentes.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -2340,10 +2277,8 @@ def add_dependente():
 # ---------------------------------------------------------------
 @pessoal_bp.route('/dependentes/edit/<int:dependente_id>', methods=['GET', 'POST'])
 @login_required
+@module_required('Pessoal')
 def edit_dependente(dependente_id):
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para editar Dependentes.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -2433,10 +2368,8 @@ def edit_dependente(dependente_id):
 # ---------------------------------------------------------------
 @pessoal_bp.route('/dependentes/delete/<int:dependente_id>', methods=['POST'])
 @login_required
+@module_required('Pessoal')
 def delete_dependente(dependente_id):
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para excluir Dependentes.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -2461,10 +2394,8 @@ def delete_dependente(dependente_id):
 # ---------------------------------------------------------------
 @pessoal_bp.route('/dependentes/details/<int:dependente_id>')
 @login_required
+@module_required('Pessoal')
 def dependente_details(dependente_id):
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para ver detalhes de Dependentes.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -2497,10 +2428,8 @@ def dependente_details(dependente_id):
 # ---------------------------------------------------------------
 @pessoal_bp.route('/dependentes/export/excel')
 @login_required
+@module_required('Pessoal')
 def export_dependentes_excel():
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para exportar dados de Dependentes.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -2572,10 +2501,8 @@ def export_dependentes_excel():
 # ---------------------------------------------------------------
 @pessoal_bp.route('/dashboard')
 @login_required
+@module_required('Pessoal')
 def pessoal_dashboard():
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para acessar o Dashboard de Pessoal.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -2607,10 +2534,8 @@ def pessoal_dashboard():
 # ---------------------------------------------------------------
 @pessoal_bp.route('/aniversariantes')
 @login_required
+@module_required('Pessoal')
 def pessoal_aniversariantes():
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para acessar o Relatório de Aniversariantes.', 'warning')
-        return redirect(url_for('welcome'))
 
     mes_atual = date.today().month
     nome_mes = date(1900, mes_atual, 1).strftime('%B')
@@ -2649,10 +2574,8 @@ def pessoal_aniversariantes():
 # ---------------------------------------------------------------
 @pessoal_bp.route('/experiencia_a_vencer')
 @login_required
+@module_required('Pessoal')
 def pessoal_experiencia_a_vencer():
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para acessar o Relatório de Período de Experiência.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
@@ -2680,10 +2603,8 @@ def pessoal_experiencia_a_vencer():
 # ---------------------------------------------------------------
 @pessoal_bp.route('/documentos_a_vencer')
 @login_required
+@module_required('Pessoal')
 def pessoal_documentos_a_vencer():
-    if not current_user.can_access_module('Pessoal'):
-        flash('Acesso negado. Você não tem permissão para acessar o Relatório de Documentos e Contratos a Vencer.', 'warning')
-        return redirect(url_for('welcome'))
 
     try:
         with DatabaseManager(**current_app.config['DB_CONFIG']) as db_base:
